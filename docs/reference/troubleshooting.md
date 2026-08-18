@@ -13,7 +13,7 @@ Common development questions, issues, and resolution steps for Sagana Mobile.
      - **Windows**: `ipconfig` (Look for `IPv4 Address`)
      - **macOS / Linux**: `ifconfig` or `ip a`
   2. Put that IP address in `.env`:
-     ```env
+     ```ini
      EXPO_PUBLIC_IP_ADDRESS=192.168.1.100
      ```
   3. Restart the Metro server with cache clear: `npx expo start -c`.

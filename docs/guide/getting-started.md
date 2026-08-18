@@ -48,7 +48,7 @@ cp .env.example .env
 
 Open `.env` and configure the following variables:
 
-```env
+```ini
 # Clerk Authentication Publishable Key (Required)
 EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_your_clerk_publishable_key
 

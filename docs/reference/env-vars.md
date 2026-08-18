@@ -26,7 +26,7 @@ Sagana Mobile resolves backend endpoints in the following priority order:
 
 ## 💻 Sample `.env`
 
-```env
+```ini
 # Clerk Authentication Key
 EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_ZGlzdGluY3Qtc25hcHBlci01Mi5jbGVyay5hY2NvdW50cy5kZXYk
 
