@@ -74,7 +74,8 @@
     "husky": "^9.1.7",
     "prettier": "^3.9.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "vitepress": "^1.6.3"
   },
   "scripts": {
     "start": "expo start",
@@ -84,7 +85,10 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,json}\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "private": true,
   "overrides": {
