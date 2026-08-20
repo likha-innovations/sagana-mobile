@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, forwardRef, type ReactNode } from 'react';
 import {
   View,
   TextInput,
@@ -14,11 +14,11 @@ export interface InputProps extends TextInputProps {
   error?: string;
   hint?: string;
   isPassword?: boolean;
-  leadingIcon?: React.ReactNode;
+  leadingIcon?: ReactNode;
   containerClassName?: string;
 }
 
-export const Input = React.forwardRef<TextInput, InputProps>(
+export const Input = forwardRef<TextInput, InputProps>(
   (
     {
       label,
