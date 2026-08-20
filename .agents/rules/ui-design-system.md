@@ -14,12 +14,13 @@ description: UI standards for ui-craftsman using honey-design, React Native Reus
 ## 2. Uniwind & Theme Tokens
 
 - Style **exclusively** using Uniwind utility classes (`className` prop) and CSS theme variables defined in `global.css`.
+- **Standard Scale over Arbitrary Values**: Always use the predefined Tailwind scale tokens instead of arbitrary values (e.g. use `p-3`, `p-4`, `gap-4`, `rounded-xl`, `text-sm`, `h-12` instead of `p-[12px]`, `p-[16px]`, `gap-[16px]`, `rounded-[12px]`, `text-[14px]`, `h-[48px]`). Arbitrary bracket syntax (`[...]`) is strictly reserved for edge-case hardware/dynamic metrics that cannot map to the scale.
 - Use semantic theme tokens to guarantee dark/light mode compatibility:
   - Backgrounds: `bg-background`, `bg-card`, `bg-muted`, `bg-primary`, `bg-secondary`, `bg-destructive`
   - Text: `text-foreground`, `text-muted-foreground`, `text-primary-foreground`, `text-card-foreground`
   - Borders: `border-border`, `border-input`
   - Ring: `ring-ring`
-- **Never** use raw hex/rgb colors in className or inline styles for themed surfaces. Use theme tokens or Tailwind color classes.
+- **Never** use raw hex/rgb colors in className or inline styles for themed surfaces (e.g. `bg-[#10b981]` is banned in favor of `bg-emerald-600` or `bg-primary`). Use theme tokens or Tailwind color classes.
 - Inline `style={}` is allowed **only** for fixed numeric dimensions (image width/height, dynamic insets) that Tailwind cannot express.
 
 ## 3. Icons — Lucide & Custom SVG Brand Icons
