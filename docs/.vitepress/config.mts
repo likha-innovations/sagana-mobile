@@ -39,6 +39,7 @@ export default defineConfig({
           { text: 'API Client & Contracts', link: '/core/api-client' },
           { text: 'State Management (TanStack)', link: '/core/state-management' },
           { text: 'Design System & Uniwind', link: '/core/design-system' },
+          { text: 'Real-time & Socket.IO', link: '/core/realtime-socket-io' },
           { text: 'Logging & Telemetry', link: '/core/logging-telemetry' },
         ],
       },
