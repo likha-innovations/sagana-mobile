@@ -4,7 +4,7 @@ import { getAuthToken } from '@/lib/auth-token';
 import { logger } from '@/lib/logger';
 
 // Dynamically resolves backend API URL: Production URL -> Custom IP -> LAN IP (Metro) -> Localhost
-function getApiBaseUrl(): string {
+export function getApiBaseUrl(): string {
   // 1. Production / Remote URL from .env (if set with actual content)
   const prodUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
   if (prodUrl) {
@@ -34,7 +34,7 @@ function getApiBaseUrl(): string {
   return 'http://localhost:3000';
 }
 
-const API_BASE_URL = getApiBaseUrl();
+export const API_BASE_URL = getApiBaseUrl();
 
 export interface FetchOptions extends RequestInit {
   withAuth?: boolean;

@@ -5,7 +5,38 @@ export interface LogEntry {
   level: LogLevel;
   context: string;
   message: string;
+  stack?: string;
   data?: unknown;
+}
+
+// Extracts and filters out node_modules and framework noise from stack traces
+function cleanStack(stackOrError?: unknown): string {
+  const rawStack =
+    stackOrError instanceof Error
+      ? stackOrError.stack
+      : typeof stackOrError === 'string'
+        ? stackOrError
+        : '';
+
+  if (!rawStack) return '';
+
+  const frames = rawStack
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(
+      (line) =>
+        line.startsWith('at ') &&
+        !line.includes('node_modules') &&
+        !line.includes('expo/build') &&
+        !line.includes('react-native/Libraries') &&
+        !line.includes('logger.ts') &&
+        !line.includes('node:internal')
+    )
+    .slice(0, 3)
+    .map((line) => line.replace(/^at\s+/, ''));
+
+  if (frames.length === 0) return '';
+  return `\n   ↳ ${frames.join('\n   ↳ ')}`;
 }
 
 class MobileLogger {
@@ -109,16 +140,19 @@ class MobileLogger {
 
   error(message: unknown, errorOrDetails?: unknown, context?: string): void {
     let detail = '';
+    const stackTrace = cleanStack(errorOrDetails);
 
     if (errorOrDetails instanceof Error) {
       detail = ` — ${errorOrDetails.message}`;
     } else if (typeof errorOrDetails === 'string' && errorOrDetails.trim()) {
       detail = ` — ${errorOrDetails}`;
     } else if (errorOrDetails && typeof errorOrDetails === 'object') {
+      const maybeObj = errorOrDetails as Record<string, unknown>;
+      const maybeErrors = maybeObj.errors as Array<Record<string, unknown>> | undefined;
       const maybeMsg =
-        (errorOrDetails as any)?.message ||
-        (errorOrDetails as any)?.errors?.[0]?.longMessage ||
-        (errorOrDetails as any)?.errors?.[0]?.message;
+        (typeof maybeObj.message === 'string' && maybeObj.message) ||
+        (typeof maybeErrors?.[0]?.longMessage === 'string' && maybeErrors[0].longMessage) ||
+        (typeof maybeErrors?.[0]?.message === 'string' && maybeErrors[0].message);
       if (maybeMsg) {
         detail = ` — ${maybeMsg}`;
       }
@@ -132,9 +166,11 @@ class MobileLogger {
       level: 'error',
       context: context ?? 'App',
       message: cleanMessage,
+      stack: stackTrace.trim(),
     });
 
-    console.error(`❌ ${formatted}`);
+    // Cleaned output preventing 50+ line internal node_modules Hermes dumps
+    console.log(`❌ ${formatted}${stackTrace}`);
   }
 
   debug(message: unknown, context?: string, data?: unknown): void {
@@ -181,3 +217,4 @@ class MobileLogger {
 }
 
 export const logger = new MobileLogger();
+export { MobileLogger };
