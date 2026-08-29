@@ -1,0 +1,46 @@
+import { z } from 'zod';
+
+export const publishCommandSchema = z.object({
+  action: z.string().min(1, 'Action is required'),
+  payload: z.record(z.string(), z.unknown()).optional(),
+});
+
+export type PublishCommandInput = z.infer<typeof publishCommandSchema>;
+
+export interface SocketPongResponse {
+  status: string;
+  source: string;
+  received: unknown;
+  timestamp: string;
+}
+
+export interface MqttPingPongEvent {
+  topic: string;
+  message: string;
+  timestamp: string;
+}
+
+export interface TelemetryReading {
+  deviceId: string;
+  sensorId: string;
+  value: number;
+  unit: string;
+  batchId?: string;
+  timestamp: string;
+}
+
+export interface DeviceStatusEvent {
+  deviceId: string;
+  status: string;
+  processingStage?: string;
+  timestamp?: string;
+}
+
+export interface RealtimeEventLog {
+  id: string;
+  type: 'socket-ping' | 'socket-pong' | 'mqtt-ping' | 'mqtt-pong' | 'telemetry' | 'device-status' | 'error';
+  title: string;
+  payload: unknown;
+  timestamp: string;
+  latencyMs?: number;
+}
