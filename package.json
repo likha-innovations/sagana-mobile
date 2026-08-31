@@ -83,7 +83,7 @@
   "scripts": {
     "start": "concurrently -k -n \"expo,docs\" -c \"cyan,magenta\" \"expo start\" \"vitepress dev docs\"",
     "start:app": "expo start",
-    "dev": "concurrently -k -n \"expo,docs\" -c \"cyan,magenta\" \"expo start\" \"vitepress dev docs\"",
+    "dev": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",

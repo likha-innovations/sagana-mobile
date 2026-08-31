@@ -2,13 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { getSocket, getSocketUrl } from '@/lib/socket';
 import { deviceApi } from '@/api/device.api';
-import {
-  SocketPongResponse,
-  MqttPingPongEvent,
-  TelemetryReading,
-  DeviceStatusEvent,
-  RealtimeEventLog,
-} from '@/types';
+import { SocketPongResponse, MqttPingPongEvent, RealtimeEventLog } from '@/types';
 import { logger } from '@/lib/logger';
 
 export function useSocket() {
@@ -18,7 +12,6 @@ export function useSocket() {
   const [logs, setLogs] = useState<RealtimeEventLog[]>([]);
   const [latestPong, setLatestPong] = useState<SocketPongResponse | null>(null);
   const [latestMqtt, setLatestMqtt] = useState<MqttPingPongEvent | null>(null);
-  const [latestTelemetry, setLatestTelemetry] = useState<TelemetryReading | null>(null);
   const pingTimestampRef = useRef<number | null>(null);
 
   const addLog = useCallback((log: Omit<RealtimeEventLog, 'id'>) => {
@@ -107,33 +100,12 @@ export function useSocket() {
       });
     };
 
-    const onTelemetry = (data: TelemetryReading) => {
-      setLatestTelemetry(data);
-      addLog({
-        type: 'telemetry',
-        title: `Telemetry [${data.sensorId}]`,
-        payload: data,
-        timestamp: new Date().toISOString(),
-      });
-    };
-
-    const onDeviceStatus = (data: DeviceStatusEvent) => {
-      addLog({
-        type: 'device-status',
-        title: `Device Status [${data.deviceId}]`,
-        payload: data,
-        timestamp: new Date().toISOString(),
-      });
-    };
-
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('connect_error', onConnectError);
     socket.on('pong', onPong);
     socket.on('mqtt:ping', onMqttPing);
     socket.on('mqtt:pong', onMqttPong);
-    socket.on('telemetry:reading', onTelemetry);
-    socket.on('device:status', onDeviceStatus);
 
     return () => {
       socket.off('connect', onConnect);
@@ -142,34 +114,35 @@ export function useSocket() {
       socket.off('pong', onPong);
       socket.off('mqtt:ping', onMqttPing);
       socket.off('mqtt:pong', onMqttPong);
-      socket.off('telemetry:reading', onTelemetry);
-      socket.off('device:status', onDeviceStatus);
     };
   }, [addLog]);
 
-  const sendSocketPing = useCallback((customText?: string) => {
-    const socket = getSocket();
-    if (!socket.connected) {
-      logger.warn('Cannot send ping: Socket is not connected', 'useSocket');
-      return false;
-    }
+  const sendSocketPing = useCallback(
+    (customText?: string) => {
+      const socket = getSocket();
+      if (!socket.connected) {
+        logger.warn('Cannot send ping: Socket is not connected', 'useSocket');
+        return false;
+      }
 
-    pingTimestampRef.current = Date.now();
-    const payload = {
-      message: customText || 'Ping from Mobile',
-      clientTimestamp: new Date().toISOString(),
-    };
+      pingTimestampRef.current = Date.now();
+      const payload = {
+        message: customText || 'Ping from Mobile',
+        clientTimestamp: new Date().toISOString(),
+      };
 
-    socket.emit('ping', payload);
-    addLog({
-      type: 'socket-ping',
-      title: 'Socket.IO Ping Sent',
-      payload,
-      timestamp: new Date().toISOString(),
-    });
+      socket.emit('ping', payload);
+      addLog({
+        type: 'socket-ping',
+        title: 'Socket.IO Ping Sent',
+        payload,
+        timestamp: new Date().toISOString(),
+      });
 
-    return true;
-  }, [addLog]);
+      return true;
+    },
+    [addLog]
+  );
 
   const mqttCommandMutation = useMutation({
     mutationFn: async ({ deviceId, action }: { deviceId: string; action: string }) => {
@@ -200,7 +173,6 @@ export function useSocket() {
     setLogs([]);
     setLatestPong(null);
     setLatestMqtt(null);
-    setLatestTelemetry(null);
   }, []);
 
   return {
@@ -210,7 +182,6 @@ export function useSocket() {
     logs,
     latestPong,
     latestMqtt,
-    latestTelemetry,
     socketUrl: getSocketUrl(),
     sendSocketPing,
     sendMqttCommand: mqttCommandMutation.mutate,

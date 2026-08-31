@@ -1,5 +1,5 @@
 import { api } from './client';
-import { PublishCommandInput, TelemetryReading } from '@/types';
+import { PublishCommandInput } from '@/types';
 
 // Telemetry & IoT REST API Endpoints (sagana-backend TelemetryController)
 export const deviceApi = {
@@ -9,8 +9,4 @@ export const deviceApi = {
       `/telemetry/devices/${deviceId}/command`,
       data
     ),
-
-  // GET /telemetry/devices/:deviceId/latest — Fetches recent device telemetry
-  getLatestReadings: (deviceId: string) =>
-    api.get<TelemetryReading[]>(`/telemetry/devices/${deviceId}/latest`),
 };

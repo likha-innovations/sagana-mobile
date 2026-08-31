@@ -20,25 +20,9 @@ export interface MqttPingPongEvent {
   timestamp: string;
 }
 
-export interface TelemetryReading {
-  deviceId: string;
-  sensorId: string;
-  value: number;
-  unit: string;
-  batchId?: string;
-  timestamp: string;
-}
-
-export interface DeviceStatusEvent {
-  deviceId: string;
-  status: string;
-  processingStage?: string;
-  timestamp?: string;
-}
-
 export interface RealtimeEventLog {
   id: string;
-  type: 'socket-ping' | 'socket-pong' | 'mqtt-ping' | 'mqtt-pong' | 'telemetry' | 'device-status' | 'error';
+  type: 'socket-ping' | 'socket-pong' | 'mqtt-ping' | 'mqtt-pong' | 'error';
   title: string;
   payload: unknown;
   timestamp: string;
