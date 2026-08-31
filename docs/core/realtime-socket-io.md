@@ -29,8 +29,6 @@ The backend gateway exposes a dedicated namespace for telemetry and protocol dia
 | `'pong'` | `{ status: 'ok', source: string, received: unknown, timestamp: string }` | Gateway reply to `'ping'` (used to compute round-trip latency) |
 | `'mqtt:ping'` | `{ topic: string, message: string, timestamp: string }` | Broadcast when message is received on MQTT `sagana/ping` |
 | `'mqtt:pong'` | `{ topic: string, message: string, timestamp: string }` | Broadcast when response is published to MQTT `sagana/pong` |
-| `'telemetry:reading'` | `{ deviceId: string, sensorId: string, value: number, unit: string, batchId?: string, timestamp: string }` | Live sensor reading from IoT nodes |
-| `'device:status'` | `{ deviceId: string, status: string, processingStage?: string, timestamp: string }` | Live device state update |
 
 ---
 
