@@ -30,6 +30,6 @@ features:
     title: Zod-First Validation
     details: Runtime schemas matching backend Prisma contracts 1:1, integrated seamlessly with React Hook Form.
   - icon: 📊
-    title: Asia/Manila Telemetry Logger
-    details: Centralized MobileLogger capturing screen navigation, network metrics, and diagnostics in real time.
+    title: Asia/Manila Scoped Logger
+    details: Centralized scoped Logger (createLogger) capturing screen navigation, network metrics, and diagnostics in real time.
 ---

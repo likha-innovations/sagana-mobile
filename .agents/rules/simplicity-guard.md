@@ -27,7 +27,7 @@ description: Clean code discipline, DRY, YAGNI, guard clauses, and single-line c
 ## 5. Clean Diffs & Zero Dead Code
 - **No Zombie Code**: Never leave commented-out code, dead functions, unused variables, or orphaned imports.
 - **Strict Typing**: Zero `any`. Define explicit types or infer them from Zod schemas.
-- **No Console Clutter**: Strip temporary debug `console.log` statements before committing; use `MobileLogger` from `src/lib/logger.ts` for actual system events.
+- **No Console Clutter**: Strip temporary debug `console.log` statements before committing; use `createLogger` / `logger` from `src/lib/logger.ts` for actual system events.
 
 ## 6. Explicit Named Imports (No Inline Namespace Calls)
 - **Direct Named Imports**: Always explicitly import hooks, types, components, and functions at the top of the file (e.g. `import { useState, useEffect, useMemo, useCallback, type ReactNode } from 'react'`).

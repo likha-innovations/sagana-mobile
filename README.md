@@ -48,7 +48,7 @@
 - **Semantic Theme Engine**: Full light and dark mode support using CSS variables (`--primary: 152 76% 36%`).
 - **Responsive Inset Handling**: Strict utilization of `useSafeAreaInsets()` preventing display notches and home indicators overlap.
 - **Native Keyboard Avoidance**: Seamless input scrolling and dismissals via `react-native-keyboard-controller`.
-- **Centralized Telemetry Logger**: `MobileLogger` utility formatting events and network errors in `Asia/Manila` timezone.
+- **Centralized Scoped Logger**: `createLogger` / `Logger` utility formatting events and network errors in `Asia/Manila` timezone with ANSI terminal colors.
 
 ---
 
@@ -91,7 +91,7 @@ sagana-mobile/
 │   │
 │   ├── lib/                       # 🔌 Native Utilities & Drivers
 │   │   ├── auth-token.ts          # Clerk JWT token provider
-│   │   ├── logger.ts              # Centralized MobileLogger
+│   │   ├── logger.ts              # Centralized scoped Logger (createLogger)
 │   │   ├── token-cache.ts         # SecureStore token storage
 │   │   └── utils.ts               # Classname merging helper (cn)
 │   │

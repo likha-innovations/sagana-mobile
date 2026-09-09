@@ -36,7 +36,7 @@ src/
 │   ├── token-cache.ts    # SecureStore hardware persistence
 │   ├── socket.ts         # (Phase 4) Socket.IO client instance
 │   ├── bluetooth.ts      # (Phase 4) BLE manager (scanning/GATT)
-│   ├── logger.ts         # Centralized MobileLogger
+│   ├── logger.ts         # Centralized scoped Logger (createLogger)
 │   └── utils.ts          # cn() class helper
 │
 └── types/                # 📦 CENTRALIZED SCHEMAS & CONTRACTS
@@ -91,6 +91,6 @@ src/
 - Safe area handling must strictly use the **`useSafeAreaInsets()`** hook (legacy `<SafeAreaView>` is banned).
 
 ## 8. Centralized Logging & Telemetry
-- All application events, auth flows, navigation transitions, and network errors must be logged via `MobileLogger` in `src/lib/logger.ts`.
+- All application events, auth flows, navigation transitions, and network errors must be logged via `Logger` (`createLogger`) in `src/lib/logger.ts`.
 - Format all log timestamps in `Asia/Manila` timezone.
 - Never leave raw `console.log` statements in production code.

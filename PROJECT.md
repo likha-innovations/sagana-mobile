@@ -22,7 +22,7 @@ Mobile client for Sagana platform built with Expo SDK 57, React 19, React Native
   - `src/hooks/`: TanStack Query v5 query/mutation hooks (`use-profile.ts`, `use-socket.ts`).
   - `src/components/`: UI primitives (`@rn-primitives` + `cva`), auth widgets, and navigation elements.
   - `src/context/`: Centralized state machines (`auth-context.tsx` wrapping Clerk Core).
-  - `src/lib/`: Native hardware persistence (`token-cache.ts` using `expo-secure-store`), `socket.ts`, logger (`MobileLogger`), and `cn()` utility.
+  - `src/lib/`: Native hardware persistence (`token-cache.ts` using `expo-secure-store`), `socket.ts`, logger (`createLogger` / `Logger`), and `cn()` utility.
   - `src/types/`: Single source of truth schemas (`auth.ts`, `api.ts`, `device.ts`) using Zod-first validation and inferred TypeScript types.
 - **Routing Hierarchy (`app/`)**:
   - `(auth)`: Public authentication screens (`sign-in`, `sign-up`, `forgot-password`).

@@ -55,7 +55,7 @@ sagana-mobile/
 - Integrations with device hardware and native SDKs:
   - `auth-token.ts`: Clerk JWT Bearer token resolution for API calls.
   - `token-cache.ts`: Hardware-backed `expo-secure-store` session caching.
-  - `logger.ts`: Centralized `MobileLogger` formatted with Asia/Manila timestamps.
+  - `logger.ts`: Centralized scoped `Logger` (`createLogger`) formatted with Asia/Manila timestamps and ANSI colors.
   - `utils.ts`: Tailwind classname merging helper (`cn`).
 
 ### 7. `src/types/` (Zod Schemas & Contracts)
