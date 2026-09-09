@@ -1,4 +1,17 @@
-export type LogLevel = 'bootstrap' | 'log' | 'info' | 'warn' | 'error' | 'debug' | 'screen';
+export type LogLevel =
+  | 'debug'
+  | 'log'
+  | 'info'
+  | 'warn'
+  | 'error'
+  | 'verbose'
+  | 'bootstrap'
+  | 'screen';
+
+export interface LoggerOptions {
+  context?: string;
+  enabled?: boolean;
+}
 
 export interface LogEntry {
   timestamp: string;
@@ -7,6 +20,28 @@ export interface LogEntry {
   message: string;
   stack?: string;
   data?: unknown;
+}
+
+const COLORS = {
+  reset: '\x1b[0m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  red: '\x1b[31m',
+  cyan: '\x1b[36m',
+  magenta: '\x1b[35m',
+  white: '\x1b[37m',
+  gray: '\x1b[90m',
+};
+
+// Global in-memory ring buffer holding recent entries across all logger instances
+const inMemoryLogs: LogEntry[] = [];
+const MAX_LOGS = 200;
+
+function saveToBuffer(entry: LogEntry): void {
+  inMemoryLogs.push(entry);
+  if (inMemoryLogs.length > MAX_LOGS) {
+    inMemoryLogs.shift();
+  }
 }
 
 // Extracts and filters out node_modules and framework noise from stack traces
@@ -39,182 +74,227 @@ function cleanStack(stackOrError?: unknown): string {
   return `\n   ↳ ${frames.join('\n   ↳ ')}`;
 }
 
-class MobileLogger {
-  private inMemoryLogs: LogEntry[] = [];
-  private readonly maxLogs = 200;
+class Logger {
+  private context: string;
+  private enabled: boolean;
 
-  private formatTimestamp(): string {
+  constructor(contextOrOptions?: string | LoggerOptions) {
+    if (typeof contextOrOptions === 'string') {
+      this.context = contextOrOptions || 'App';
+      this.enabled = __DEV__;
+    } else if (contextOrOptions && typeof contextOrOptions === 'object') {
+      this.context = contextOrOptions.context || 'App';
+      this.enabled = contextOrOptions.enabled ?? __DEV__;
+    } else {
+      this.context = 'App';
+      this.enabled = __DEV__;
+    }
+  }
+
+  private getTimestamp(): string {
+    const now = new Date();
     try {
-      return new Intl.DateTimeFormat('en-US', {
-        dateStyle: 'short',
-        timeStyle: 'medium',
+      return now.toLocaleTimeString('en-US', {
+        hour12: false,
         timeZone: 'Asia/Manila',
-      }).format(new Date());
+      });
     } catch {
-      return new Date().toISOString();
+      return now.toLocaleTimeString('en-US', { hour12: false });
     }
   }
 
-  private formatLog(level: LogLevel, message: unknown, context?: string): string {
-    const time = this.formatTimestamp();
-    const ctx = context ?? 'App';
-    const msg = typeof message === 'object' ? JSON.stringify(message) : String(message);
-    return `[${time}] [${ctx}] [${level.toUpperCase()}] ${msg}`;
+  private resolveParams(
+    arg1?: unknown,
+    arg2?: unknown
+  ): { contextOverride?: string; data?: unknown } {
+    if (this.context === 'App' && typeof arg1 === 'string') {
+      return { contextOverride: arg1, data: arg2 };
+    }
+    return { data: arg1 };
   }
 
-  private saveToBuffer(entry: LogEntry): void {
-    this.inMemoryLogs.push(entry);
-    if (this.inMemoryLogs.length > this.maxLogs) {
-      this.inMemoryLogs.shift();
+  private formatMessage(
+    level: string,
+    message: string,
+    color: string,
+    data?: unknown,
+    contextOverride?: string
+  ): void {
+    if (!this.enabled) return;
+
+    const timestamp = this.getTimestamp();
+    const pid = 'RN';
+    const ctx = contextOverride || this.context;
+
+    console.log(
+      `${color}[${pid}] ${timestamp}  ${level.padEnd(5)} ${COLORS.yellow}[${ctx}]${COLORS.reset} ${color}${message}${COLORS.reset}`
+    );
+
+    if (data !== undefined) {
+      const dataStr = typeof data === 'object' ? JSON.stringify(data, null, 2) : String(data);
+      console.log(`${COLORS.gray}${dataStr}${COLORS.reset}`);
     }
   }
 
-  bootstrap(message: unknown, context?: string): void {
-    const formatted = this.formatLog('bootstrap', message, context ?? 'Bootstrap');
-    this.saveToBuffer({
-      timestamp: this.formatTimestamp(),
-      level: 'bootstrap',
-      context: context ?? 'Bootstrap',
-      message: String(message),
-    });
+  log(message: unknown, dataOrContext?: unknown, maybeData?: unknown): void {
+    const { contextOverride, data } = this.resolveParams(dataOrContext, maybeData);
+    const ctx = contextOverride || this.context;
+    const msgStr = typeof message === 'object' ? JSON.stringify(message) : String(message);
 
-    if (__DEV__) {
-      console.log(`🚀 ${formatted}`);
-    }
-  }
-
-  log(message: unknown, context?: string, data?: unknown): void {
-    const formatted = this.formatLog('log', message, context);
-    this.saveToBuffer({
-      timestamp: this.formatTimestamp(),
+    saveToBuffer({
+      timestamp: this.getTimestamp(),
       level: 'log',
-      context: context ?? 'App',
-      message: String(message),
+      context: ctx,
+      message: msgStr,
       data,
     });
 
-    if (__DEV__) {
-      if (data !== undefined) {
-        console.log(`📝 ${formatted}`, data);
-      } else {
-        console.log(`📝 ${formatted}`);
-      }
-    }
+    this.formatMessage('LOG', msgStr, COLORS.green, data, ctx);
   }
 
-  info(message: unknown, context?: string, data?: unknown): void {
-    const formatted = this.formatLog('info', message, context);
-    this.saveToBuffer({
-      timestamp: this.formatTimestamp(),
+  info(message: unknown, dataOrContext?: unknown, maybeData?: unknown): void {
+    const { contextOverride, data } = this.resolveParams(dataOrContext, maybeData);
+    const ctx = contextOverride || this.context;
+    const msgStr = typeof message === 'object' ? JSON.stringify(message) : String(message);
+
+    saveToBuffer({
+      timestamp: this.getTimestamp(),
       level: 'info',
-      context: context ?? 'App',
-      message: String(message),
+      context: ctx,
+      message: msgStr,
       data,
     });
 
-    if (__DEV__) {
-      if (data !== undefined) {
-        console.info(`ℹ️ ${formatted}`, data);
-      } else {
-        console.info(`ℹ️ ${formatted}`);
-      }
-    }
+    this.formatMessage('INFO', msgStr, COLORS.cyan, data, ctx);
   }
 
-  warn(message: unknown, context?: string, data?: unknown): void {
-    const formatted = this.formatLog('warn', message, context);
-    this.saveToBuffer({
-      timestamp: this.formatTimestamp(),
+  warn(message: unknown, dataOrContext?: unknown, maybeData?: unknown): void {
+    const { contextOverride, data } = this.resolveParams(dataOrContext, maybeData);
+    const ctx = contextOverride || this.context;
+    const msgStr = typeof message === 'object' ? JSON.stringify(message) : String(message);
+
+    saveToBuffer({
+      timestamp: this.getTimestamp(),
       level: 'warn',
-      context: context ?? 'App',
-      message: String(message),
+      context: ctx,
+      message: msgStr,
       data,
     });
 
-    if (data !== undefined) {
-      console.warn(`⚠️ ${formatted}`, data);
-    } else {
-      console.warn(`⚠️ ${formatted}`);
-    }
+    this.formatMessage('WARN', msgStr, COLORS.yellow, data, ctx);
   }
 
-  error(message: unknown, errorOrDetails?: unknown, context?: string): void {
-    let detail = '';
-    const stackTrace = cleanStack(errorOrDetails);
+  debug(message: unknown, dataOrContext?: unknown, maybeData?: unknown): void {
+    const { contextOverride, data } = this.resolveParams(dataOrContext, maybeData);
+    const ctx = contextOverride || this.context;
+    const msgStr = typeof message === 'object' ? JSON.stringify(message) : String(message);
 
-    if (errorOrDetails instanceof Error) {
-      detail = ` — ${errorOrDetails.message}`;
-    } else if (typeof errorOrDetails === 'string' && errorOrDetails.trim()) {
-      detail = ` — ${errorOrDetails}`;
-    } else if (errorOrDetails && typeof errorOrDetails === 'object') {
-      const maybeObj = errorOrDetails as Record<string, unknown>;
-      const maybeErrors = maybeObj.errors as Array<Record<string, unknown>> | undefined;
-      const maybeMsg =
-        (typeof maybeObj.message === 'string' && maybeObj.message) ||
-        (typeof maybeErrors?.[0]?.longMessage === 'string' && maybeErrors[0].longMessage) ||
-        (typeof maybeErrors?.[0]?.message === 'string' && maybeErrors[0].message);
-      if (maybeMsg) {
-        detail = ` — ${maybeMsg}`;
+    saveToBuffer({
+      timestamp: this.getTimestamp(),
+      level: 'debug',
+      context: ctx,
+      message: msgStr,
+      data,
+    });
+
+    this.formatMessage('DEBUG', msgStr, COLORS.magenta, data, ctx);
+  }
+
+  verbose(message: unknown, dataOrContext?: unknown, maybeData?: unknown): void {
+    const { contextOverride, data } = this.resolveParams(dataOrContext, maybeData);
+    const ctx = contextOverride || this.context;
+    const msgStr = typeof message === 'object' ? JSON.stringify(message) : String(message);
+
+    saveToBuffer({
+      timestamp: this.getTimestamp(),
+      level: 'verbose',
+      context: ctx,
+      message: msgStr,
+      data,
+    });
+
+    this.formatMessage('VERB', msgStr, COLORS.cyan, data, ctx);
+  }
+
+  error(message: unknown, trace?: unknown, contextOverride?: string): void {
+    const ctx = contextOverride || this.context;
+    const msgStr = typeof message === 'object' ? JSON.stringify(message) : String(message);
+
+    saveToBuffer({
+      timestamp: this.getTimestamp(),
+      level: 'error',
+      context: ctx,
+      message: msgStr,
+      stack: trace instanceof Error ? trace.stack : typeof trace === 'string' ? trace : undefined,
+    });
+
+    if (!this.enabled) return;
+
+    this.formatMessage('ERROR', msgStr, COLORS.red, undefined, ctx);
+
+    if (trace !== undefined) {
+      if (trace instanceof Error) {
+        const stack = cleanStack(trace);
+        const errorText = stack ? `${trace.message}${stack}` : trace.stack || trace.message;
+        console.log(`${COLORS.red}${errorText}${COLORS.reset}`);
+      } else {
+        const traceStr = typeof trace === 'object' ? JSON.stringify(trace, null, 2) : String(trace);
+        console.log(`${COLORS.red}${traceStr}${COLORS.reset}`);
       }
     }
-
-    const cleanMessage = `${typeof message === 'object' ? JSON.stringify(message) : String(message)}${detail}`;
-    const formatted = this.formatLog('error', cleanMessage, context);
-
-    this.saveToBuffer({
-      timestamp: this.formatTimestamp(),
-      level: 'error',
-      context: context ?? 'App',
-      message: cleanMessage,
-      stack: stackTrace.trim(),
-    });
-
-    // Cleaned output preventing 50+ line internal node_modules Hermes dumps
-    console.log(`❌ ${formatted}${stackTrace}`);
   }
 
-  debug(message: unknown, context?: string, data?: unknown): void {
-    if (!__DEV__) return;
+  bootstrap(message: unknown, dataOrContext?: unknown, maybeData?: unknown): void {
+    const { contextOverride, data } = this.resolveParams(dataOrContext, maybeData);
+    const ctx = contextOverride || this.context;
+    const msgStr = typeof message === 'object' ? JSON.stringify(message) : String(message);
 
-    const formatted = this.formatLog('debug', message, context);
-    this.saveToBuffer({
-      timestamp: this.formatTimestamp(),
-      level: 'debug',
-      context: context ?? 'Debug',
-      message: String(message),
+    saveToBuffer({
+      timestamp: this.getTimestamp(),
+      level: 'bootstrap',
+      context: ctx,
+      message: msgStr,
       data,
     });
 
-    if (data !== undefined) {
-      console.debug(`🔍 ${formatted}`, data);
-    } else {
-      console.debug(`🔍 ${formatted}`);
-    }
+    this.formatMessage('BOOT', msgStr, COLORS.magenta, data, ctx);
   }
 
   screen(screenName: string, params?: Record<string, unknown>): void {
-    const formatted = this.formatLog('screen', `Navigated to -> ${screenName}`, 'Navigation');
-    this.saveToBuffer({
-      timestamp: this.formatTimestamp(),
+    const msgStr = `Navigated to -> ${screenName}`;
+    const ctx = this.context === 'App' ? 'Navigation' : this.context;
+
+    saveToBuffer({
+      timestamp: this.getTimestamp(),
       level: 'screen',
-      context: 'Navigation',
-      message: `Navigated to -> ${screenName}`,
+      context: ctx,
+      message: msgStr,
       data: params,
     });
 
-    if (__DEV__) {
-      console.log(`📱 ${formatted}`, params ?? '');
-    }
+    this.formatMessage('NAV', msgStr, COLORS.cyan, params, ctx);
+  }
+
+  setContext(context: string): void {
+    this.context = context;
+  }
+
+  getContext(): string {
+    return this.context;
   }
 
   getLogs(): LogEntry[] {
-    return [...this.inMemoryLogs];
+    return [...inMemoryLogs];
   }
 
   clearLogs(): void {
-    this.inMemoryLogs = [];
+    inMemoryLogs.length = 0;
   }
 }
 
-export const logger = new MobileLogger();
-export { MobileLogger };
+export function createLogger(contextOrOptions?: string | LoggerOptions): Logger {
+  return new Logger(contextOrOptions);
+}
+
+export const logger = new Logger();
+export { Logger };
