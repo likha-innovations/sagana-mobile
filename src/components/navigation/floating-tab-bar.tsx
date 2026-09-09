@@ -3,8 +3,10 @@ import { View, Text, Pressable, Platform, StyleSheet } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { logger } from '@/lib/logger';
+import { createLogger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
+
+const logger = createLogger('Navigation');
 
 export function FloatingTabBar({
   state,

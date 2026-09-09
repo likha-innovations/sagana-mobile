@@ -15,7 +15,11 @@ import {
 } from '@expo-google-fonts/montserrat';
 import { tokenCache } from '@/lib/token-cache';
 import { AuthProvider, useAuthContext } from '@/context/auth-context';
-import { logger } from '@/lib/logger';
+import { createLogger } from '@/lib/logger';
+
+const logger = createLogger('RootLayout');
+const authGateLogger = createLogger('AuthGate');
+const navLogger = createLogger('Navigation');
 
 SplashScreen.preventAutoHideAsync();
 
@@ -23,9 +27,7 @@ const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 if (!publishableKey) {
   logger.error(
-    'Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in environment variables.',
-    undefined,
-    'RootLayout'
+    'Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in environment variables.'
   );
 }
 
@@ -35,15 +37,21 @@ function AuthProtectedNavigation() {
   const router = useRouter();
 
   useEffect(() => {
+    if (segments.length > 0) {
+      navLogger.screen(segments.join('/'));
+    }
+  }, [segments]);
+
+  useEffect(() => {
     if (!isLoaded) return;
 
     const inAuthGroup = segments[0] === '(auth)';
 
     if (!isSignedIn && !inAuthGroup) {
-      logger.info('Unauthenticated user redirected to sign-in', 'AuthGate');
+      authGateLogger.info('Unauthenticated user redirected to sign-in');
       router.replace('/(auth)/sign-in');
     } else if (isSignedIn && inAuthGroup) {
-      logger.info('Authenticated user redirected to app tabs', 'AuthGate');
+      authGateLogger.info('Authenticated user redirected to app tabs');
       router.replace('/(app)/(tabs)');
     }
   }, [isSignedIn, isLoaded, segments, router]);
@@ -80,7 +88,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
-      logger.bootstrap('Sagana Mobile UI initialized', 'RootLayout');
+      logger.bootstrap('Sagana Mobile UI initialized');
     }
   }, [fontsLoaded, fontError]);
 

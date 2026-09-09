@@ -3,7 +3,9 @@ import { useMutation } from '@tanstack/react-query';
 import { getSocket, getSocketUrl } from '@/lib/socket';
 import { deviceApi } from '@/api/device.api';
 import { SocketPongResponse, MqttPingPongEvent, RealtimeEventLog } from '@/types';
-import { logger } from '@/lib/logger';
+import { createLogger } from '@/lib/logger';
+
+const logger = createLogger('useSocket');
 
 export function useSocket() {
   const [isConnected, setIsConnected] = useState(false);
@@ -121,7 +123,7 @@ export function useSocket() {
     (customText?: string) => {
       const socket = getSocket();
       if (!socket.connected) {
-        logger.warn('Cannot send ping: Socket is not connected', 'useSocket');
+        logger.warn('Cannot send ping: Socket is not connected');
         return false;
       }
 

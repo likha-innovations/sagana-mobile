@@ -1,5 +1,7 @@
 import { tokenCache } from './token-cache';
-import { logger } from './logger';
+import { createLogger } from './logger';
+
+const logger = createLogger('AuthToken');
 
 type TokenGetter = () => Promise<string | null | undefined>;
 
@@ -21,7 +23,7 @@ export async function getAuthToken(): Promise<string | null> {
         token = dynamicToken;
       }
     } catch (err) {
-      logger.warn('Failed to retrieve token from activeTokenGetter', 'AuthToken', err);
+      logger.warn('Failed to retrieve token from activeTokenGetter', err);
     }
   }
 
@@ -32,14 +34,14 @@ export async function getAuthToken(): Promise<string | null> {
         token = cachedToken;
       }
     } catch (err) {
-      logger.error('Failed to retrieve token from SecureStore', err, 'AuthToken');
+      logger.error('Failed to retrieve token from SecureStore', err);
     }
   }
 
   if (token) {
-    logger.info(`[JWT TOKEN] ${token}`, 'AuthToken');
+    logger.info(`Resolved active JWT token: ${token}`);
   } else {
-    logger.warn('No active JWT token found in session or storage', 'AuthToken');
+    logger.warn('No active JWT token found in session or storage');
   }
 
   return token;

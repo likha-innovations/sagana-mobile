@@ -1,7 +1,9 @@
 import Constants from 'expo-constants';
 import { ApiError, ApiResponse, ApiErrorResponse } from '@/types';
 import { getAuthToken } from '@/lib/auth-token';
-import { logger } from '@/lib/logger';
+import { createLogger } from '@/lib/logger';
+
+const logger = createLogger('APIClient');
 
 // Dynamically resolves backend API URL: Production URL -> Custom IP -> LAN IP (Metro) -> Localhost
 export function getApiBaseUrl(): string {
@@ -60,14 +62,14 @@ export async function apiFetch<T>(
     const token = await getAuthToken();
 
     if (!token) {
-      logger.warn(`[AUTH] Missing token for protected endpoint: ${normalizedEndpoint}`, 'APIClient');
+      logger.warn(`Missing token for protected endpoint: ${normalizedEndpoint}`);
       throw new ApiError(401, 'Authentication required. Please sign in.');
     }
 
     requestHeaders['Authorization'] = `Bearer ${token}`;
   }
 
-  logger.debug(`[HTTP] ${options.method || 'GET'} -> ${url}`, 'APIClient');
+  logger.debug(`${options.method || 'GET'} -> ${url}`);
 
   try {
     const response = await fetch(url, {
@@ -83,7 +85,7 @@ export async function apiFetch<T>(
         errorData?.message ||
         `Request failed with status code ${response.status}`;
 
-      logger.error(`[HTTP ERROR] ${response.status} -> ${url}`, json, 'APIClient');
+      logger.error(`${response.status} -> ${url}`, json);
       throw new ApiError(response.status, message);
     }
 
@@ -97,7 +99,7 @@ export async function apiFetch<T>(
       throw error;
     }
 
-    logger.error(`[NETWORK ERROR] -> ${url}`, error, 'APIClient');
+    logger.error(`Network error -> ${url}`, error);
     throw new ApiError(0, error?.message || 'Network connection failed.');
   }
 }

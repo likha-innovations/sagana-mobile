@@ -14,7 +14,9 @@ import {
   resetPasswordConfirmSchema,
 } from '@/types';
 import { setAuthTokenGetter } from '@/lib/auth-token';
-import { logger } from '@/lib/logger';
+import { createLogger } from '@/lib/logger';
+
+const logger = createLogger('AuthContext');
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -79,11 +81,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (attempt.status === 'complete') {
-        logger.info('User signed in', 'AuthContext');
+        logger.info('User signed in');
         await setSignInActive({ session: attempt.createdSessionId });
         router.replace('/(app)/(tabs)');
       } else {
-        logger.warn('Sign in incomplete', 'AuthContext', attempt);
+        logger.warn('Sign in incomplete', attempt);
         throw new Error('Additional verification required.');
       }
     },
@@ -114,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       await clerkSignUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-      logger.info('Sign-up verification code sent', 'AuthContext');
+      logger.info('Sign-up verification code sent');
     },
     [clerkSignUp]
   );
@@ -131,11 +133,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (attempt.status === 'complete') {
-        logger.info('Email verified successfully', 'AuthContext');
+        logger.info('Email verified successfully');
         await setSignUpActive({ session: attempt.createdSessionId });
         router.replace('/(app)/(tabs)');
       } else {
-        logger.warn('Email verification incomplete', 'AuthContext', attempt);
+        logger.warn('Email verification incomplete', attempt);
         throw new Error('Verification incomplete. Please try again.');
       }
     },
@@ -145,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const resendVerificationCode = useCallback(async () => {
     if (!clerkSignUp) throw new Error('Sign-up service unavailable');
     await clerkSignUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-    logger.info('Verification code resent', 'AuthContext');
+    logger.info('Verification code resent');
   }, [clerkSignUp]);
 
   const requestPasswordReset = useCallback(
@@ -159,7 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         strategy: 'reset_password_email_code',
         identifier: validated.email,
       });
-      logger.info('Password reset email sent', 'AuthContext');
+      logger.info('Password reset email sent');
     },
     [clerkSignIn]
   );
@@ -178,11 +180,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (result.status === 'complete') {
-        logger.info('Password reset complete', 'AuthContext');
+        logger.info('Password reset complete');
         await setSignInActive({ session: result.createdSessionId });
         router.replace('/(app)/(tabs)');
       } else {
-        logger.warn('Password reset incomplete', 'AuthContext', result);
+        logger.warn('Password reset incomplete', result);
         throw new Error('Password reset incomplete. Please try again.');
       }
     },
@@ -198,12 +200,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (createdSessionId && setActive) {
-        logger.info('Google OAuth successful', 'AuthContext');
+        logger.info('Google OAuth successful');
         await setActive({ session: createdSessionId });
         router.replace('/(app)/(tabs)');
       }
     } catch (err: any) {
-      logger.error('Google OAuth error', err, 'AuthContext');
+      logger.error('Google OAuth error', err);
       throw err;
     } finally {
       setIsOAuthLoading(false);
@@ -212,11 +214,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     try {
-      logger.info('Signing out user', 'AuthContext');
+      logger.info('Signing out user');
       await clerkSignOut();
       router.replace('/(auth)/sign-in');
     } catch (err: any) {
-      logger.error('Sign out error', err, 'AuthContext');
+      logger.error('Sign out error', err);
       throw err;
     }
   }, [clerkSignOut, router]);

@@ -1,6 +1,8 @@
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
-import { logger } from '@/lib/logger';
+import { createLogger } from '@/lib/logger';
+
+const logger = createLogger('TokenCache');
 
 export interface TokenCache {
   getToken: (key: string) => Promise<string | null | undefined>;
@@ -19,7 +21,7 @@ export const tokenCache: TokenCache = {
       }
       return await SecureStore.getItemAsync(key);
     } catch (error) {
-      logger.error(`Failed to retrieve auth token for key: ${key}`, error, 'TokenCache');
+      logger.error(`Failed to retrieve auth token for key: ${key}`, error);
       return null;
     }
   },
@@ -36,7 +38,7 @@ export const tokenCache: TokenCache = {
         keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK,
       });
     } catch (error) {
-      logger.error(`Failed to persist auth token for key: ${key}`, error, 'TokenCache');
+      logger.error(`Failed to persist auth token for key: ${key}`, error);
     }
   },
 
@@ -50,7 +52,7 @@ export const tokenCache: TokenCache = {
       }
       await SecureStore.deleteItemAsync(key);
     } catch (error) {
-      logger.error(`Failed to delete auth token for key: ${key}`, error, 'TokenCache');
+      logger.error(`Failed to delete auth token for key: ${key}`, error);
     }
   },
 };

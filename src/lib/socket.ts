@@ -1,6 +1,8 @@
 import { io, Socket } from 'socket.io-client';
 import { getApiBaseUrl } from '@/api/client';
-import { logger } from '@/lib/logger';
+import { createLogger } from '@/lib/logger';
+
+const logger = createLogger('SocketClient');
 
 let socketInstance: Socket | null = null;
 
@@ -12,7 +14,7 @@ export function getSocketUrl(): string {
 export function getSocket(): Socket {
   if (!socketInstance) {
     const url = getSocketUrl();
-    logger.info(`[SOCKET] Initializing Socket.IO connection to: ${url}`, 'SocketClient');
+    logger.info(`Initializing Socket.IO connection to: ${url}`);
 
     socketInstance = io(url, {
       transports: ['websocket', 'polling'],
@@ -24,15 +26,15 @@ export function getSocket(): Socket {
     });
 
     socketInstance.on('connect', () => {
-      logger.info(`[SOCKET] Connected to telemetry gateway. ID: ${socketInstance?.id}`, 'SocketClient');
+      logger.info(`Connected to telemetry gateway. ID: ${socketInstance?.id}`);
     });
 
     socketInstance.on('disconnect', (reason) => {
-      logger.warn(`[SOCKET] Disconnected from telemetry gateway. Reason: ${reason}`, 'SocketClient');
+      logger.warn(`Disconnected from telemetry gateway. Reason: ${reason}`);
     });
 
     socketInstance.on('connect_error', (err) => {
-      logger.error(`[SOCKET] Connection error: ${err.message}`, err, 'SocketClient');
+      logger.error(`Connection error: ${err.message}`, err);
     });
   }
 
@@ -43,6 +45,6 @@ export function disconnectSocket(): void {
   if (socketInstance) {
     socketInstance.disconnect();
     socketInstance = null;
-    logger.info('[SOCKET] Socket connection destroyed', 'SocketClient');
+    logger.info('Socket connection destroyed');
   }
 }
