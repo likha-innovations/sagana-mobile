@@ -7,18 +7,20 @@ export const publishCommandSchema = z.object({
 
 export type PublishCommandInput = z.infer<typeof publishCommandSchema>;
 
-export interface SocketPongResponse {
-  status: string;
-  source: string;
-  received: unknown;
-  timestamp: string;
+// Telemetry reading structure with dynamic key support
+export interface TelemetryData {
+  temperature?: number;
+  humidity?: number;
+  moisture?: number;
+  waterLevel?: number;
+  [key: string]: unknown;
 }
 
+// Log entry for real-time telemetry and command stream
 export interface RealtimeEventLog {
   id: string;
-  type: 'socket-ping' | 'socket-pong' | 'error';
+  type: 'telemetry' | 'command' | 'connection' | 'error';
   title: string;
   payload: unknown;
   timestamp: string;
-  latencyMs?: number;
 }

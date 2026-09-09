@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getSocket, getSocketUrl } from '@/lib/socket';
-import { SocketPongResponse, RealtimeEventLog } from '@/types';
+import { TelemetryData, RealtimeEventLog } from '@/types';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('useSocket');
@@ -8,10 +8,8 @@ const logger = createLogger('useSocket');
 export function useSocket() {
   const [isConnected, setIsConnected] = useState(false);
   const [socketId, setSocketId] = useState<string | null>(null);
-  const [latency, setLatency] = useState<number | null>(null);
+  const [latestTelemetry, setLatestTelemetry] = useState<TelemetryData | null>(null);
   const [logs, setLogs] = useState<RealtimeEventLog[]>([]);
-  const [latestPong, setLatestPong] = useState<SocketPongResponse | null>(null);
-  const pingTimestampRef = useRef<number | null>(null);
 
   const addLog = useCallback((log: Omit<RealtimeEventLog, 'id'>) => {
     logger.info(log.title, log.payload);
@@ -37,7 +35,7 @@ export function useSocket() {
       setIsConnected(true);
       setSocketId(socket.id || null);
       addLog({
-        type: 'socket-ping',
+        type: 'connection',
         title: 'Socket.IO Connected',
         payload: { socketId: socket.id, url: getSocketUrl() },
         timestamp: new Date().toISOString(),
@@ -48,7 +46,7 @@ export function useSocket() {
       setIsConnected(false);
       setSocketId(null);
       addLog({
-        type: 'error',
+        type: 'connection',
         title: 'Socket.IO Disconnected',
         payload: { reason },
         timestamp: new Date().toISOString(),
@@ -65,53 +63,55 @@ export function useSocket() {
       });
     };
 
-    const onPong = (data: SocketPongResponse) => {
-      const now = Date.now();
-      const roundtrip = pingTimestampRef.current ? now - pingTimestampRef.current : undefined;
-      if (roundtrip !== undefined) {
-        setLatency(roundtrip);
-      }
-      setLatestPong(data);
+    const onTelemetry = (data: unknown) => {
+      const telemetryPayload = typeof data === 'object' && data !== null
+        ? (data as TelemetryData)
+        : { raw: data };
+
+      setLatestTelemetry(telemetryPayload);
       addLog({
-        type: 'socket-pong',
-        title: 'Socket.IO Pong Received',
+        type: 'telemetry',
+        title: 'Live Telemetry Received',
         payload: data,
         timestamp: new Date().toISOString(),
-        latencyMs: roundtrip,
       });
     };
 
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('connect_error', onConnectError);
-    socket.on('pong', onPong);
+    socket.on('telemetry', onTelemetry);
 
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('connect_error', onConnectError);
-      socket.off('pong', onPong);
+      socket.off('telemetry', onTelemetry);
     };
   }, [addLog]);
 
-  const sendSocketPing = useCallback(
-    (customText?: string) => {
+  // Dispatches custom command from mobile to backend -> HiveMQ sagana/commands
+  const sendCommand = useCallback(
+    (commandData: string | object) => {
       const socket = getSocket();
       if (!socket.connected) {
-        logger.warn('Cannot send ping: Socket is not connected');
+        logger.warn('Cannot send command: Socket is disconnected');
         return false;
       }
 
-      pingTimestampRef.current = Date.now();
-      const payload = {
-        message: customText || 'Ping from Mobile',
-        clientTimestamp: new Date().toISOString(),
-      };
+      let payload: unknown = commandData;
+      if (typeof commandData === 'string') {
+        try {
+          payload = JSON.parse(commandData);
+        } catch {
+          payload = { message: commandData };
+        }
+      }
 
-      socket.emit('ping', payload);
+      socket.emit('command', payload);
       addLog({
-        type: 'socket-ping',
-        title: 'Socket.IO Ping Sent',
+        type: 'command',
+        title: 'Command Dispatched to HiveMQ',
         payload,
         timestamp: new Date().toISOString(),
       });
@@ -123,17 +123,15 @@ export function useSocket() {
 
   const clearLogs = useCallback(() => {
     setLogs([]);
-    setLatestPong(null);
   }, []);
 
   return {
     isConnected,
     socketId,
-    latency,
+    latestTelemetry,
     logs,
-    latestPong,
     socketUrl: getSocketUrl(),
-    sendSocketPing,
+    sendCommand,
     clearLogs,
   };
 }
