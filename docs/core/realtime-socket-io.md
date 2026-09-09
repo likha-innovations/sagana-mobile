@@ -1,6 +1,15 @@
 # Real-time WebSocket & Socket.IO
 
-Sagana Mobile uses `socket.io-client` in `src/lib/socket.ts` and `src/hooks/use-socket.ts` for bidirectional real-time communication with the backend telemetry gateway.
+Sagana Mobile uses `socket.io-client` in `src/lib/socket.ts` and `src/hooks/use-socket.ts` for bidirectional real-time communication with the backend telemetry gateway and HiveMQ Cloud.
+
+---
+
+## 🏗️ 2-Way Real-time Architecture
+
+```
+[Firmware / ESP32] ──(MQTT: sagana/stream)──> [HiveMQ Cloud] ──> [NestJS Backend] ──(Socket.IO: 'telemetry')──> [Sagana Mobile]
+[Sagana Mobile] ──(Socket.IO: 'command')──> [NestJS Backend] ──> [HiveMQ Cloud] ──(MQTT: sagana/commands)──> [Firmware / ESP32]
+```
 
 ---
 
@@ -9,24 +18,24 @@ Sagana Mobile uses `socket.io-client` in `src/lib/socket.ts` and `src/hooks/use-
 The backend gateway exposes a dedicated namespace for real-time telemetry:
 
 - **Namespace**: `/telemetry`
-- **Full Endpoint**: `${API_BASE_URL}/telemetry` (e.g. `http://localhost:3000/telemetry` or `http://192.168.x.x:3000/telemetry`)
+- **Full Endpoint**: `${API_BASE_URL}/telemetry` (e.g. `http://localhost:3000/telemetry` or LAN IP)
 - **Transports**: `['websocket', 'polling']`
 
 ---
 
 ## 📡 Event Matrix
 
-### 1. Client ➔ Server Events (Emitted by Mobile)
+### 1. Server ➔ Client Events (Subscribed on Mobile)
 
 | Event Name | Payload Shape | Description |
 |---|---|---|
-| `'ping'` | `{ message?: string, clientTimestamp: string }` | Sends ping to gateway; server responds with `'pong'` |
+| `'telemetry'` | `TelemetryData \| unknown` | Live hardware sensor readings received from HiveMQ topic `sagana/stream`. |
 
-### 2. Server ➔ Client Events (Subscribed on Mobile)
+### 2. Client ➔ Server Events (Emitted by Mobile)
 
 | Event Name | Payload Shape | Description |
 |---|---|---|
-| `'pong'` | `{ status: 'ok', source: string, received: unknown, timestamp: string }` | Gateway reply to `'ping'` (used to compute round-trip latency) |
+| `'command'` | `string \| object` | Custom actuator control/instructions forwarded to HiveMQ topic `sagana/commands`. |
 
 ---
 
@@ -51,7 +60,7 @@ export function disconnectSocket(): void {
 
 ## 🎣 React Hook (`useSocket`)
 
-The `useSocket` hook manages subscription lifecycles, latency calculation, and real-time state bindings:
+The `useSocket` hook manages subscription lifecycles, incoming telemetry state, and command dispatching:
 
 ```typescript
 import { useSocket } from '@/hooks';
@@ -60,16 +69,15 @@ export function Dashboard() {
   const {
     isConnected,
     socketId,
-    latency,
-    latestPong,
+    latestTelemetry,
     logs,
-    sendSocketPing,
+    sendCommand,
     clearLogs,
   } = useSocket();
 
-  // Trigger test ping
-  const onPing = () => {
-    sendSocketPing('Hello from mobile!');
+  // Send an actuator command to firmware
+  const onToggleRelay = () => {
+    sendCommand('RELAY_ON');
   };
 }
 ```

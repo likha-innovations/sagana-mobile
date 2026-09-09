@@ -50,7 +50,7 @@ Mobile client for Sagana platform built with Expo SDK 57, React 19, React Native
   - Dashboard (`index.tsx`): Real-time metrics and quick stats.
   - Profile (`profile.tsx`): User profile view and update.
 - **Realtime / IoT**:
-  - WebSocket / Socket.io client integration (`use-socket.ts`, `src/lib/socket.ts`).
+  - 2-way IoT event bridge (`use-socket.ts`, `src/lib/socket.ts`): Inbound telemetry on topic `sagana/stream` ➔ event `'telemetry'`; Outbound command dispatch on event `'command'` ➔ topic `sagana/commands`.
 
 ## Decisions & Dead-ends
 
