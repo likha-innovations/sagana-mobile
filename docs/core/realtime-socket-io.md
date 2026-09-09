@@ -6,7 +6,7 @@ Sagana Mobile uses `socket.io-client` in `src/lib/socket.ts` and `src/hooks/use-
 
 ## 🌐 Gateway Architecture & Namespace
 
-The backend gateway exposes a dedicated namespace for telemetry and protocol diagnostics:
+The backend gateway exposes a dedicated namespace for real-time telemetry:
 
 - **Namespace**: `/telemetry`
 - **Full Endpoint**: `${API_BASE_URL}/telemetry` (e.g. `http://localhost:3000/telemetry` or `http://192.168.x.x:3000/telemetry`)
@@ -27,8 +27,6 @@ The backend gateway exposes a dedicated namespace for telemetry and protocol dia
 | Event Name | Payload Shape | Description |
 |---|---|---|
 | `'pong'` | `{ status: 'ok', source: string, received: unknown, timestamp: string }` | Gateway reply to `'ping'` (used to compute round-trip latency) |
-| `'mqtt:ping'` | `{ topic: string, message: string, timestamp: string }` | Broadcast when message is received on MQTT `sagana/ping` |
-| `'mqtt:pong'` | `{ topic: string, message: string, timestamp: string }` | Broadcast when response is published to MQTT `sagana/pong` |
 
 ---
 
@@ -53,7 +51,7 @@ export function disconnectSocket(): void {
 
 ## 🎣 React Hook (`useSocket`)
 
-The `useSocket` hook manages subscription lifecycles, latency calculation, and state bindings:
+The `useSocket` hook manages subscription lifecycles, latency calculation, and real-time state bindings:
 
 ```typescript
 import { useSocket } from '@/hooks';
@@ -64,10 +62,8 @@ export function Dashboard() {
     socketId,
     latency,
     latestPong,
-    latestMqtt,
     logs,
     sendSocketPing,
-    sendMqttCommand,
     clearLogs,
   } = useSocket();
 
@@ -77,9 +73,3 @@ export function Dashboard() {
   };
 }
 ```
-
----
-
-## 🌉 MQTT Broker Bridging
-
-The backend `TelemetryGateway` acts as a WebSocket bridge for MQTT broker events. When external IoT devices publish to `sagana/ping` or `sagana/pong`, the backend intercepts and broadcasts them over Socket.IO as `mqtt:ping` and `mqtt:pong`, enabling mobile clients to monitor MQTT streams without maintaining raw TCP/MQTT sockets.

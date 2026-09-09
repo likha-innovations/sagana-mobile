@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useMutation } from '@tanstack/react-query';
 import { getSocket, getSocketUrl } from '@/lib/socket';
-import { deviceApi } from '@/api/device.api';
-import { SocketPongResponse, MqttPingPongEvent, RealtimeEventLog } from '@/types';
+import { SocketPongResponse, RealtimeEventLog } from '@/types';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('useSocket');
@@ -13,10 +11,11 @@ export function useSocket() {
   const [latency, setLatency] = useState<number | null>(null);
   const [logs, setLogs] = useState<RealtimeEventLog[]>([]);
   const [latestPong, setLatestPong] = useState<SocketPongResponse | null>(null);
-  const [latestMqtt, setLatestMqtt] = useState<MqttPingPongEvent | null>(null);
   const pingTimestampRef = useRef<number | null>(null);
 
   const addLog = useCallback((log: Omit<RealtimeEventLog, 'id'>) => {
+    logger.info(log.title, log.payload);
+
     const newEntry: RealtimeEventLog = {
       ...log,
       id: `${Date.now()}-${Math.random().toString(16).substring(2, 6)}`,
@@ -82,40 +81,16 @@ export function useSocket() {
       });
     };
 
-    const onMqttPing = (data: MqttPingPongEvent) => {
-      setLatestMqtt(data);
-      addLog({
-        type: 'mqtt-ping',
-        title: 'MQTT Ping Bridged',
-        payload: data,
-        timestamp: new Date().toISOString(),
-      });
-    };
-
-    const onMqttPong = (data: MqttPingPongEvent) => {
-      setLatestMqtt(data);
-      addLog({
-        type: 'mqtt-pong',
-        title: 'MQTT Pong Bridged',
-        payload: data,
-        timestamp: new Date().toISOString(),
-      });
-    };
-
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('connect_error', onConnectError);
     socket.on('pong', onPong);
-    socket.on('mqtt:ping', onMqttPing);
-    socket.on('mqtt:pong', onMqttPong);
 
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('connect_error', onConnectError);
       socket.off('pong', onPong);
-      socket.off('mqtt:ping', onMqttPing);
-      socket.off('mqtt:pong', onMqttPong);
     };
   }, [addLog]);
 
@@ -146,35 +121,9 @@ export function useSocket() {
     [addLog]
   );
 
-  const mqttCommandMutation = useMutation({
-    mutationFn: async ({ deviceId, action }: { deviceId: string; action: string }) => {
-      return deviceApi.sendCommand(deviceId, {
-        action,
-        payload: { source: 'sagana-mobile-test', sentAt: new Date().toISOString() },
-      });
-    },
-    onSuccess: (data) => {
-      addLog({
-        type: 'mqtt-ping',
-        title: `MQTT Command Sent (${data.action})`,
-        payload: data,
-        timestamp: new Date().toISOString(),
-      });
-    },
-    onError: (err: Error) => {
-      addLog({
-        type: 'error',
-        title: 'MQTT Command Failed',
-        payload: { error: err.message },
-        timestamp: new Date().toISOString(),
-      });
-    },
-  });
-
   const clearLogs = useCallback(() => {
     setLogs([]);
     setLatestPong(null);
-    setLatestMqtt(null);
   }, []);
 
   return {
@@ -183,11 +132,8 @@ export function useSocket() {
     latency,
     logs,
     latestPong,
-    latestMqtt,
     socketUrl: getSocketUrl(),
     sendSocketPing,
-    sendMqttCommand: mqttCommandMutation.mutate,
-    isSendingMqtt: mqttCommandMutation.isPending,
     clearLogs,
   };
 }

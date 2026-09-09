@@ -14,15 +14,9 @@ export interface SocketPongResponse {
   timestamp: string;
 }
 
-export interface MqttPingPongEvent {
-  topic: string;
-  message: string;
-  timestamp: string;
-}
-
 export interface RealtimeEventLog {
   id: string;
-  type: 'socket-ping' | 'socket-pong' | 'mqtt-ping' | 'mqtt-pong' | 'error';
+  type: 'socket-ping' | 'socket-pong' | 'error';
   title: string;
   payload: unknown;
   timestamp: string;

@@ -4,13 +4,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Wifi,
   WifiOff,
-  Radio,
   Send,
   Zap,
-  CheckCircle2,
   Clock,
   Trash2,
-  RotateCw,
 } from 'lucide-react-native';
 import * as toast from 'burnt';
 import { useSocket } from '@/hooks';
@@ -22,11 +19,8 @@ export default function DashboardScreen() {
     isConnected,
     latency,
     latestPong,
-    latestMqtt,
     logs,
     sendSocketPing,
-    sendMqttCommand,
-    isSendingMqtt,
     clearLogs,
   } = useSocket();
 
@@ -41,21 +35,6 @@ export default function DashboardScreen() {
         preset: 'done',
       });
     }
-  };
-
-  const handleSendMqttPing = () => {
-    sendMqttCommand(
-      { deviceId: 'mobile-client', action: 'ping' },
-      {
-        onSuccess: () => {
-          toast.toast({
-            title: 'MQTT Ping Sent',
-            message: 'Dispatched command to MQTT broker',
-            preset: 'done',
-          });
-        },
-      }
-    );
   };
 
   const formatReceivedData = (data: unknown) => {
@@ -84,7 +63,7 @@ export default function DashboardScreen() {
               Dashboard
             </Text>
             <Text className="text-xs text-muted-foreground mt-0.5">
-              Live Web & MQTT Communications
+              Real-time Gateway Telemetry
             </Text>
           </View>
           <View
@@ -116,8 +95,8 @@ export default function DashboardScreen() {
                   <Zap size={18} color="#047857" />
                 </View>
                 <View>
-                  <CardTitle className="text-base">Socket.IO Message</CardTitle>
-                  <CardDescription>Live reply from server / web client</CardDescription>
+                  <CardTitle className="text-base">Socket.IO Gateway</CardTitle>
+                  <CardDescription>Real-time gateway communication</CardDescription>
                 </View>
               </View>
               {latency !== null && (
@@ -149,7 +128,7 @@ export default function DashboardScreen() {
                 ) : (
                   <View className="py-2 items-center justify-center">
                     <Text className="text-xs text-muted-foreground">
-                      Waiting for ping from web client or mobile...
+                      Waiting for ping from server or mobile...
                     </Text>
                   </View>
                 )}
@@ -174,65 +153,6 @@ export default function DashboardScreen() {
                   <Text className="text-white font-medium text-xs">Ping</Text>
                 </Button>
               </View>
-            </CardContent>
-          </Card>
-
-          <Card className="border-sky-500/20 bg-sky-500/[0.02]">
-            <CardHeader className="flex-row items-center justify-between pb-2 border-b border-border/50">
-              <View className="flex-row items-center gap-2">
-                <View className="h-8 w-8 rounded-lg bg-sky-700/10 items-center justify-center">
-                  <Radio size={18} color="#0284c7" />
-                </View>
-                <View>
-                  <CardTitle className="text-base">MQTT Event</CardTitle>
-                  <CardDescription>Topic: sagana/pong</CardDescription>
-                </View>
-              </View>
-              <View className="flex-row items-center gap-1 bg-sky-500/10 px-2 py-0.5 rounded-md">
-                <CheckCircle2 size={12} color="#0284c7" />
-                <Text className="text-xs font-medium text-sky-700">ACTIVE</Text>
-              </View>
-            </CardHeader>
-            <CardContent className="gap-3 pt-3">
-              <View className="rounded-xl bg-card border border-border p-3.5 shadow-sm">
-                <Text className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                  Latest MQTT Payload
-                </Text>
-                {latestMqtt ? (
-                  <View className="gap-1">
-                    <Text className="text-base font-semibold text-foreground">
-                      {latestMqtt.message}
-                    </Text>
-                    <View className="flex-row items-center justify-between mt-2 pt-2 border-t border-border/50">
-                      <Text className="text-xs font-mono text-sky-700">
-                        {latestMqtt.topic}
-                      </Text>
-                      <Text className="text-[10px] font-mono text-muted-foreground">
-                        {new Date(latestMqtt.timestamp).toLocaleTimeString()}
-                      </Text>
-                    </View>
-                  </View>
-                ) : (
-                  <View className="py-2 items-center justify-center">
-                    <Text className="text-xs text-muted-foreground">
-                      No MQTT messages received yet.
-                    </Text>
-                  </View>
-                )}
-              </View>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onPress={handleSendMqttPing}
-                loading={isSendingMqtt}
-                className="gap-2 border-sky-200 bg-sky-50/60 active:bg-sky-100"
-              >
-                <RotateCw size={14} color="#0284c7" />
-                <Text className="text-sky-700 font-medium text-xs">
-                  Dispatch MQTT Test Ping
-                </Text>
-              </Button>
             </CardContent>
           </Card>
         </View>
