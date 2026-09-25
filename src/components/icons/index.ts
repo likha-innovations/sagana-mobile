@@ -1,1 +1,2 @@
-export * from './google-icon';
+// Reserved for custom SVG brand icons
+export {};

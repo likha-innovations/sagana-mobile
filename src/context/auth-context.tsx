@@ -1,15 +1,10 @@
-import { createContext, useContext, useState, useCallback, useMemo, useEffect, type ReactNode } from 'react';
-import * as WebBrowser from 'expo-web-browser';
-import * as Linking from 'expo-linking';
-import { useAuth, useUser, useOAuth } from '@clerk/expo';
-import { useSignIn, useSignUp } from '@clerk/expo/legacy';
+import { createContext, useContext, useCallback, useMemo, useEffect, type ReactNode } from 'react';
+import { useAuth, useUser } from '@clerk/expo';
+import { useSignIn } from '@clerk/expo/legacy';
 import { useRouter } from 'expo-router';
 import {
   User,
-  SignUpInput,
   signInSchema,
-  signUpSchema,
-  verifyCodeSchema,
   resetPasswordRequestSchema,
   resetPasswordConfirmSchema,
 } from '@/types';
@@ -18,21 +13,14 @@ import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('AuthContext');
 
-WebBrowser.maybeCompleteAuthSession();
-
 interface AuthContextType {
   isSignedIn: boolean;
   isLoaded: boolean;
   user: User | null;
-  isOAuthLoading: boolean;
   getToken: () => Promise<string | null>;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (params: SignUpInput) => Promise<void>;
-  verifyEmail: (code: string) => Promise<void>;
-  resendVerificationCode: () => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (code: string, newPassword: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -43,12 +31,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { isSignedIn, isLoaded: authLoaded, signOut: clerkSignOut, getToken } = useAuth();
   const { user: clerkUser, isLoaded: userLoaded } = useUser();
   const { signIn: clerkSignIn, setActive: setSignInActive, isLoaded: signInLoaded } = useSignIn();
-  const { signUp: clerkSignUp, setActive: setSignUpActive, isLoaded: signUpLoaded } = useSignUp();
-  const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' });
 
-  const [isOAuthLoading, setIsOAuthLoading] = useState(false);
-
-  const isLoaded = authLoaded && userLoaded && signInLoaded && signUpLoaded;
+  const isLoaded = authLoaded && userLoaded && signInLoaded;
 
   // Automatically wire Clerk's active JWT getter into native apiFetch
   useEffect(() => {
@@ -84,71 +68,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logger.info('User signed in');
         await setSignInActive({ session: attempt.createdSessionId });
         router.replace('/(app)/(tabs)');
-      } else {
-        logger.warn('Sign in incomplete', attempt);
-        throw new Error('Additional verification required.');
+        return;
       }
+
+      logger.warn('Sign in incomplete', attempt);
+
+      throw new Error(`Sign-in incomplete (status: ${attempt.status}).`);
     },
     [clerkSignIn, setSignInActive, router]
   );
-
-  const signUp = useCallback(
-    async (params: SignUpInput) => {
-      if (!clerkSignUp) throw new Error('Sign-up service unavailable');
-
-      // Zod validation
-      const validated = signUpSchema.parse(params);
-
-      const nameParts = validated.fullName.split(' ');
-      const firstName = nameParts[0] || validated.fullName;
-      const lastName = nameParts.slice(1).join(' ') || '';
-
-      await clerkSignUp.create({
-        firstName,
-        lastName,
-        emailAddress: validated.email,
-        password: validated.password,
-        unsafeMetadata: {
-          fullName: validated.fullName,
-          contactNumber: validated.contactNumber?.trim() || undefined,
-          location: validated.location?.trim() || undefined,
-        },
-      });
-
-      await clerkSignUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-      logger.info('Sign-up verification code sent');
-    },
-    [clerkSignUp]
-  );
-
-  const verifyEmail = useCallback(
-    async (code: string) => {
-      if (!clerkSignUp) throw new Error('Sign-up service unavailable');
-
-      // Zod validation
-      const validated = verifyCodeSchema.parse({ code });
-
-      const attempt = await clerkSignUp.attemptEmailAddressVerification({
-        code: validated.code,
-      });
-
-      if (attempt.status === 'complete') {
-        logger.info('Email verified successfully');
-        await setSignUpActive({ session: attempt.createdSessionId });
-        router.replace('/(app)/(tabs)');
-      } else {
-        logger.warn('Email verification incomplete', attempt);
-        throw new Error('Verification incomplete. Please try again.');
-      }
-    },
-    [clerkSignUp, setSignUpActive, router]
-  );
-
-  const resendVerificationCode = useCallback(async () => {
-    if (!clerkSignUp) throw new Error('Sign-up service unavailable');
-    await clerkSignUp.prepareEmailAddressVerification({ strategy: 'email_code' });
-    logger.info('Verification code resent');
-  }, [clerkSignUp]);
 
   const requestPasswordReset = useCallback(
     async (email: string) => {
@@ -191,33 +119,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [clerkSignIn, setSignInActive, router]
   );
 
-  const signInWithGoogle = useCallback(async () => {
-    try {
-      setIsOAuthLoading(true);
-      const redirectUrl = Linking.createURL('/(app)/(tabs)');
-      const { createdSessionId, setActive } = await startOAuthFlow({
-        redirectUrl,
-      });
-
-      if (createdSessionId && setActive) {
-        logger.info('Google OAuth successful');
-        await setActive({ session: createdSessionId });
-        router.replace('/(app)/(tabs)');
-      }
-    } catch (err: any) {
-      logger.error('Google OAuth error', err);
-      throw err;
-    } finally {
-      setIsOAuthLoading(false);
-    }
-  }, [startOAuthFlow, router]);
-
   const signOut = useCallback(async () => {
     try {
       logger.info('Signing out user');
       await clerkSignOut();
       router.replace('/(auth)/sign-in');
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error('Sign out error', err);
       throw err;
     }
@@ -228,30 +135,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isSignedIn: !!isSignedIn,
       isLoaded,
       user,
-      isOAuthLoading,
       getToken,
       signIn,
-      signUp,
-      verifyEmail,
-      resendVerificationCode,
       requestPasswordReset,
       resetPassword,
-      signInWithGoogle,
       signOut,
     }),
     [
       isSignedIn,
       isLoaded,
       user,
-      isOAuthLoading,
       getToken,
       signIn,
-      signUp,
-      verifyEmail,
-      resendVerificationCode,
       requestPasswordReset,
       resetPassword,
-      signInWithGoogle,
       signOut,
     ]
   );

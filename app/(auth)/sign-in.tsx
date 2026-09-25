@@ -14,13 +14,12 @@ import { Mail, Lock } from 'lucide-react-native';
 import * as toast from 'burnt';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { GoogleIcon } from '@/components/icons';
 import { useAuthContext } from '@/context/auth-context';
 
 export default function SignInScreen() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { signIn, signInWithGoogle, isOAuthLoading, isLoaded } = useAuthContext();
+  const { signIn, isLoaded } = useAuthContext();
 
   const [emailAddress, setEmailAddress] = useState('');
   const [password, setPassword] = useState('');
@@ -147,39 +146,6 @@ export default function SignInScreen() {
               onPress={onSignInPress}
               loading={loading}
             />
-
-            {/* Social Divider & Google SSO */}
-            <View className="flex-row items-center my-4">
-              <View className="flex-1 h-[1px] bg-slate-200" />
-              <Text className="text-xs text-slate-400 px-4 font-semibold uppercase tracking-wider">
-                Or continue with
-              </Text>
-              <View className="flex-1 h-[1px] bg-slate-200" />
-            </View>
-
-            <Button
-              variant="outline"
-              onPress={signInWithGoogle}
-              loading={isOAuthLoading}
-              className="w-full flex-row items-center gap-3 border-slate-200 bg-white shadow-none"
-            >
-              <GoogleIcon size={18} />
-              <Text className="text-sm font-semibold text-slate-800">
-                Continue with Google
-              </Text>
-            </Button>
-
-            <View className="flex-row justify-center items-center gap-1.5 mt-6 pt-4 border-t border-slate-100">
-              <Text className="text-xs text-slate-500">
-                Don't have an account?
-              </Text>
-              <Link
-                href="/(auth)/sign-up"
-                className="text-xs font-bold text-emerald-700"
-              >
-                Create Account
-              </Link>
-            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
