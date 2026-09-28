@@ -5,62 +5,84 @@ description: UI standards for ui-craftsman using honey-design, React Native Reus
 
 # UI Design & Styling Rules (ui-craftsman)
 
-## 1. Component Standards (`@rn-primitives` + `cva`)
+## 1. 1:1 Figma Design Adherence
 
-- Use React Native Reusables (`@rn-primitives`) in `src/components/ui/` for **all** core primitives: `Button`, `Input`, `Card`, `Dialog`, `Avatar`, `Tabs`, `Separator`, `Label`, `Switch`, `Select`, `Checkbox`.
+- **Visual Fidelity**: Replicate Figma screens, layouts, component hierarchies, spacings, and copy exactly.
+- **Component Geometry & Radii**:
+  - Buttons: `rounded-full` (Figma `50px` pill).
+  - Cards & Inputs: `rounded-2xl` (Figma `14px` radius).
+  - Menu list items / rows: `rounded-lg` (Figma `8px` radius).
+  - Input field border width: `1.5px` (`border-[1.5px]`).
+- **Complete State Coverage**:
+  - Always implement all interactive states shown in Figma: idle, focused, loading, disabled, error states (e.g., incorrect OTP, password mismatch), and confirmation/success modals.
+
+## 2. Strict Adherence to Global Theme Colors (`global.css`)
+
+- Style **exclusively** with semantic theme variables defined in `global.css`. Never use raw hex/rgb values or hardcoded generic palette classes (`bg-emerald-*`, `bg-slate-*`, `bg-white`) for themed surfaces:
+  - Background: `bg-background` (`#FAF9EE` warm cream)
+  - Card & Surfaces: `bg-card` (`#FAF9EE`)
+  - Primary Brand: `bg-primary` (`#718619` olive green), `text-primary-foreground` (`#FAF9EE`)
+  - Secondary Action: `bg-secondary` (`#E2E1DC` stone gray), `text-secondary-foreground` (`#414141`)
+  - Primary Text / Headings: `text-foreground` (`#414141` charcoal)
+  - Secondary / Helper Text: `text-muted-foreground` (`#96958F`)
+  - Inactive Navigation: `text-[#AFAEA7]`
+  - Borders: `border-border` (`#D3D2CB` card outlines), `border-input` (`#C8C7BE` input strokes)
+  - Destructive / Errors: `bg-destructive`, `text-destructive`, `border-destructive` (`#E84C4C`)
+  - Accent / Focus Ring: `ring-primary`
+
+## 3. Mandatory Keyboard Avoidance & Form Handling
+
+- Every screen containing text inputs or form submission MUST implement keyboard avoidance:
+  - Wrap screen content with `KeyboardAvoidingView` using `behavior={Platform.OS === 'ios' ? 'padding' : 'height'}`.
+  - Wrap inputs inside a `ScrollView` with `keyboardShouldPersistTaps="handled"` and `showsVerticalScrollIndicator={false}`.
+  - Implement dismiss-on-tap outside: wrap non-interactive background areas in `TouchableWithoutFeedback` calling `Keyboard.dismiss`.
+  - Ensure action buttons (e.g. submit, next, log in) remain visible and accessible when the virtual keyboard is open.
+
+## 4. Typography & Font Mapping
+
+- SAGANA Mobile uses **Spotify Mix** loaded from `assets/fonts/` via `expo-font`:
+  - `font-sans`: `SpotifyMix-Regular` (400) — input placeholders, bullet descriptions
+  - `font-medium`: `SpotifyMix-Medium` (500) — body text, input value text
+  - `font-semibold`: `SpotifyMix-Bold` (600/700) — card titles, field labels, badges
+  - `font-bold`: `SpotifyMix-Bold` (700) — screen titles (`text-2xl`/`text-3xl`), primary button labels
+- Never leave text unstyled with default system fonts.
+
+## 5. Component Standards (`@rn-primitives` + `cva`)
+
+- Use React Native Reusables (`@rn-primitives`) in `src/components/ui/` for core primitives: `Button`, `Input`, `Card`, `Dialog`, `Avatar`, `Tabs`, `Separator`, `Label`, `Switch`, `Select`, `Checkbox`.
 - All components must expose standard `variant` and `size` props via `class-variance-authority` (`cva`).
-- **Reuse first**: Always check if a component already exists in `src/components/ui/` before creating a new one. Only create new components when no existing primitive covers the need.
+- **Reuse first**: Always check if a component already exists in `src/components/ui/` before creating a new one.
 
-## 2. Uniwind & Theme Tokens
+## 6. Icons — Lucide & Custom SVG Brand Icons
 
-- Style **exclusively** using Uniwind utility classes (`className` prop) and CSS theme variables defined in `global.css`.
-- **Standard Scale over Arbitrary Values**: Always use the predefined Tailwind scale tokens instead of arbitrary values (e.g. use `p-3`, `p-4`, `gap-4`, `rounded-xl`, `text-sm`, `h-12` instead of `p-[12px]`, `p-[16px]`, `gap-[16px]`, `rounded-[12px]`, `text-[14px]`, `h-[48px]`). Arbitrary bracket syntax (`[...]`) is strictly reserved for edge-case hardware/dynamic metrics that cannot map to the scale.
-- Use semantic theme tokens to guarantee dark/light mode compatibility:
-  - Backgrounds: `bg-background`, `bg-card`, `bg-muted`, `bg-primary`, `bg-secondary`, `bg-destructive`
-  - Text: `text-foreground`, `text-muted-foreground`, `text-primary-foreground`, `text-card-foreground`
-  - Borders: `border-border`, `border-input`
-  - Ring: `ring-ring`
-- **Never** use raw hex/rgb colors in className or inline styles for themed surfaces (e.g. `bg-[#10b981]` is banned in favor of `bg-emerald-600` or `bg-primary`). Use theme tokens or Tailwind color classes.
-- Inline `style={}` is allowed **only** for fixed numeric dimensions (image width/height, dynamic insets) that Tailwind cannot express.
+- Use **`lucide-react-native`** for all standard UI icons (`Mail`, `Lock`, `User`, `Phone`, `MapPin`, `Check`, `AlertCircle`, etc.).
+- Place custom brand vector icons in **`src/components/icons/`** using `react-native-svg` (e.g. `GoogleIcon`).
+- Use theme tokens or palette colors for icon strokes (e.g. `color="#414141"` or `color="#718619"`).
 
-## 3. Icons — Lucide & Custom SVG Brand Icons
-
-- Use **`lucide-react-native`** for all standard UI icons (`Mail`, `Lock`, `User`, `Phone`, `MapPin`, etc.).
-- Place brand vector icons in **`src/components/icons/`** using `react-native-svg` (e.g. `GoogleIcon`).
-- Common pattern: `<Mail size={18} color="#94a3b8" />`, `<GoogleIcon size={18} />`.
-
-## 4. Safe Area — `useSafeAreaInsets()` Hook
+## 7. Safe Area — `useSafeAreaInsets()` Hook
 
 - Use `useSafeAreaInsets()` from `react-native-safe-area-context` for safe area handling.
 - **Do NOT** use the legacy `<SafeAreaView>` wrapper component.
 - Apply insets directly via style: `style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}`.
 
-## 5. Honey-Design Efficiency
+## 8. Honey-Design Efficiency
 
 - **Compact, token-dense markup**: Every `<View>` must earn its existence. If a parent can carry the styles, don't add a wrapper.
 - **Flat hierarchies**: Flatten nested View trees. Prefer `gap-*` on a parent over margin on each child.
 - **Shared classes**: Extract repeated className strings into a `const` or a `cva` variant rather than duplicating long class lists.
-- **Minimal state**: Derive values from existing state instead of creating new state variables. Use `useMemo` only when profiling shows a need.
-- **No speculative abstractions**: Don't create "generic" wrappers, HOCs, or context providers unless 3+ consumers exist today.
+- **Minimal state**: Derive values from existing state instead of creating new state variables.
 
-## 6. Animations & Transitions
+## 9. Animations & Micro-Interactions
 
-- Use `react-native-reanimated` for all animations. Prefer `Animated.View` with shared values.
-- Animations must be **smooth** — use spring configs (`withSpring`) for natural motion, timing for linear fades.
-- Keep animation durations short: 150–300ms for micro-interactions, 300–500ms for page transitions.
-- Avoid layout thrashing — animate `transform` and `opacity` only, not `width`/`height`/`top`/`left`.
-
-## 7. Micro-Interactions & Haptics
-
-- Include tactile vibration feedback via `expo-haptics` on button presses, toggles, destructive actions, and form submissions.
-- Use `ImpactFeedbackStyle.Light` for taps, `.Medium` for toggles, `.Heavy` for destructive.
+- Use `react-native-reanimated` for smooth animations (spring configs `withSpring` for natural motion, 150–300ms duration).
+- Include tactile vibration feedback via `expo-haptics`:
+  - `Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)` on button presses and OTP typing.
+  - `Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)` on validation failures.
 - Surface backend errors and notifications using `burnt` native toasts — never use `Alert.alert()` for API errors.
-- Prevent keyboard overlaps with `KeyboardAvoidingView` (behavior `padding` on iOS, `height` on Android) on all scrollable screens.
 
-## 8. UX Fundamentals
+## 10. UX Fundamentals
 
 - **Touch targets**: Minimum 44×44pt hit area on all interactive elements.
 - **Loading states**: Every async action must show a loading indicator (spinner, skeleton, or disabled state).
-- **Error states**: Display inline error text below inputs; use `burnt` toast for global errors.
-- **Empty states**: Never show a blank screen — provide helpful messaging and a CTA.
-- **Keyboard dismiss**: Scrollable screens should dismiss keyboard on scroll/tap outside inputs.
+- **Inline errors**: Display inline error text directly below inputs (`text-xs text-destructive mt-1 font-medium`).
+- **Empty states**: Never show a blank screen — provide clear messaging and a CTA.

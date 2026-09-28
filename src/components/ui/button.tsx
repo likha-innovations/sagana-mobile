@@ -11,21 +11,21 @@ import * as Haptics from 'expo-haptics';
 import { cn } from '@/lib/utils';
 
 export const buttonVariants = cva(
-  'w-full flex-row items-center justify-center rounded-xl transition-all active:opacity-85 disabled:opacity-50',
+  'w-full flex-row items-center justify-center rounded-full transition-all active:opacity-85 disabled:opacity-50',
   {
     variants: {
       variant: {
-        default: 'bg-emerald-700 active:bg-emerald-800 shadow-sm shadow-emerald-700/20',
-        secondary: 'bg-slate-100 active:bg-slate-200',
-        outline: 'border border-slate-200 bg-white active:bg-slate-50',
-        destructive: 'bg-rose-600 active:bg-rose-700 shadow-sm shadow-rose-600/20',
-        ghost: 'bg-transparent active:bg-slate-100',
+        default: 'bg-primary active:opacity-90 shadow-sm shadow-primary/20',
+        secondary: 'bg-secondary active:opacity-90',
+        outline: 'border border-border bg-background active:bg-muted',
+        destructive: 'bg-destructive active:opacity-90 shadow-sm shadow-destructive/20',
+        ghost: 'bg-transparent active:bg-muted',
         link: 'bg-transparent underline-offset-4',
       },
       size: {
         default: 'h-12 px-5 py-3',
-        sm: 'h-10 rounded-lg px-3.5',
-        lg: 'h-14 rounded-2xl px-8',
+        sm: 'h-10 px-3.5',
+        lg: 'h-14 px-8',
         icon: 'h-10 w-10 p-0',
       },
     },
@@ -39,12 +39,12 @@ export const buttonVariants = cva(
 export const buttonTextVariants = cva('font-semibold text-center select-none', {
   variants: {
     variant: {
-      default: 'text-white',
-      secondary: 'text-slate-800',
-      outline: 'text-slate-700',
-      destructive: 'text-white',
-      ghost: 'text-slate-700',
-      link: 'text-emerald-700 underline',
+      default: 'text-primary-foreground',
+      secondary: 'text-secondary-foreground',
+      outline: 'text-foreground',
+      destructive: 'text-destructive-foreground',
+      ghost: 'text-foreground',
+      link: 'text-primary underline',
     },
     size: {
       default: 'text-base',

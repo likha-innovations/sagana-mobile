@@ -41,30 +41,30 @@ export const Input = forwardRef<TextInput, InputProps>(
     return (
       <View className={cn('w-full mb-3.5', containerClassName)}>
         {label && (
-          <Text className="text-xs font-semibold text-slate-700 mb-1.5">
+          <Text className="text-xs font-semibold text-foreground mb-1.5">
             {label}
           </Text>
         )}
         <View
           className={cn(
-            'w-full h-12 flex-row items-center rounded-xl border px-3.5 transition-all',
+            'w-full h-12 flex-row items-center rounded-2xl border px-3.5 transition-all',
             error
-              ? 'border-red-500 bg-red-50/50'
+              ? 'border-destructive bg-destructive/5'
               : isFocused
-                ? 'border-emerald-600 bg-white ring-2 ring-emerald-600/15'
-                : 'border-slate-200 bg-slate-50'
+                ? 'border-primary bg-background ring-2 ring-primary/15'
+                : 'border-input bg-background'
           )}
         >
           {leadingIcon && <View className="mr-2.5">{leadingIcon}</View>}
 
           <TextInput
             ref={ref}
-            placeholderTextColor="#94a3b8"
+            placeholderTextColor="#96958F"
             secureTextEntry={isSecure}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             className={cn(
-              'flex-1 h-full text-sm font-medium text-slate-900',
+              'flex-1 h-full text-sm font-medium text-foreground',
               className
             )}
             {...props}

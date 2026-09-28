@@ -11,28 +11,31 @@ Theme tokens are defined in `global.css` using CSS custom properties with automa
 ```css
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --primary: 152 76% 36%;           /* Sagana Emerald */
-    --primary-foreground: 355.7 100% 97.3%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 152 76% 36%;
+    --background: 55 55% 96%;        /* #FAF9EE - Warm Cream */
+    --foreground: 0 0% 25.5%;        /* #414141 - Dark Charcoal */
+    --card: 55 55% 96%;
+    --card-foreground: 0 0% 25.5%;
+    --primary: 71.6 68.6% 31.2%;     /* #718619 - Sagana Olive */
+    --primary-foreground: 55 55% 96%;
+    --secondary: 50 9.4% 87.5%;      /* #E2E1DC - Stone Gray */
+    --secondary-foreground: 0 0% 25.5%;
+    --muted: 50 9.4% 87.5%;
+    --muted-foreground: 51 3.5% 57.5%; /* #96958F - Muted Text */
+    --border: 52 8% 81.2%;           /* #D3D2CB - Card Border */
+    --input: 54 8.5% 76.5%;          /* #C8C7BE - Input Border */
+    --destructive: 0 77.2% 60.4%;    /* #E84C4C - Error Red */
+    --ring: 71.6 68.6% 31.2%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 6.5%;
-    --card-foreground: 210 40% 98%;
-    --primary: 152 76% 42%;
-    --primary-foreground: 144.9 80.4% 10%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+    --background: 60 10% 10%;
+    --foreground: 55 55% 96%;
+    --card: 60 11% 13%;
+    --card-foreground: 55 55% 96%;
+    --primary: 71 68% 44%;
+    --primary-foreground: 60 10% 10%;
+    --border: 60 11% 22%;
+    --input: 60 11% 22%;
   }
 }
 ```
@@ -93,3 +96,14 @@ Custom typography uses Google's **Montserrat** font family loaded via `@expo-goo
 - **Safe Areas**: Use `useSafeAreaInsets()` from `react-native-safe-area-context` instead of legacy `<SafeAreaView>`.
 - **Haptic Feedback**: Use `expo-haptics` on all primary buttons, tab switches, and confirmations (`Haptics.ImpactFeedbackStyle.Light`).
 - **Toasts**: Use `burnt` native toasts for asynchronous feedback.
+
+---
+
+## ⌨️ Mandatory Keyboard Avoidance & Form Handling
+
+Every screen containing inputs or forms MUST implement keyboard avoidance so inputs and buttons never get blocked:
+
+- **KeyboardAvoidingView**: Wrap screen contents with `KeyboardAvoidingView` using `behavior={Platform.OS === 'ios' ? 'padding' : 'height'}`.
+- **Scroll Container**: Inputs must live inside a `ScrollView` with `keyboardShouldPersistTaps="handled"` and `showsVerticalScrollIndicator={false}`.
+- **Dismiss on Background Tap**: Wrap outside non-interactive areas in `TouchableWithoutFeedback` calling `Keyboard.dismiss`.
+- **Submit Visibility**: Ensure CTA buttons (e.g. Next, Submit, Save) remain visible above the software keyboard.

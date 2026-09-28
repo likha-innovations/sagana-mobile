@@ -1,65 +1,74 @@
 @import "tailwindcss";
 @import "uniwind";
 
+@theme {
+  --color-background: #FAF9EE;
+  --color-foreground: #414141;
+  --color-card: #FAF9EE;
+  --color-card-foreground: #414141;
+  --color-popover: #FAF9EE;
+  --color-popover-foreground: #414141;
+  --color-primary: #718619;
+  --color-primary-foreground: #FAF9EE;
+  --color-secondary: #E2E1DC;
+  --color-secondary-foreground: #414141;
+  --color-muted: #E2E1DC;
+  --color-muted-foreground: #96958F;
+  --color-accent: #E2E1DC;
+  --color-accent-foreground: #414141;
+  --color-destructive: #E84C4C;
+  --color-destructive-foreground: #FAF9EE;
+  --color-border: #D3D2CB;
+  --color-input: #C8C7BE;
+  --color-ring: #718619;
+}
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 152 76% 36%;
-    --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 152 76% 36%;
-    --radius: 0.5rem;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 6.5%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 6.5%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 152 76% 42%;
-    --primary-foreground: 144.9 80.4% 10%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 152 76% 42%;
+    --background: #FAF9EE;
+    --foreground: #414141;
+    --card: #FAF9EE;
+    --card-foreground: #414141;
+    --primary: #718619;
+    --primary-foreground: #FAF9EE;
+    --secondary: #E2E1DC;
+    --secondary-foreground: #414141;
+    --muted: #E2E1DC;
+    --muted-foreground: #96958F;
+    --border: #D3D2CB;
+    --input: #C8C7BE;
+    --destructive: #E84C4C;
   }
 }
 
 .font-sans {
-  font-family: 'Montserrat-Regular';
+  font-family: 'SpotifyMix-Regular';
 }
 
 .font-medium {
-  font-family: 'Montserrat-Medium';
+  font-family: 'SpotifyMix-Medium';
 }
 
 .font-semibold {
-  font-family: 'Montserrat-SemiBold';
+  font-family: 'SpotifyMix-Bold';
 }
 
 .font-bold {
-  font-family: 'Montserrat-Bold';
+  font-family: 'SpotifyMix-Bold';
+}
+
+.font-extrabold {
+  font-family: 'SpotifyMix-Extrabold';
+}
+
+.font-black {
+  font-family: 'SpotifyMix-Black';
+}
+
+.font-light {
+  font-family: 'SpotifyMix-Light';
+}
+
+.font-thin {
+  font-family: 'SpotifyMix-Thin';
 }

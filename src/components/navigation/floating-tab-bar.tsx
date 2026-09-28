@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 11,
-    fontFamily: 'Montserrat-Medium',
+    fontFamily: 'SpotifyMix-Medium',
   },
   tabLabelActive: {
     color: '#15803d',

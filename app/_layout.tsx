@@ -1,20 +1,15 @@
 import '../global.css';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
 import { ClerkProvider, ClerkLoaded } from '@clerk/expo';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import {
-  useFonts,
-  Montserrat_400Regular,
-  Montserrat_500Medium,
-  Montserrat_600SemiBold,
-  Montserrat_700Bold,
-} from '@expo-google-fonts/montserrat';
+import { useFonts } from 'expo-font';
 import { tokenCache } from '@/lib/token-cache';
 import { AuthProvider, useAuthContext } from '@/context/auth-context';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('RootLayout');
@@ -79,10 +74,17 @@ export default function RootLayout() {
   );
 
   const [fontsLoaded, fontError] = useFonts({
-    'Montserrat-Regular': Montserrat_400Regular,
-    'Montserrat-Medium': Montserrat_500Medium,
-    'Montserrat-SemiBold': Montserrat_600SemiBold,
-    'Montserrat-Bold': Montserrat_700Bold,
+    'SpotifyMix-Regular': require('../assets/fonts/SpotifyMix-Regular.ttf'),
+    'SpotifyMix-Medium': require('../assets/fonts/SpotifyMix-Medium.ttf'),
+    'SpotifyMix-Bold': require('../assets/fonts/SpotifyMix-Bold.ttf'),
+    'SpotifyMix-Extrabold': require('../assets/fonts/SpotifyMix-Extrabold.ttf'),
+    'SpotifyMix-Black': require('../assets/fonts/SpotifyMix-Black.ttf'),
+    'SpotifyMix-Light': require('../assets/fonts/SpotifyMix-Light.ttf'),
+    'SpotifyMix-Thin': require('../assets/fonts/SpotifyMix-Thin.ttf'),
+    'Montserrat-Regular': require('../assets/fonts/SpotifyMix-Regular.ttf'),
+    'Montserrat-Medium': require('../assets/fonts/SpotifyMix-Medium.ttf'),
+    'Montserrat-SemiBold': require('../assets/fonts/SpotifyMix-Bold.ttf'),
+    'Montserrat-Bold': require('../assets/fonts/SpotifyMix-Bold.ttf'),
   });
 
   useEffect(() => {
@@ -105,8 +107,10 @@ export default function RootLayout() {
         <ClerkLoaded>
           <AuthProvider>
             <QueryClientProvider client={queryClient}>
-              <StatusBar style="auto" />
-              <AuthProtectedNavigation />
+              <BottomSheetModalProvider>
+                <StatusBar style="auto" />
+                <AuthProtectedNavigation />
+              </BottomSheetModalProvider>
             </QueryClientProvider>
           </AuthProvider>
         </ClerkLoaded>
