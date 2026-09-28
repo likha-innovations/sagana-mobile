@@ -1,7 +1,6 @@
 import { api } from './client';
 import { User, UpdateProfileInput } from '@/types';
 
-// User & Profile REST API Endpoints (sagana-backend UsersController)
 export const userApi = {
   // GET /me — Fetches current authenticated user profile
   getProfile: () => api.get<User>('/me'),

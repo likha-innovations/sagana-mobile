@@ -1,6 +1,6 @@
 import { createContext, useContext, useCallback, useMemo, useEffect, type ReactNode } from 'react';
 import { useAuth, useUser } from '@clerk/expo';
-import { useSignIn } from '@clerk/expo/legacy';
+import { useSignIn, useSignUp } from '@clerk/expo/legacy';
 import { useRouter } from 'expo-router';
 import {
   User,
@@ -19,6 +19,9 @@ interface AuthContextType {
   user: User | null;
   getToken: () => Promise<string | null>;
   signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string) => Promise<void>;
+  verifyEmail: (code: string) => Promise<void>;
+  completeSignUp: (firstName: string, lastName: string, birthday: string) => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (code: string, newPassword: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -31,8 +34,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { isSignedIn, isLoaded: authLoaded, signOut: clerkSignOut, getToken } = useAuth();
   const { user: clerkUser, isLoaded: userLoaded } = useUser();
   const { signIn: clerkSignIn, setActive: setSignInActive, isLoaded: signInLoaded } = useSignIn();
+  const { signUp: clerkSignUp, setActive: setSignUpActive, isLoaded: signUpLoaded } = useSignUp();
 
-  const isLoaded = authLoaded && userLoaded && signInLoaded;
+  const isLoaded = authLoaded && userLoaded && signInLoaded && Boolean(signUpLoaded);
 
   // Automatically wire Clerk's active JWT getter into native apiFetch
   useEffect(() => {
@@ -119,6 +123,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [clerkSignIn, setSignInActive, router]
   );
 
+  const signUp = useCallback(
+    async (email: string) => {
+      if (!clerkSignUp) throw new Error('Sign-up service unavailable');
+      await clerkSignUp.create({ emailAddress: email });
+      await clerkSignUp.prepareEmailAddressVerification({ strategy: 'email_code' });
+      logger.info('Sign-up initiated, verification code sent');
+    },
+    [clerkSignUp]
+  );
+
+  const verifyEmail = useCallback(
+    async (code: string) => {
+      if (!clerkSignUp) throw new Error('Sign-up service unavailable');
+      const attempt = await clerkSignUp.attemptEmailAddressVerification({ code });
+      if (attempt.status !== 'complete') {
+        logger.warn('Email verification incomplete', attempt);
+      }
+      logger.info('Email verified successfully');
+    },
+    [clerkSignUp]
+  );
+
+  const completeSignUp = useCallback(
+    async (firstName: string, lastName: string, birthday: string) => {
+      if (!clerkSignUp) throw new Error('Sign-up service unavailable');
+      const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+
+      try {
+        await clerkSignUp.update({
+          unsafeMetadata: {
+            fullName,
+            birthday: birthday.trim(),
+          },
+        });
+      } catch (e) {
+        logger.warn('Metadata update notice', e);
+      }
+
+      if (clerkSignUp.createdSessionId) {
+        await setSignUpActive({ session: clerkSignUp.createdSessionId });
+        router.replace('/(app)/(tabs)');
+      } else {
+        router.replace('/(auth)/sign-in');
+      }
+      logger.info('Sign up completed for', fullName);
+    },
+    [clerkSignUp, setSignUpActive, router]
+  );
+
   const signOut = useCallback(async () => {
     try {
       logger.info('Signing out user');
@@ -137,6 +190,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       getToken,
       signIn,
+      signUp,
+      verifyEmail,
+      completeSignUp,
       requestPasswordReset,
       resetPassword,
       signOut,
@@ -147,6 +203,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       getToken,
       signIn,
+      signUp,
+      verifyEmail,
+      completeSignUp,
       requestPasswordReset,
       resetPassword,
       signOut,
