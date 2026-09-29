@@ -12,6 +12,8 @@ import {
   ActivityIndicator,
   useWindowDimensions,
   type TextInputProps,
+  type NativeSyntheticEvent,
+  type TextInputKeyPressEventData,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -260,6 +262,205 @@ function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupPr
   );
 }
 
+// Segmented Direct Number Input for Date of Birth (MM / DD / YYYY)
+interface SegmentedDateInputProps {
+  month: string;
+  day: string;
+  year: string;
+  onChangeMonth: (m: string) => void;
+  onChangeDay: (d: string) => void;
+  onChangeYear: (y: string) => void;
+  hasError?: boolean;
+  onSubmitEditing?: () => void;
+  monthRef: RefObject<TextInput | null>;
+  dayRef: RefObject<TextInput | null>;
+  yearRef: RefObject<TextInput | null>;
+}
+
+function SegmentedDateInput({
+  month,
+  day,
+  year,
+  onChangeMonth,
+  onChangeDay,
+  onChangeYear,
+  hasError = false,
+  onSubmitEditing,
+  monthRef,
+  dayRef,
+  yearRef,
+}: SegmentedDateInputProps) {
+  const [focusedField, setFocusedField] = useState<'month' | 'day' | 'year' | null>(null);
+
+  const handleMonthChange = (text: string) => {
+    const cleaned = text.replace(/[^0-9]/g, '');
+    if (cleaned.length > 2) {
+      const m = cleaned.slice(0, 2);
+      const d = cleaned.slice(2, 4);
+      const y = cleaned.slice(4, 8);
+      onChangeMonth(m);
+      if (d) onChangeDay(d);
+      if (y) onChangeYear(y);
+      if (y.length === 4) {
+        Keyboard.dismiss();
+      } else if (d.length === 2) {
+        yearRef.current?.focus();
+      } else {
+        dayRef.current?.focus();
+      }
+      return;
+    }
+
+    onChangeMonth(cleaned);
+    if (cleaned.length === 2) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      dayRef.current?.focus();
+    }
+  };
+
+  const handleDayChange = (text: string) => {
+    const cleaned = text.replace(/[^0-9]/g, '').slice(0, 2);
+    onChangeDay(cleaned);
+    if (cleaned.length === 2) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      yearRef.current?.focus();
+    }
+  };
+
+  const handleYearChange = (text: string) => {
+    const cleaned = text.replace(/[^0-9]/g, '').slice(0, 4);
+    onChangeYear(cleaned);
+    if (cleaned.length === 4) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      Keyboard.dismiss();
+    }
+  };
+
+  const handleDayKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
+    if (e.nativeEvent.key === 'Backspace' && (!day || day.length === 0)) {
+      monthRef.current?.focus();
+    }
+  };
+
+  const handleYearKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
+    if (e.nativeEvent.key === 'Backspace' && (!year || year.length === 0)) {
+      dayRef.current?.focus();
+    }
+  };
+
+  return (
+    <View className="w-full">
+      <Text className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 ml-1">
+        Date of Birth
+      </Text>
+      <View className="w-full flex-row items-center justify-between gap-2.5">
+        <Pressable
+          onPress={() => monthRef.current?.focus()}
+          className={cn(
+            'flex-1 h-[58px] rounded-2xl border-[1.5px] bg-background items-center justify-center px-2',
+            hasError
+              ? 'border-destructive bg-destructive/[0.03]'
+              : focusedField === 'month'
+                ? 'border-foreground/40'
+                : 'border-input'
+          )}
+        >
+          <Text className="text-[10px] font-sans text-muted-foreground uppercase mb-0.5">
+            Month
+          </Text>
+          <TextInput
+            ref={monthRef}
+            value={month}
+            onChangeText={handleMonthChange}
+            onFocus={() => setFocusedField('month')}
+            onBlur={() => setFocusedField(null)}
+            placeholder="MM"
+            placeholderTextColor="#96958F"
+            keyboardType="number-pad"
+            maxLength={2}
+            textAlign="center"
+            className="text-[16px] font-bold text-foreground p-0 m-0 w-full"
+            returnKeyType="next"
+            onSubmitEditing={() => dayRef.current?.focus()}
+          />
+        </Pressable>
+
+        <Text className="text-[18px] font-sans text-muted-foreground select-none">
+          /
+        </Text>
+
+        <Pressable
+          onPress={() => dayRef.current?.focus()}
+          className={cn(
+            'flex-1 h-[58px] rounded-2xl border-[1.5px] bg-background items-center justify-center px-2',
+            hasError
+              ? 'border-destructive bg-destructive/[0.03]'
+              : focusedField === 'day'
+                ? 'border-foreground/40'
+                : 'border-input'
+          )}
+        >
+          <Text className="text-[10px] font-sans text-muted-foreground uppercase mb-0.5">
+            Day
+          </Text>
+          <TextInput
+            ref={dayRef}
+            value={day}
+            onChangeText={handleDayChange}
+            onKeyPress={handleDayKeyPress}
+            onFocus={() => setFocusedField('day')}
+            onBlur={() => setFocusedField(null)}
+            placeholder="DD"
+            placeholderTextColor="#96958F"
+            keyboardType="number-pad"
+            maxLength={2}
+            textAlign="center"
+            className="text-[16px] font-bold text-foreground p-0 m-0 w-full"
+            returnKeyType="next"
+            onSubmitEditing={() => yearRef.current?.focus()}
+          />
+        </Pressable>
+
+        <Text className="text-[18px] font-sans text-muted-foreground select-none">
+          /
+        </Text>
+
+        <Pressable
+          onPress={() => yearRef.current?.focus()}
+          className={cn(
+            'flex-[1.4] h-[58px] rounded-2xl border-[1.5px] bg-background items-center justify-center px-2',
+            hasError
+              ? 'border-destructive bg-destructive/[0.03]'
+              : focusedField === 'year'
+                ? 'border-foreground/40'
+                : 'border-input'
+          )}
+        >
+          <Text className="text-[10px] font-sans text-muted-foreground uppercase mb-0.5">
+            Year
+          </Text>
+          <TextInput
+            ref={yearRef}
+            value={year}
+            onChangeText={handleYearChange}
+            onKeyPress={handleYearKeyPress}
+            onFocus={() => setFocusedField('year')}
+            onBlur={() => setFocusedField(null)}
+            placeholder="YYYY"
+            placeholderTextColor="#96958F"
+            keyboardType="number-pad"
+            maxLength={4}
+            textAlign="center"
+            className="text-[16px] font-bold text-foreground p-0 m-0 w-full"
+            returnKeyType="done"
+            onSubmitEditing={onSubmitEditing}
+          />
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 type SignUpStep = 'email' | 'otp' | 'name' | 'birthday';
 
 export default function SignUpScreen() {
@@ -291,11 +492,15 @@ export default function SignUpScreen() {
   const firstNameRef = useRef<TextInput>(null);
   const lastNameRef = useRef<TextInput>(null);
 
-  // Step 4: Birthday State
-  const [birthday, setBirthday] = useState('');
+  // Step 4: Birthday State (Segmented MM / DD / YYYY)
+  const [birthMonth, setBirthMonth] = useState('');
+  const [birthDay, setBirthDay] = useState('');
+  const [birthYear, setBirthYear] = useState('');
   const [birthdayError, setBirthdayError] = useState(false);
   const [birthdayErrorMessage, setBirthdayErrorMessage] = useState<string | null>(null);
-  const birthdayRef = useRef<TextInput>(null);
+  const birthMonthRef = useRef<TextInput>(null);
+  const birthDayRef = useRef<TextInput>(null);
+  const birthYearRef = useRef<TextInput>(null);
 
   // Modals
   const [loading, setLoading] = useState(false);
@@ -338,6 +543,7 @@ export default function SignUpScreen() {
 
   // --- Step 1: Submit Email ---
   const handleNextEmail = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const trimmed = email.trim();
     if (!trimmed) {
       setEmailError(true);
@@ -379,6 +585,7 @@ export default function SignUpScreen() {
 
   // --- Step 2: Verify OTP ---
   const handleVerifyOtp = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const trimmedCode = otpCode.trim();
     if (trimmedCode.length !== 6) {
       setOtpError(true);
@@ -422,6 +629,7 @@ export default function SignUpScreen() {
 
   // --- Step 3: Validate Name ---
   const handleNextName = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const trimmedFirst = firstName.trim();
     const trimmedLast = lastName.trim();
 
@@ -439,21 +647,60 @@ export default function SignUpScreen() {
 
   // --- Step 4: Finish Birthday & Complete Registration ---
   const handleFinish = async () => {
-    const trimmedBirthday = birthday.trim();
-    if (!trimmedBirthday) {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const m = birthMonth.trim();
+    const d = birthDay.trim();
+    const y = birthYear.trim();
+
+    if (!m || !d || !y) {
       setBirthdayError(true);
-      setBirthdayErrorMessage('Please enter your birthday');
+      setBirthdayErrorMessage('Please enter your complete date of birth');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
-    setLoading(true);
+    const monthNum = parseInt(m, 10);
+    const dayNum = parseInt(d, 10);
+    const yearNum = parseInt(y, 10);
+    const currentYear = new Date().getFullYear();
+
+    if (monthNum < 1 || monthNum > 12) {
+      setBirthdayError(true);
+      setBirthdayErrorMessage('Please enter a valid month (01–12)');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+
+    if (yearNum < 1900 || yearNum > currentYear) {
+      setBirthdayError(true);
+      setBirthdayErrorMessage(`Please enter a valid year between 1900 and ${currentYear}`);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+
+    const daysInMonth = new Date(yearNum, monthNum, 0).getDate();
+    if (dayNum < 1 || dayNum > daysInMonth) {
+      setBirthdayError(true);
+      setBirthdayErrorMessage(`Please enter a valid day for the chosen month (01–${daysInMonth})`);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+
+    if (yearNum > currentYear - 5) {
+      setBirthdayError(true);
+      setBirthdayErrorMessage('Please enter a valid birth year');
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+
+    const formattedBirthday = `${m.padStart(2, '0')}/${d.padStart(2, '0')}/${y}`;
     setBirthdayError(false);
     setBirthdayErrorMessage(null);
+    setLoading(true);
 
     try {
       if (isLoaded) {
-        await completeSignUp(firstName, lastName, trimmedBirthday);
+        await completeSignUp(firstName, lastName, formattedBirthday);
       } else {
         router.replace('/(auth)/sign-in');
       }
@@ -466,6 +713,7 @@ export default function SignUpScreen() {
   };
 
   const handleGooglePress = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setGeneralErrorModal(true);
   };
 
@@ -482,9 +730,10 @@ export default function SignUpScreen() {
           <ScrollView
             contentContainerStyle={{
               flexGrow: 1,
+              justifyContent: 'space-between',
               alignItems: 'center',
               paddingTop: isCompact ? 16 : 24,
-              paddingBottom: 28,
+              paddingBottom: 24,
               paddingHorizontal: 20,
             }}
             keyboardShouldPersistTaps="handled"
@@ -496,7 +745,7 @@ export default function SignUpScreen() {
                 <Pressable
                   onPress={handleBack}
                   hitSlop={12}
-                  className="w-[30px] h-[30px] items-center justify-center -ml-1"
+                  className="w-10 h-10 items-start justify-center"
                   accessibilityRole="button"
                   accessibilityLabel="Go back"
                 >
@@ -511,7 +760,7 @@ export default function SignUpScreen() {
                     />
                   </View>
                 )}
-                <View className="w-[30px]" />
+                <View className="w-10" />
               </View>
 
               {/* --- SCREEN 1: Create your account (Email) --- */}
@@ -549,9 +798,9 @@ export default function SignUpScreen() {
                     </View>
 
                     {/* Divider: or continue with */}
-                    <View className="w-full max-w-[320px] self-center flex-row items-center justify-between my-1">
+                    <View className="w-full flex-row items-center justify-between my-2">
                       <View className="flex-1 h-[1px] bg-border" />
-                      <Text className="text-sm font-sans text-muted-foreground px-3">
+                      <Text className="text-[13px] font-sans text-muted-foreground px-3">
                         or continue with
                       </Text>
                       <View className="flex-1 h-[1px] bg-border" />
@@ -560,50 +809,34 @@ export default function SignUpScreen() {
                     {/* Google SSO Button */}
                     <Pressable
                       onPress={handleGooglePress}
-                      className="w-full h-[45px] rounded-full bg-secondary flex-row items-center justify-center gap-2.5 active:opacity-85"
+                      className="w-full h-[50px] rounded-full bg-secondary flex-row items-center justify-center gap-2.5 active:opacity-85"
                       accessibilityRole="button"
                       accessibilityLabel="Sign up with Google"
                     >
                       <GoogleIcon size={18} />
-                      <Text className="text-sm font-bold text-foreground">
+                      <Text className="text-[15px] font-bold text-foreground">
                         Google
                       </Text>
                     </Pressable>
 
                     {/* Terms & Privacy Agreement Text */}
-                    <Text className="text-xs font-sans text-muted-foreground text-left leading-relaxed mt-1">
+                    <Text className="text-xs font-sans text-muted-foreground text-left leading-relaxed mt-2">
                       By continuing, you agree with the{' '}
                       <Text
                         onPress={() => handleOpenPolicy('tos')}
-                        className="text-primary font-bold underline"
+                        className="text-primary font-bold"
                       >
                         Terms of Services
                       </Text>{' '}
                       and acknowledge the{' '}
                       <Text
                         onPress={() => handleOpenPolicy('privacy')}
-                        className="text-primary font-bold underline"
+                        className="text-primary font-bold"
                       >
                         Privacy Policy
                       </Text>{' '}
                       of SAGANA
                     </Text>
-
-                    {/* Primary Action Button */}
-                    <Pressable
-                      onPress={handleNextEmail}
-                      disabled={loading}
-                      className="w-full h-[45px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60 mt-4"
-                      accessibilityRole="button"
-                    >
-                      {loading ? (
-                        <ActivityIndicator color="#FAF9EE" size="small" />
-                      ) : (
-                        <Text className="text-sm font-bold text-primary-foreground">
-                          Next
-                        </Text>
-                      )}
-                    </Pressable>
                   </View>
                 </View>
               )}
@@ -664,22 +897,6 @@ export default function SignUpScreen() {
                       </Text>
                     </Pressable>
                   </View>
-
-                  {/* Action Button */}
-                  <Pressable
-                    onPress={handleVerifyOtp}
-                    disabled={loading}
-                    className="w-full h-[45px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60 mt-6"
-                    accessibilityRole="button"
-                  >
-                    {loading ? (
-                      <ActivityIndicator color="#FAF9EE" size="small" />
-                    ) : (
-                      <Text className="text-sm font-bold text-primary-foreground">
-                        Next
-                      </Text>
-                    )}
-                  </Pressable>
                 </View>
               )}
 
@@ -728,17 +945,6 @@ export default function SignUpScreen() {
                         {nameErrorMessage}
                       </Text>
                     )}
-
-                    {/* Action Button */}
-                    <Pressable
-                      onPress={handleNextName}
-                      className="w-full h-[45px] rounded-full bg-primary items-center justify-center active:opacity-90 mt-5"
-                      accessibilityRole="button"
-                    >
-                      <Text className="text-sm font-bold text-primary-foreground">
-                        Next
-                      </Text>
-                    </Pressable>
                   </View>
                 </View>
               )}
@@ -752,45 +958,106 @@ export default function SignUpScreen() {
                     </Text>
                   </View>
 
-                  <View className="w-full gap-y-3">
-                    <FloatingInputField
-                      label="Birthday"
-                      value={birthday}
-                      onChangeText={(text) => {
-                        setBirthday(text);
+                  <View className="w-full">
+                    <SegmentedDateInput
+                      month={birthMonth}
+                      day={birthDay}
+                      year={birthYear}
+                      onChangeMonth={(val) => {
+                        setBirthMonth(val);
+                        if (birthdayError) setBirthdayError(false);
+                        if (birthdayErrorMessage) setBirthdayErrorMessage(null);
+                      }}
+                      onChangeDay={(val) => {
+                        setBirthDay(val);
+                        if (birthdayError) setBirthdayError(false);
+                        if (birthdayErrorMessage) setBirthdayErrorMessage(null);
+                      }}
+                      onChangeYear={(val) => {
+                        setBirthYear(val);
                         if (birthdayError) setBirthdayError(false);
                         if (birthdayErrorMessage) setBirthdayErrorMessage(null);
                       }}
                       hasError={birthdayError}
-                      keyboardType="numbers-and-punctuation"
-                      returnKeyType="done"
-                      inputRef={birthdayRef}
                       onSubmitEditing={handleFinish}
+                      monthRef={birthMonthRef}
+                      dayRef={birthDayRef}
+                      yearRef={birthYearRef}
                     />
 
                     {birthdayErrorMessage && (
-                      <Text className="text-xs font-sans text-destructive mt-1 ml-1 text-left">
+                      <Text className="text-xs font-sans text-destructive mt-2 ml-1 text-left">
                         {birthdayErrorMessage}
                       </Text>
                     )}
-
-                    {/* Action Button */}
-                    <Pressable
-                      onPress={handleFinish}
-                      disabled={loading}
-                      className="w-full h-[45px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60 mt-5"
-                      accessibilityRole="button"
-                    >
-                      {loading ? (
-                        <ActivityIndicator color="#FAF9EE" size="small" />
-                      ) : (
-                        <Text className="text-sm font-bold text-primary-foreground">
-                          Finish
-                        </Text>
-                      )}
-                    </Pressable>
                   </View>
                 </View>
+              )}
+            </View>
+
+            {/* Bottom Actions Container (Pinned at the bottom) */}
+            <View className="w-full max-w-[380px] pt-6 pb-2">
+              {step === 'email' && (
+                <Pressable
+                  onPress={handleNextEmail}
+                  disabled={loading}
+                  className="w-full h-[50px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+                  accessibilityRole="button"
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#FAF9EE" size="small" />
+                  ) : (
+                    <Text className="text-[15px] font-bold text-primary-foreground">
+                      Next
+                    </Text>
+                  )}
+                </Pressable>
+              )}
+
+              {step === 'otp' && (
+                <Pressable
+                  onPress={handleVerifyOtp}
+                  disabled={loading}
+                  className="w-full h-[50px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+                  accessibilityRole="button"
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#FAF9EE" size="small" />
+                  ) : (
+                    <Text className="text-[15px] font-bold text-primary-foreground">
+                      Next
+                    </Text>
+                  )}
+                </Pressable>
+              )}
+
+              {step === 'name' && (
+                <Pressable
+                  onPress={handleNextName}
+                  className="w-full h-[50px] rounded-full bg-primary items-center justify-center active:opacity-90"
+                  accessibilityRole="button"
+                >
+                  <Text className="text-[15px] font-bold text-primary-foreground">
+                    Next
+                  </Text>
+                </Pressable>
+              )}
+
+              {step === 'birthday' && (
+                <Pressable
+                  onPress={handleFinish}
+                  disabled={loading}
+                  className="w-full h-[50px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+                  accessibilityRole="button"
+                >
+                  {loading ? (
+                    <ActivityIndicator color="#FAF9EE" size="small" />
+                  ) : (
+                    <Text className="text-[15px] font-bold text-primary-foreground">
+                      Finish
+                    </Text>
+                  )}
+                </Pressable>
               )}
             </View>
           </ScrollView>
