@@ -11,10 +11,11 @@ import { useProfile, useBarangays } from '@/hooks';
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { user: authUser, signOut } = useAuthContext();
+  const { user: authUser, signOut, clerkUser } = useAuthContext();
   const { data: profileData } = useProfile();
   const { data: barangays = [] } = useBarangays();
   const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
+  const isGoogleUser = clerkUser?.externalAccounts?.some((acc: any) => acc.provider === 'oauth_google');
 
   const user = profileData || authUser;
 
@@ -71,25 +72,32 @@ export default function ProfileScreen() {
               <Text className="text-[14px] text-foreground font-sans">
                 {barangayName}
               </Text>
+              {isGoogleUser && (
+                <View className="bg-primary/10 self-start px-2 py-0.5 rounded-full mt-0.5">
+                  <Text className="text-[11px] font-bold text-primary">Google Account</Text>
+                </View>
+              )}
             </View>
           </View>
 
           {/* Actions */}
-          <View className="gap-2">
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => {
-                if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.push('/change-password/otp');
-              }}
-              className="flex-row items-center h-[60px] px-4.5 bg-card border border-border rounded-[8px] gap-4"
-            >
-              <Lock size={18} color="#96958F" />
-              <Text className="text-[14px] text-foreground font-sans">
-                Change password
-              </Text>
-            </TouchableOpacity>
-          </View>
+          {!isGoogleUser && (
+            <View className="gap-2">
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  router.push('/change-password/otp');
+                }}
+                className="flex-row items-center h-[60px] px-4.5 bg-card border border-border rounded-[8px] gap-4"
+              >
+                <Lock size={18} color="#96958F" />
+                <Text className="text-[14px] text-foreground font-sans">
+                  Change password
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Log Out Button */}
           <TouchableOpacity
