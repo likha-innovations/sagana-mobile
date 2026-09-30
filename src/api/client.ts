@@ -40,6 +40,7 @@ export const API_BASE_URL = getApiBaseUrl();
 
 export interface FetchOptions extends RequestInit {
   withAuth?: boolean;
+  timeoutMs?: number;
 }
 
 // Typed Native Fetch Wrapper for Sagana Backend with auto JWT injection
@@ -71,11 +72,18 @@ export async function apiFetch<T>(
 
   logger.debug(`${options.method || 'GET'} -> ${url}`);
 
+  const timeout = options.timeoutMs || 10000; // Default 10 seconds timeout
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
   try {
     const response = await fetch(url, {
       ...restOptions,
       headers: requestHeaders,
+      signal: controller.signal,
     });
+
+    clearTimeout(id);
 
     const json = await response.json().catch(() => null);
 
@@ -95,6 +103,11 @@ export async function apiFetch<T>(
 
     return json as T;
   } catch (error: any) {
+    if (error.name === 'AbortError') {
+      logger.error(`Request timed out after ${timeout}ms: ${url}`);
+      throw new ApiError(408, 'Request timed out. Please check your connection.');
+    }
+
     if (error instanceof ApiError) {
       throw error;
     }
