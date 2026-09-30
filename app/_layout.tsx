@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
 import { ClerkProvider, ClerkLoaded } from '@clerk/expo';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { tokenCache } from '@/lib/token-cache';
 import { AuthProvider, useAuthContext } from '@/context/auth-context';
@@ -30,6 +30,7 @@ function AuthProtectedNavigation() {
   const { isSignedIn, isLoaded, user } = useAuthContext();
   const segments = useSegments();
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (segments.length > 0) {
@@ -39,12 +40,17 @@ function AuthProtectedNavigation() {
 
   useEffect(() => {
     if (!isLoaded) return;
+    
+    // Clerk updates `isSignedIn` immediately, but `user` (clerkUser) might take a tick to fetch.
+    // Wait until the user object is fully loaded before making routing decisions.
+    if (isSignedIn && !user) return;
 
     const inAuthGroup = segments[0] === '(auth)';
     const hasCompleteProfile = Boolean(user?.birthday);
 
     if (!isSignedIn && !inAuthGroup) {
       authGateLogger.info('Unauthenticated user redirected to sign-in');
+      queryClient.clear();
       router.replace('/(auth)/sign-in');
     } else if (isSignedIn && hasCompleteProfile) {
       if (inAuthGroup) {
@@ -58,7 +64,7 @@ function AuthProtectedNavigation() {
         router.replace('/(auth)/sign-up');
       }
     }
-  }, [isSignedIn, isLoaded, user, segments, router]);
+  }, [isSignedIn, isLoaded, user, segments, router, queryClient]);
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = useCallback(async (): Promise<GoogleAuthResult> => {
     logger.info('Initiating Google SSO flow');
     try {
-      const redirectUrl = Linking.createURL('/(auth)/sign-up', { scheme: 'sagana' });
+      const redirectUrl = Linking.createURL('/', { scheme: 'sagana' });
       const { createdSessionId, setActive, signIn: ssoSignIn, signUp: ssoSignUp } = await startSSOFlow({
         strategy: 'oauth_google',
         redirectUrl,
