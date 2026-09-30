@@ -9,7 +9,11 @@ export const userSchema = z.object({
   fullName: z.string().nullable(),
   email: z.string().email('Invalid email address'),
   contactNumber: z.string().nullable().optional(),
-  location: z.string().nullable().optional(),
+  barangayId: z.string().nullable().optional(),
+  barangay: z.union([
+    z.string(),
+    z.object({ id: z.string(), name: z.string() })
+  ]).nullable().optional(),
   birthday: z.string().nullable().optional(),
   createdAt: z.string().or(z.date()).optional(),
   updatedAt: z.string().or(z.date()).optional(),
@@ -32,10 +36,14 @@ export const updateProfileSchema = z.object({
     .trim()
     .min(5, 'Contact number must be at least 5 characters')
     .optional(),
-  location: z
+  barangay: z
     .string()
     .trim()
     .min(2, 'Location must be at least 2 characters')
+    .optional(),
+  birthday: z
+    .string()
+    .trim()
     .optional(),
 });
 
@@ -77,7 +85,11 @@ export const signUpSchema = z.object({
     .string()
     .trim()
     .optional(),
-  location: z
+  barangay: z
+    .string()
+    .trim()
+    .optional(),
+  birthday: z
     .string()
     .trim()
     .optional(),

@@ -16,14 +16,27 @@ import {
 import * as Haptics from 'expo-haptics';
 import { mockDashboardData, getPhaseStep } from '@/lib/mock-data';
 import { useAuthContext } from '@/context/auth-context';
+import { useProfile, useBarangays } from '@/hooks';
 
 export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
-  const { user } = useAuthContext();
-  const { metrics, machines } = mockDashboardData;
-
+  const { user: authUser } = useAuthContext();
+  const { data: profileData } = useProfile();
+  const { data: barangays = [] } = useBarangays();
+  
+  const user = profileData || authUser;
   const firstName = user?.fullName?.split(' ')[0] || 'Operator';
-  const barangay = user?.location || 'Unknown Location';
+  const { metrics, machines } = mockDashboardData;
+  
+  let barangayName = 'Unknown Location';
+  if (user?.barangay) {
+    if (typeof user.barangay === 'object' && user.barangay.name) {
+      barangayName = user.barangay.name;
+    } else if (typeof user.barangay === 'string') {
+      const bId = user.barangay;
+      barangayName = barangays.find(b => b.id === bId || b.name === bId)?.name || bId;
+    }
+  }
 
   return (
     <View className="flex-1 bg-background">
@@ -45,7 +58,7 @@ export default function DashboardScreen() {
             <View className="flex-row items-center gap-1.5">
               <MapPin size={16} color="#414141" />
               <Text className="text-[14px] text-foreground font-sans">
-                {barangay}
+                {barangayName}
               </Text>
             </View>
           </View>

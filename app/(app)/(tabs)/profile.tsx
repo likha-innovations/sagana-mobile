@@ -6,16 +6,27 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useAuthContext } from '@/context/auth-context';
-import { useProfile } from '@/hooks';
+import { useProfile, useBarangays } from '@/hooks';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { user: authUser, signOut } = useAuthContext();
   const { data: profileData } = useProfile();
+  const { data: barangays = [] } = useBarangays();
   const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
 
   const user = profileData || authUser;
+
+  let barangayName = 'Unknown Location';
+  if (user?.barangay) {
+    if (typeof user.barangay === 'object' && user.barangay.name) {
+      barangayName = user.barangay.name;
+    } else if (typeof user.barangay === 'string') {
+      const bId = user.barangay;
+      barangayName = barangays.find(b => b.id === bId || b.name === bId)?.name || bId;
+    }
+  }
 
   const handleLogout = async () => {
     setIsLogoutModalVisible(false);
@@ -58,7 +69,7 @@ export default function ProfileScreen() {
                 {user?.fullName || 'Neo Isaiah D. Nimo'}
               </Text>
               <Text className="text-[14px] text-foreground font-sans">
-                {user?.location || 'Barangay 176-E'}
+                {barangayName}
               </Text>
             </View>
           </View>
