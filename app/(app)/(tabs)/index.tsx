@@ -15,10 +15,15 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { mockDashboardData, getPhaseStep } from '@/lib/mock-data';
+import { useAuthContext } from '@/context/auth-context';
 
 export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
+  const { user } = useAuthContext();
   const { metrics, machines } = mockDashboardData;
+
+  const firstName = user?.fullName?.split(' ')[0] || 'Operator';
+  const barangay = user?.location || 'Unknown Location';
 
   return (
     <View className="flex-1 bg-background">
@@ -35,12 +40,12 @@ export default function DashboardScreen() {
           {/* Header */}
           <View className="gap-2">
             <Text className="text-[20px] font-bold text-foreground font-bold">
-              Hello, Neo Isaiah!
+              Hello, {firstName}!
             </Text>
             <View className="flex-row items-center gap-1.5">
               <MapPin size={16} color="#414141" />
               <Text className="text-[14px] text-foreground font-sans">
-                Barangay 176-E
+                {barangay}
               </Text>
             </View>
           </View>
