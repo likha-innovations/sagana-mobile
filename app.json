@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "Sagana Mobile",
+    "name": "Sagana",
     "slug": "sagana-mobile",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/sagana_logo.png",
     "scheme": "sagana",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -13,10 +13,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#15803d",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#FAF9EE",
+        "foregroundImage": "./assets/sagana_logo.png"
       },
       "package": "com.sagana.mobile",
       "predictiveBackGestureEnabled": false
@@ -24,7 +22,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/sagana_logo.png"
     },
     "plugins": [
       "expo-router",
@@ -32,7 +30,37 @@
       "expo-web-browser",
       "expo-image",
       "expo-font",
-      "expo-splash-screen"
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/sagana_logo.png",
+          "backgroundColor": "#FAF9EE",
+          "resizeMode": "contain"
+        }
+      ],
+      "@react-native-community/datetimepicker",
+      [
+        "@config-plugins/react-native-ble-plx",
+        {
+          "isBackgroundEnabled": false,
+          "modes": [
+            "central"
+          ],
+          "bluetoothAlwaysPermission": "Allow Sagana to connect to hardware via Bluetooth."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Sagana to use your location to discover nearby hardware."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Sagana to scan QR codes for hardware pairing."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
