@@ -34,7 +34,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<GoogleAuthResult>;
   signUp: (email: string) => Promise<void>;
   verifyEmail: (code: string) => Promise<void>;
-  completeSignUp: (firstName: string, lastName: string, birthday: string, location: string, password?: string) => Promise<void>;
+  completeSignUp: (firstName: string, lastName: string, birthday: string, barangayId: string, barangayName: string, password?: string) => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (code: string, newPassword: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       fullName: clerkUser.fullName || metadata.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || null,
       email: clerkUser.primaryEmailAddress?.emailAddress || '',
       contactNumber: metadata.contactNumber || null,
-      location: metadata.location || null,
+      barangay: metadata.barangayName || metadata.barangay || null,
       birthday: metadata.birthday || null,
     };
   }, [clerkUser]);
@@ -223,10 +223,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const completeSignUp = useCallback(
-    async (firstName: string, lastName: string, birthday: string, location: string, password?: string) => {
+    async (firstName: string, lastName: string, birthday: string, barangayId: string, barangayName: string, password?: string) => {
       const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
       const trimmedBirthday = birthday.trim();
-      const trimmedLocation = location.trim();
+      const trimmedBarangayId = barangayId.trim();
+      const trimmedBarangayName = barangayName.trim();
 
       // If user is already authenticated (e.g. via Google SSO)
       if (clerkUser) {
@@ -238,7 +239,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             ...((clerkUser.unsafeMetadata || {}) as Record<string, any>),
             fullName,
             birthday: trimmedBirthday,
-            location: trimmedLocation,
+            barangay: trimmedBarangayId,
+            barangayName: trimmedBarangayName,
           },
         });
         logger.info('Profile confirmed and updated for', fullName);
@@ -256,7 +258,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             unsafeMetadata: {
               fullName,
               birthday: trimmedBirthday,
-              location: trimmedLocation,
+              barangay: trimmedBarangayId,
+              barangayName: trimmedBarangayName,
             },
           });
         } catch (e) {

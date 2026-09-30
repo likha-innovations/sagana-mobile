@@ -31,18 +31,11 @@ import { GoogleIcon } from '@/components/icons';
 import { ErrorModal } from '@/components/ui/error-modal';
 import { PolicyBottomSheet } from '@/components/auth';
 import { useAuthContext } from '@/context/auth-context';
+import { useBarangays } from '@/hooks';
 import { createLogger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 
 const logger = createLogger('SignUpScreen');
-
-const MOCK_BARANGAYS = [
-  'Barangay 1',
-  'Barangay 2',
-  'Barangay 3',
-  'Barangay 4',
-  'Barangay 5',
-];
 
 // --- Figma Component: 2-Segment Expanding Step Indicator for Account Creation ---
 function AccountCreationProgressBar({ activeStep }: { activeStep: 1 | 2 }) {
@@ -365,6 +358,10 @@ export default function SignUpScreen() {
   const [barangayErrorMessage, setBarangayErrorMessage] = useState<string | null>(null);
   const barangaySheetRef = useRef<BottomSheetModal>(null);
 
+  const { data: barangays = [], isLoading: isLoadingBarangays, isError: isErrorBarangays, refetch: refetchBarangays } = useBarangays();
+  const selectedBarangay = barangays.find(b => b.id === barangay);
+  const selectedBarangayName = selectedBarangay ? selectedBarangay.name : '';
+
   // Modals
   const [loading, setLoading] = useState(false);
   const policySheetRef = useRef<BottomSheetModal>(null);
@@ -680,7 +677,7 @@ export default function SignUpScreen() {
 
     try {
       if (isLoaded) {
-        await completeSignUp(firstName, lastName, formattedBirthday, barangay, password || undefined);
+        await completeSignUp(firstName, lastName, formattedBirthday, barangay, selectedBarangayName, password || undefined);
       } else {
         router.replace('/(auth)/sign-in');
       }
@@ -1074,7 +1071,7 @@ export default function SignUpScreen() {
                         <View pointerEvents="none">
                           <FloatingInputField
                             label="Barangay"
-                            value={barangay}
+                            value={selectedBarangayName}
                             onChangeText={() => {}}
                             hasError={barangayError}
                           />
@@ -1188,26 +1185,50 @@ export default function SignUpScreen() {
           contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
           className="flex-1 pt-2"
         >
-          {MOCK_BARANGAYS.map((brgy) => {
-            const isSelected = barangay === brgy;
-            return (
+          {isLoadingBarangays ? (
+            <View className="py-8">
+              <ActivityIndicator size="small" color="#718619" />
+            </View>
+          ) : isErrorBarangays ? (
+            <View className="py-8 px-6 items-center">
+              <Text className="text-destructive font-sans text-center mb-4">
+                Failed to load barangays. Please check your connection.
+              </Text>
               <Pressable
-                key={brgy}
-                onPress={() => {
-                  setBarangay(brgy);
-                  setBarangayError(false);
-                  setBarangayErrorMessage(null);
-                  barangaySheetRef.current?.dismiss();
-                }}
-                className={cn(
-                  'py-3.5 px-6 w-full flex-row items-center',
-                  isSelected ? 'bg-[#EAE8DD]' : 'bg-transparent active:bg-secondary/20'
-                )}
+                onPress={() => refetchBarangays()}
+                className="bg-primary px-6 py-2 rounded-full"
               >
-                <Text className="text-[14px] font-sans text-foreground">{brgy}</Text>
+                <Text className="text-primary-foreground font-semibold">Retry</Text>
               </Pressable>
-            );
-          })}
+            </View>
+          ) : barangays.length === 0 ? (
+            <View className="py-8 px-6 items-center">
+              <Text className="text-muted-foreground font-sans text-center">
+                No barangays found.
+              </Text>
+            </View>
+          ) : (
+            barangays.map((brgy) => {
+              const isSelected = barangay === brgy.id;
+              return (
+                <Pressable
+                  key={brgy.id}
+                  onPress={() => {
+                    setBarangay(brgy.id);
+                    setBarangayError(false);
+                    setBarangayErrorMessage(null);
+                    barangaySheetRef.current?.dismiss();
+                  }}
+                  className={cn(
+                    'py-3.5 px-6 w-full flex-row items-center',
+                    isSelected ? 'bg-[#EAE8DD]' : 'bg-transparent active:bg-secondary/20'
+                  )}
+                >
+                  <Text className="text-[14px] font-sans text-foreground">{brgy.name}</Text>
+                </Pressable>
+              );
+            })
+          )}
         </BottomSheetScrollView>
       </BottomSheetModal>
 
