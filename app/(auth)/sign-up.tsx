@@ -25,7 +25,7 @@ import Animated, {
   interpolate,
   Easing,
 } from 'react-native-reanimated';
-import type { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { BottomSheetModal, BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { ChevronLeft, Eye, EyeOff, X } from 'lucide-react-native';
 import { GoogleIcon } from '@/components/icons';
 import { ErrorModal } from '@/components/ui/error-modal';
@@ -35,6 +35,14 @@ import { createLogger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 
 const logger = createLogger('SignUpScreen');
+
+const MOCK_BARANGAYS = [
+  'Barangay 1',
+  'Barangay 2',
+  'Barangay 3',
+  'Barangay 4',
+  'Barangay 5',
+];
 
 // --- Figma Component: 2-Segment Expanding Step Indicator for Account Creation ---
 function AccountCreationProgressBar({ activeStep }: { activeStep: 1 | 2 }) {
@@ -294,7 +302,7 @@ function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupPr
 
 
 
-type SignUpStep = 'email' | 'otp' | 'name' | 'birthday';
+type SignUpStep = 'email' | 'otp' | 'password' | 'name' | 'location';
 
 export default function SignUpScreen() {
   const insets = useSafeAreaInsets();
@@ -328,6 +336,16 @@ export default function SignUpScreen() {
   const [otpErrorMessage, setOtpErrorMessage] = useState<string | null>(null);
   const [resendCooldown, setResendCooldown] = useState(59);
 
+  // Step 3: Password State
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
+  const [confirmPasswordError, setConfirmPasswordError] = useState(false);
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState<string | null>(null);
+  const [failedRequirements, setFailedRequirements] = useState<string[]>([]);
+  const passwordRef = useRef<TextInput>(null);
+  const confirmPasswordRef = useRef<TextInput>(null);
+
   // Step 3: Name State
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -336,11 +354,16 @@ export default function SignUpScreen() {
   const firstNameRef = useRef<TextInput>(null);
   const lastNameRef = useRef<TextInput>(null);
 
-  // Step 4: Birthday State (Numeric Keypad with Guidelines)
+  // Step 4: Birthday & Barangay State
   const [birthdayInput, setBirthdayInput] = useState('');
   const [birthdayError, setBirthdayError] = useState(false);
   const [birthdayErrorMessage, setBirthdayErrorMessage] = useState<string | null>(null);
   const birthdayInputRef = useRef<TextInput>(null);
+
+  const [barangay, setBarangay] = useState('');
+  const [barangayError, setBarangayError] = useState(false);
+  const [barangayErrorMessage, setBarangayErrorMessage] = useState<string | null>(null);
+  const barangaySheetRef = useRef<BottomSheetModal>(null);
 
   // Modals
   const [loading, setLoading] = useState(false);
@@ -393,7 +416,7 @@ export default function SignUpScreen() {
   }, [step, resendCooldown]);
 
   const handleBack = async () => {
-    if (step === 'birthday') {
+    if (step === 'location') {
       setStep('name');
     } else if (step === 'name') {
       if (isSignedIn) {
@@ -404,8 +427,10 @@ export default function SignUpScreen() {
         }
         setStep('email');
       } else {
-        setStep('otp');
+        setStep('password');
       }
+    } else if (step === 'password') {
+      setStep('otp');
     } else if (step === 'otp') {
       setStep('email');
     } else {
@@ -474,7 +499,7 @@ export default function SignUpScreen() {
       if (isLoaded) {
         await verifyEmail(trimmedCode);
       }
-      setStep('name');
+      setStep('password');
     } catch {
       setOtpError(true);
       setOtpErrorMessage('Incorrect one time code');
@@ -499,7 +524,54 @@ export default function SignUpScreen() {
     }
   };
 
-  // --- Step 3: Validate Name ---
+  // --- Step 3: Validate Password ---
+  const handleNextPassword = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    if (!password || !confirmPassword) {
+      if (!password) setPasswordError(true);
+      if (!confirmPassword) setConfirmPasswordError(true);
+      setPasswordErrorMessage('Please enter and confirm your password');
+      setFailedRequirements([]);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+
+    const isAtLeast8 = password.length >= 8;
+    const hasNumber = /\d/.test(password);
+    const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    if (!isAtLeast8 || !hasNumber || !hasSymbol) {
+      const unmet = [];
+      if (!isAtLeast8) unmet.push('At least 8+ characters');
+      if (!hasNumber) unmet.push('Must have a number (0–9)');
+      if (!hasSymbol) unmet.push('Must have a special symbol (e.g., !@#$)');
+
+      setPasswordError(true);
+      setConfirmPasswordError(false);
+      setPasswordErrorMessage("Password doesn't meet requirements");
+      setFailedRequirements(unmet);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setPasswordError(false);
+      setConfirmPasswordError(true);
+      setPasswordErrorMessage("Passwords doesn't match");
+      setFailedRequirements([]);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+
+    setPasswordError(false);
+    setConfirmPasswordError(false);
+    setPasswordErrorMessage(null);
+    setFailedRequirements([]);
+    setStep('name');
+  };
+
+  // --- Step 4: Validate Name & Birthday ---
   const handleNextName = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const trimmedFirst = firstName.trim();
@@ -512,44 +584,10 @@ export default function SignUpScreen() {
       return;
     }
 
-    setNameError(false);
-    setNameErrorMessage(null);
-    setStep('birthday');
-  };
-
-  const handleBirthdayChange = (text: string) => {
-    if (birthdayError) setBirthdayError(false);
-    if (birthdayErrorMessage) setBirthdayErrorMessage(null);
-
-    // If user hit backspace on " / "
-    if (text.length < birthdayInput.length) {
-      if (text.endsWith(' / ') || text.endsWith('/')) {
-        setBirthdayInput(text.slice(0, -3).trim());
-        return;
-      }
-      setBirthdayInput(text);
-      return;
-    }
-
-    const clean = text.replace(/\D/g, '').slice(0, 8);
-    let formatted = clean;
-
-    if (clean.length > 4) {
-      formatted = `${clean.slice(0, 2)} / ${clean.slice(2, 4)} / ${clean.slice(4)}`;
-    } else if (clean.length > 2) {
-      formatted = `${clean.slice(0, 2)} / ${clean.slice(2)}`;
-    }
-
-    setBirthdayInput(formatted);
-  };
-
-
-  // --- Step 4: Finish Birthday & Complete Registration ---
-  const handleFinish = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const digits = birthdayInput.replace(/\D/g, '');
-
     if (digits.length < 8) {
+      setNameError(false);
+      setNameErrorMessage(null);
       setBirthdayError(true);
       setBirthdayErrorMessage('Please enter your complete date of birth (MM / DD / YYYY)');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -583,14 +621,66 @@ export default function SignUpScreen() {
       return;
     }
 
-    const formattedBirthday = `${monthNum.toString().padStart(2, '0')}/${dayNum.toString().padStart(2, '0')}/${yearNum}`;
+    setNameError(false);
+    setNameErrorMessage(null);
     setBirthdayError(false);
     setBirthdayErrorMessage(null);
+    setStep('location');
+  };
+
+  const handleBirthdayChange = (text: string) => {
+    if (birthdayError) setBirthdayError(false);
+    if (birthdayErrorMessage) setBirthdayErrorMessage(null);
+
+    // If user hit backspace on " / "
+    if (text.length < birthdayInput.length) {
+      if (text.endsWith(' / ') || text.endsWith('/')) {
+        setBirthdayInput(text.slice(0, -3).trim());
+        return;
+      }
+      setBirthdayInput(text);
+      return;
+    }
+
+    const clean = text.replace(/\D/g, '').slice(0, 8);
+    let formatted = clean;
+
+    if (clean.length > 4) {
+      formatted = `${clean.slice(0, 2)} / ${clean.slice(2, 4)} / ${clean.slice(4)}`;
+    } else if (clean.length > 2) {
+      formatted = `${clean.slice(0, 2)} / ${clean.slice(2)}`;
+    }
+
+    setBirthdayInput(formatted);
+  };
+
+
+  // --- Step 5: Finish Registration ---
+  const handleFinish = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    let hasErr = false;
+
+    if (!barangay) {
+      setBarangayError(true);
+      setBarangayErrorMessage('Please select your barangay');
+      hasErr = true;
+    } else {
+      setBarangayError(false);
+      setBarangayErrorMessage(null);
+    }
+
+    if (hasErr) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+
+    const digits = birthdayInput.replace(/\D/g, '');
+    const formattedBirthday = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
     setLoading(true);
 
     try {
       if (isLoaded) {
-        await completeSignUp(firstName, lastName, formattedBirthday);
+        await completeSignUp(firstName, lastName, formattedBirthday, barangay, password || undefined);
       } else {
         router.replace('/(auth)/sign-in');
       }
@@ -659,7 +749,7 @@ export default function SignUpScreen() {
                 </Pressable>
 
                 {/* Progress Bar for Step 3 and 4 */}
-                {(step === 'name' || step === 'birthday') && (
+                {(step === 'name' || step === 'location') && (
                   <View className="absolute inset-x-0 items-center justify-center pointer-events-none">
                     <AccountCreationProgressBar
                       activeStep={step === 'name' ? 1 : 2}
@@ -813,7 +903,88 @@ export default function SignUpScreen() {
                 </View>
               )}
 
-              {/* --- SCREEN 3: Who are you? (First Name & Last Name) --- */}
+              {/* --- SCREEN 3: Enter Password Content --- */}
+              {step === 'password' && (
+                <View className="w-full">
+                  <View className="w-full gap-2.5 mb-8">
+                    <Text className="text-[20px] font-bold text-foreground text-left">
+                      Enter new password
+                    </Text>
+                    <Text className="text-[14px] font-sans text-foreground text-left leading-5">
+                      Enter and confirm the password you wish to use for this account.
+                    </Text>
+                  </View>
+
+                  <View className="w-full gap-3">
+                    <FloatingInputField
+                      label="New password"
+                      value={password}
+                      onChangeText={(text) => {
+                        setPassword(text);
+                        if (passwordError) setPasswordError(false);
+                        if (passwordErrorMessage) setPasswordErrorMessage(null);
+                        if (failedRequirements.length > 0) setFailedRequirements([]);
+                      }}
+                      hasError={passwordError}
+                      isPassword
+                      returnKeyType="next"
+                      inputRef={passwordRef}
+                      onSubmitEditing={() => confirmPasswordRef.current?.focus()}
+                    />
+
+                    <FloatingInputField
+                      label="Confirm new password"
+                      value={confirmPassword}
+                      onChangeText={(text) => {
+                        setConfirmPassword(text);
+                        if (confirmPasswordError) setConfirmPasswordError(false);
+                        if (passwordErrorMessage) setPasswordErrorMessage(null);
+                        if (failedRequirements.length > 0) setFailedRequirements([]);
+                      }}
+                      hasError={confirmPasswordError}
+                      isPassword
+                      returnKeyType="done"
+                      inputRef={confirmPasswordRef}
+                      onSubmitEditing={handleNextPassword}
+                    />
+
+                    {/* Inline Error Message */}
+                    {passwordErrorMessage && (
+                      <Text className="text-[14px] font-sans text-destructive mt-1 ml-1 text-left">
+                        {passwordErrorMessage}
+                      </Text>
+                    )}
+
+                    {/* Specific Failed Requirement Bullets */}
+                    {failedRequirements.length > 0 && (
+                      <View className="w-full mt-1 pl-2">
+                        {failedRequirements.map((req, idx) => (
+                          <Text key={idx} className="text-[13px] font-sans text-destructive leading-6">
+                            • {req}
+                          </Text>
+                        ))}
+                      </View>
+                    )}
+
+                    {/* Checklist Requirements matching Figma */}
+                    {!passwordErrorMessage && (
+                      <View className="w-full mt-2 pl-2">
+                        <Text className="text-[13px] font-sans text-[#96958F] leading-6">
+                          • At least 8+ characters
+                        </Text>
+                        <Text className="text-[13px] font-sans text-[#96958F] leading-6">
+                          • Must have a number (0–9)
+                        </Text>
+                        <Text className="text-[13px] font-sans text-[#96958F] leading-6">
+                          • Must have a special symbol (e.g., !@#$)
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              )}
+
+              {/* --- SCREEN 4: Who are you? (First Name, Last Name & Birthday) --- */}
               {step === 'name' && (
                 <View className="w-full">
                   <View className="w-full mb-6">
@@ -850,30 +1021,17 @@ export default function SignUpScreen() {
                       clearable
                       hasError={nameError}
                       autoCapitalize="words"
-                      returnKeyType="done"
+                      returnKeyType="next"
                       inputRef={lastNameRef}
-                      onSubmitEditing={handleNextName}
+                      onSubmitEditing={() => birthdayInputRef.current?.focus()}
                     />
 
                     {nameErrorMessage && (
-                      <Text className="text-xs font-sans text-destructive mt-1 ml-1 text-left">
+                      <Text className="text-xs font-sans text-destructive mt-0.5 ml-1 text-left">
                         {nameErrorMessage}
                       </Text>
                     )}
-                  </View>
-                </View>
-              )}
 
-              {/* --- SCREEN 4: Who are you? (Birthday) --- */}
-              {step === 'birthday' && (
-                <View className="w-full">
-                  <View className="w-full mb-6">
-                    <Text className="text-[20px] font-bold text-foreground text-left">
-                      Who are you?
-                    </Text>
-                  </View>
-
-                  <View className="w-full">
                     <FloatingInputField
                       label="Birthday"
                       placeholder="MM / DD / YYYY"
@@ -883,15 +1041,52 @@ export default function SignUpScreen() {
                       keyboardType="number-pad"
                       returnKeyType="done"
                       inputRef={birthdayInputRef}
-                      onSubmitEditing={handleFinish}
+                      onSubmitEditing={handleNextName}
                       clearable
                     />
 
                     {birthdayErrorMessage && (
-                      <Text className="text-xs font-sans text-destructive mt-1.5 ml-1 text-left">
+                      <Text className="text-xs font-sans text-destructive mt-0.5 ml-1 text-left">
                         {birthdayErrorMessage}
                       </Text>
                     )}
+                  </View>
+                </View>
+              )}
+
+              {/* --- SCREEN 5: Location (Barangay) --- */}
+              {step === 'location' && (
+                <View className="w-full">
+                  <View className="w-full mb-6">
+                    <Text className="text-[20px] font-bold text-foreground text-left">
+                      Where are you from?
+                    </Text>
+                  </View>
+
+                  <View className="w-full gap-y-4">
+                    <View className="w-full">
+                      <Pressable
+                        onPress={() => {
+                          Keyboard.dismiss();
+                          barangaySheetRef.current?.present();
+                        }}
+                      >
+                        <View pointerEvents="none">
+                          <FloatingInputField
+                            label="Barangay"
+                            value={barangay}
+                            onChangeText={() => {}}
+                            hasError={barangayError}
+                          />
+                        </View>
+                      </Pressable>
+
+                      {barangayErrorMessage && (
+                        <Text className="text-xs font-sans text-destructive mt-1.5 ml-1 text-left">
+                          {barangayErrorMessage}
+                        </Text>
+                      )}
+                    </View>
                   </View>
                 </View>
               )}
@@ -933,6 +1128,18 @@ export default function SignUpScreen() {
                 </Pressable>
               )}
 
+              {step === 'password' && (
+                <Pressable
+                  onPress={handleNextPassword}
+                  className="w-full h-[50px] rounded-full bg-primary items-center justify-center active:opacity-90"
+                  accessibilityRole="button"
+                >
+                  <Text className="text-[15px] font-bold text-primary-foreground">
+                    Next
+                  </Text>
+                </Pressable>
+              )}
+
               {step === 'name' && (
                 <Pressable
                   onPress={handleNextName}
@@ -945,7 +1152,7 @@ export default function SignUpScreen() {
                 </Pressable>
               )}
 
-              {step === 'birthday' && (
+              {step === 'location' && (
                 <Pressable
                   onPress={handleFinish}
                   disabled={loading}
@@ -965,6 +1172,44 @@ export default function SignUpScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>
+
+      {/* Barangay Selection Bottom Sheet Modal */}
+      <BottomSheetModal
+        ref={barangaySheetRef}
+        snapPoints={['50%']}
+        enablePanDownToClose
+        backdropComponent={(props) => (
+          <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} pressBehavior="close" />
+        )}
+        backgroundStyle={{ backgroundColor: '#FAF9EE' }}
+        handleIndicatorStyle={{ backgroundColor: '#C8C7BE', width: 40 }}
+      >
+        <BottomSheetScrollView
+          contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+          className="flex-1 pt-2"
+        >
+          {MOCK_BARANGAYS.map((brgy) => {
+            const isSelected = barangay === brgy;
+            return (
+              <Pressable
+                key={brgy}
+                onPress={() => {
+                  setBarangay(brgy);
+                  setBarangayError(false);
+                  setBarangayErrorMessage(null);
+                  barangaySheetRef.current?.dismiss();
+                }}
+                className={cn(
+                  'py-3.5 px-6 w-full flex-row items-center',
+                  isSelected ? 'bg-[#EAE8DD]' : 'bg-transparent active:bg-secondary/20'
+                )}
+              >
+                <Text className="text-[14px] font-sans text-foreground">{brgy}</Text>
+              </Pressable>
+            );
+          })}
+        </BottomSheetScrollView>
+      </BottomSheetModal>
 
       {/* Terms of Service / Privacy Policy Gorhom Bottom Sheet Modal */}
       <PolicyBottomSheet

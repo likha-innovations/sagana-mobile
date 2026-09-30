@@ -34,7 +34,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<GoogleAuthResult>;
   signUp: (email: string) => Promise<void>;
   verifyEmail: (code: string) => Promise<void>;
-  completeSignUp: (firstName: string, lastName: string, birthday: string) => Promise<void>;
+  completeSignUp: (firstName: string, lastName: string, birthday: string, location: string, password?: string) => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
   resetPassword: (code: string, newPassword: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -223,9 +223,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const completeSignUp = useCallback(
-    async (firstName: string, lastName: string, birthday: string) => {
+    async (firstName: string, lastName: string, birthday: string, location: string, password?: string) => {
       const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
       const trimmedBirthday = birthday.trim();
+      const trimmedLocation = location.trim();
 
       // If user is already authenticated (e.g. via Google SSO)
       if (clerkUser) {
@@ -237,6 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             ...((clerkUser.unsafeMetadata || {}) as Record<string, any>),
             fullName,
             birthday: trimmedBirthday,
+            location: trimmedLocation,
           },
         });
         logger.info('Profile confirmed and updated for', fullName);
@@ -248,11 +250,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (clerkSignUp) {
         try {
           await clerkSignUp.update({
+            ...(password ? { password } : {}),
             firstName: firstName.trim(),
             lastName: lastName.trim(),
             unsafeMetadata: {
               fullName,
               birthday: trimmedBirthday,
+              location: trimmedLocation,
             },
           });
         } catch (e) {
