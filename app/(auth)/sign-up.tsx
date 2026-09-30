@@ -31,22 +31,27 @@ import { GoogleIcon } from '@/components/icons';
 import { ErrorModal } from '@/components/ui/error-modal';
 import { PolicyBottomSheet } from '@/components/auth';
 import { useAuthContext } from '@/context/auth-context';
+import { createLogger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 
-// --- Figma Component: 2-Segment Progress Bar (144px x 6px) for Account Creation ---
+const logger = createLogger('SignUpScreen');
+
+// --- Figma Component: 2-Segment Expanding Step Indicator for Account Creation ---
 function AccountCreationProgressBar({ activeStep }: { activeStep: 1 | 2 }) {
   return (
-    <View className="flex-row items-center gap-[10px] w-[144px] h-[6px]">
+    <View className="flex-row items-center gap-2 h-[5px]">
       <View
         className={cn(
-          'flex-1 h-full rounded-[14px]',
-          activeStep >= 1 ? 'bg-primary' : 'bg-[#C8C7BE]'
+          'h-[5px] rounded-full bg-primary',
+          activeStep === 1 ? 'w-[84px]' : 'w-[18px]'
         )}
       />
       <View
         className={cn(
-          'flex-1 h-full rounded-[14px]',
-          activeStep >= 2 ? 'bg-primary' : 'bg-[#C8C7BE]'
+          'h-[5px] rounded-full',
+          activeStep === 2
+            ? 'w-[84px] bg-primary'
+            : 'w-[18px] bg-[#C8C7BE]'
         )}
       />
     </View>
@@ -58,6 +63,7 @@ interface FloatingInputFieldProps {
   label: string;
   value: string;
   onChangeText: (text: string) => void;
+  placeholder?: string;
   isPassword?: boolean;
   clearable?: boolean;
   hasError?: boolean;
@@ -66,12 +72,15 @@ interface FloatingInputFieldProps {
   returnKeyType?: TextInputProps['returnKeyType'];
   onSubmitEditing?: () => void;
   inputRef?: RefObject<TextInput | null>;
+  trailingIcon?: React.ReactNode;
+  onTrailingPress?: () => void;
 }
 
 function FloatingInputField({
   label,
   value,
   onChangeText,
+  placeholder,
   isPassword = false,
   clearable = false,
   hasError = false,
@@ -80,6 +89,8 @@ function FloatingInputField({
   returnKeyType,
   onSubmitEditing,
   inputRef,
+  trailingIcon,
+  onTrailingPress,
 }: FloatingInputFieldProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -146,6 +157,8 @@ function FloatingInputField({
           ref={inputRef}
           value={value}
           onChangeText={onChangeText}
+          placeholder={isFloating ? placeholder : undefined}
+          placeholderTextColor="#96958F"
           secureTextEntry={isPassword && !showPassword}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
@@ -185,6 +198,17 @@ function FloatingInputField({
           accessibilityLabel="Clear input"
         >
           <X size={16} color="#414141" />
+        </Pressable>
+      )}
+
+      {trailingIcon && (!clearable || !hasValue || !isFocused) && (
+        <Pressable
+          onPress={onTrailingPress}
+          hitSlop={8}
+          className="p-1 -mr-1"
+          accessibilityRole="button"
+        >
+          {trailingIcon}
         </Pressable>
       )}
     </Pressable>
@@ -262,204 +286,13 @@ function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupPr
   );
 }
 
-// Segmented Direct Number Input for Date of Birth (MM / DD / YYYY)
-interface SegmentedDateInputProps {
-  month: string;
-  day: string;
-  year: string;
-  onChangeMonth: (m: string) => void;
-  onChangeDay: (d: string) => void;
-  onChangeYear: (y: string) => void;
-  hasError?: boolean;
-  onSubmitEditing?: () => void;
-  monthRef: RefObject<TextInput | null>;
-  dayRef: RefObject<TextInput | null>;
-  yearRef: RefObject<TextInput | null>;
-}
 
-function SegmentedDateInput({
-  month,
-  day,
-  year,
-  onChangeMonth,
-  onChangeDay,
-  onChangeYear,
-  hasError = false,
-  onSubmitEditing,
-  monthRef,
-  dayRef,
-  yearRef,
-}: SegmentedDateInputProps) {
-  const [focusedField, setFocusedField] = useState<'month' | 'day' | 'year' | null>(null);
 
-  const handleMonthChange = (text: string) => {
-    const cleaned = text.replace(/[^0-9]/g, '');
-    if (cleaned.length > 2) {
-      const m = cleaned.slice(0, 2);
-      const d = cleaned.slice(2, 4);
-      const y = cleaned.slice(4, 8);
-      onChangeMonth(m);
-      if (d) onChangeDay(d);
-      if (y) onChangeYear(y);
-      if (y.length === 4) {
-        Keyboard.dismiss();
-      } else if (d.length === 2) {
-        yearRef.current?.focus();
-      } else {
-        dayRef.current?.focus();
-      }
-      return;
-    }
 
-    onChangeMonth(cleaned);
-    if (cleaned.length === 2) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      dayRef.current?.focus();
-    }
-  };
 
-  const handleDayChange = (text: string) => {
-    const cleaned = text.replace(/[^0-9]/g, '').slice(0, 2);
-    onChangeDay(cleaned);
-    if (cleaned.length === 2) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      yearRef.current?.focus();
-    }
-  };
 
-  const handleYearChange = (text: string) => {
-    const cleaned = text.replace(/[^0-9]/g, '').slice(0, 4);
-    onChangeYear(cleaned);
-    if (cleaned.length === 4) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      Keyboard.dismiss();
-    }
-  };
 
-  const handleDayKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
-    if (e.nativeEvent.key === 'Backspace' && (!day || day.length === 0)) {
-      monthRef.current?.focus();
-    }
-  };
 
-  const handleYearKeyPress = (e: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
-    if (e.nativeEvent.key === 'Backspace' && (!year || year.length === 0)) {
-      dayRef.current?.focus();
-    }
-  };
-
-  return (
-    <View className="w-full">
-      <Text className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 ml-1">
-        Date of Birth
-      </Text>
-      <View className="w-full flex-row items-center justify-between gap-2.5">
-        <Pressable
-          onPress={() => monthRef.current?.focus()}
-          className={cn(
-            'flex-1 h-[58px] rounded-2xl border-[1.5px] bg-background items-center justify-center px-2',
-            hasError
-              ? 'border-destructive bg-destructive/[0.03]'
-              : focusedField === 'month'
-                ? 'border-foreground/40'
-                : 'border-input'
-          )}
-        >
-          <Text className="text-[10px] font-sans text-muted-foreground uppercase mb-0.5">
-            Month
-          </Text>
-          <TextInput
-            ref={monthRef}
-            value={month}
-            onChangeText={handleMonthChange}
-            onFocus={() => setFocusedField('month')}
-            onBlur={() => setFocusedField(null)}
-            placeholder="MM"
-            placeholderTextColor="#96958F"
-            keyboardType="number-pad"
-            maxLength={2}
-            textAlign="center"
-            className="text-[16px] font-bold text-foreground p-0 m-0 w-full"
-            returnKeyType="next"
-            onSubmitEditing={() => dayRef.current?.focus()}
-          />
-        </Pressable>
-
-        <Text className="text-[18px] font-sans text-muted-foreground select-none">
-          /
-        </Text>
-
-        <Pressable
-          onPress={() => dayRef.current?.focus()}
-          className={cn(
-            'flex-1 h-[58px] rounded-2xl border-[1.5px] bg-background items-center justify-center px-2',
-            hasError
-              ? 'border-destructive bg-destructive/[0.03]'
-              : focusedField === 'day'
-                ? 'border-foreground/40'
-                : 'border-input'
-          )}
-        >
-          <Text className="text-[10px] font-sans text-muted-foreground uppercase mb-0.5">
-            Day
-          </Text>
-          <TextInput
-            ref={dayRef}
-            value={day}
-            onChangeText={handleDayChange}
-            onKeyPress={handleDayKeyPress}
-            onFocus={() => setFocusedField('day')}
-            onBlur={() => setFocusedField(null)}
-            placeholder="DD"
-            placeholderTextColor="#96958F"
-            keyboardType="number-pad"
-            maxLength={2}
-            textAlign="center"
-            className="text-[16px] font-bold text-foreground p-0 m-0 w-full"
-            returnKeyType="next"
-            onSubmitEditing={() => yearRef.current?.focus()}
-          />
-        </Pressable>
-
-        <Text className="text-[18px] font-sans text-muted-foreground select-none">
-          /
-        </Text>
-
-        <Pressable
-          onPress={() => yearRef.current?.focus()}
-          className={cn(
-            'flex-[1.4] h-[58px] rounded-2xl border-[1.5px] bg-background items-center justify-center px-2',
-            hasError
-              ? 'border-destructive bg-destructive/[0.03]'
-              : focusedField === 'year'
-                ? 'border-foreground/40'
-                : 'border-input'
-          )}
-        >
-          <Text className="text-[10px] font-sans text-muted-foreground uppercase mb-0.5">
-            Year
-          </Text>
-          <TextInput
-            ref={yearRef}
-            value={year}
-            onChangeText={handleYearChange}
-            onKeyPress={handleYearKeyPress}
-            onFocus={() => setFocusedField('year')}
-            onBlur={() => setFocusedField(null)}
-            placeholder="YYYY"
-            placeholderTextColor="#96958F"
-            keyboardType="number-pad"
-            maxLength={4}
-            textAlign="center"
-            className="text-[16px] font-bold text-foreground p-0 m-0 w-full"
-            returnKeyType="done"
-            onSubmitEditing={onSubmitEditing}
-          />
-        </Pressable>
-      </View>
-    </View>
-  );
-}
 
 type SignUpStep = 'email' | 'otp' | 'name' | 'birthday';
 
@@ -468,12 +301,23 @@ export default function SignUpScreen() {
   const router = useRouter();
   const { height: screenHeight } = useWindowDimensions();
   const isCompact = screenHeight < 720;
-  const { signUp, verifyEmail, completeSignUp, isLoaded } = useAuthContext();
+  const {
+    signUp,
+    verifyEmail,
+    completeSignUp,
+    signInWithGoogle,
+    isLoaded,
+    isSignedIn,
+    clerkUser,
+    user,
+    signOut,
+  } = useAuthContext();
 
   const [step, setStep] = useState<SignUpStep>('email');
 
   // Step 1: Email Form State
   const [email, setEmail] = useState('');
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [emailError, setEmailError] = useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = useState<string | null>(null);
   const emailInputRef = useRef<TextInput>(null);
@@ -492,15 +336,11 @@ export default function SignUpScreen() {
   const firstNameRef = useRef<TextInput>(null);
   const lastNameRef = useRef<TextInput>(null);
 
-  // Step 4: Birthday State (Segmented MM / DD / YYYY)
-  const [birthMonth, setBirthMonth] = useState('');
-  const [birthDay, setBirthDay] = useState('');
-  const [birthYear, setBirthYear] = useState('');
+  // Step 4: Birthday State (Numeric Keypad with Guidelines)
+  const [birthdayInput, setBirthdayInput] = useState('');
   const [birthdayError, setBirthdayError] = useState(false);
   const [birthdayErrorMessage, setBirthdayErrorMessage] = useState<string | null>(null);
-  const birthMonthRef = useRef<TextInput>(null);
-  const birthDayRef = useRef<TextInput>(null);
-  const birthYearRef = useRef<TextInput>(null);
+  const birthdayInputRef = useRef<TextInput>(null);
 
   // Modals
   const [loading, setLoading] = useState(false);
@@ -508,6 +348,29 @@ export default function SignUpScreen() {
   const [policyType, setPolicyType] = useState<'tos' | 'privacy' | null>(null);
   const [emailTakenModal, setEmailTakenModal] = useState(false);
   const [generalErrorModal, setGeneralErrorModal] = useState(false);
+
+  // Prefill Google SSO user names and advance to 'name' step if birthday is not yet set
+  useEffect(() => {
+    if (isSignedIn && clerkUser && !user?.birthday) {
+      const gFirst =
+        clerkUser.firstName ||
+        (clerkUser.fullName ? clerkUser.fullName.split(' ')[0] : '') ||
+        '';
+      const gLast =
+        clerkUser.lastName ||
+        (clerkUser.fullName ? clerkUser.fullName.split(' ').slice(1).join(' ') : '') ||
+        '';
+
+      if (gFirst) {
+        setFirstName((prev) => (prev ? prev : gFirst));
+      }
+      if (gLast) {
+        setLastName((prev) => (prev ? prev : gLast));
+      }
+
+      setStep('name');
+    }
+  }, [isSignedIn, clerkUser, user?.birthday]);
 
   const handleOpenPolicy = useCallback((type: 'tos' | 'privacy') => {
     setPolicyType(type);
@@ -529,11 +392,20 @@ export default function SignUpScreen() {
     return () => clearInterval(timer);
   }, [step, resendCooldown]);
 
-  const handleBack = () => {
+  const handleBack = async () => {
     if (step === 'birthday') {
       setStep('name');
     } else if (step === 'name') {
-      setStep('otp');
+      if (isSignedIn) {
+        try {
+          await signOut();
+        } catch (e) {
+          logger.warn('Sign out on back press notice', e);
+        }
+        setStep('email');
+      } else {
+        setStep('otp');
+      }
     } else if (step === 'otp') {
       setStep('email');
     } else {
@@ -645,35 +517,53 @@ export default function SignUpScreen() {
     setStep('birthday');
   };
 
+  const handleBirthdayChange = (text: string) => {
+    if (birthdayError) setBirthdayError(false);
+    if (birthdayErrorMessage) setBirthdayErrorMessage(null);
+
+    // If user hit backspace on " / "
+    if (text.length < birthdayInput.length) {
+      if (text.endsWith(' / ') || text.endsWith('/')) {
+        setBirthdayInput(text.slice(0, -3).trim());
+        return;
+      }
+      setBirthdayInput(text);
+      return;
+    }
+
+    const clean = text.replace(/\D/g, '').slice(0, 8);
+    let formatted = clean;
+
+    if (clean.length > 4) {
+      formatted = `${clean.slice(0, 2)} / ${clean.slice(2, 4)} / ${clean.slice(4)}`;
+    } else if (clean.length > 2) {
+      formatted = `${clean.slice(0, 2)} / ${clean.slice(2)}`;
+    }
+
+    setBirthdayInput(formatted);
+  };
+
+
   // --- Step 4: Finish Birthday & Complete Registration ---
   const handleFinish = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    const m = birthMonth.trim();
-    const d = birthDay.trim();
-    const y = birthYear.trim();
+    const digits = birthdayInput.replace(/\D/g, '');
 
-    if (!m || !d || !y) {
+    if (digits.length < 8) {
       setBirthdayError(true);
-      setBirthdayErrorMessage('Please enter your complete date of birth');
+      setBirthdayErrorMessage('Please enter your complete date of birth (MM / DD / YYYY)');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
-    const monthNum = parseInt(m, 10);
-    const dayNum = parseInt(d, 10);
-    const yearNum = parseInt(y, 10);
+    const monthNum = parseInt(digits.slice(0, 2), 10);
+    const dayNum = parseInt(digits.slice(2, 4), 10);
+    const yearNum = parseInt(digits.slice(4, 8), 10);
     const currentYear = new Date().getFullYear();
 
     if (monthNum < 1 || monthNum > 12) {
       setBirthdayError(true);
       setBirthdayErrorMessage('Please enter a valid month (01–12)');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      return;
-    }
-
-    if (yearNum < 1900 || yearNum > currentYear) {
-      setBirthdayError(true);
-      setBirthdayErrorMessage(`Please enter a valid year between 1900 and ${currentYear}`);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
@@ -686,14 +576,14 @@ export default function SignUpScreen() {
       return;
     }
 
-    if (yearNum > currentYear - 5) {
+    if (yearNum < 1920 || yearNum > currentYear - 5) {
       setBirthdayError(true);
       setBirthdayErrorMessage('Please enter a valid birth year');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
-    const formattedBirthday = `${m.padStart(2, '0')}/${d.padStart(2, '0')}/${y}`;
+    const formattedBirthday = `${monthNum.toString().padStart(2, '0')}/${dayNum.toString().padStart(2, '0')}/${yearNum}`;
     setBirthdayError(false);
     setBirthdayErrorMessage(null);
     setLoading(true);
@@ -712,9 +602,25 @@ export default function SignUpScreen() {
     }
   };
 
-  const handleGooglePress = () => {
+  const handleGooglePress = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setGeneralErrorModal(true);
+    setGoogleLoading(true);
+    try {
+      const result = await signInWithGoogle();
+      if (result.isNewUserOrIncomplete) {
+        if (result.firstName) setFirstName(result.firstName);
+        if (result.lastName) setLastName(result.lastName);
+        setStep('name');
+      }
+    } catch (err: any) {
+      logger.error('Google Sign-Up failed', err);
+      const msg = err?.message || '';
+      if (!msg.includes('cancel') && !msg.includes('dismiss')) {
+        setGeneralErrorModal(true);
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   return (
@@ -809,14 +715,21 @@ export default function SignUpScreen() {
                     {/* Google SSO Button */}
                     <Pressable
                       onPress={handleGooglePress}
-                      className="w-full h-[50px] rounded-full bg-secondary flex-row items-center justify-center gap-2.5 active:opacity-85"
+                      disabled={loading || googleLoading}
+                      className="w-full h-[50px] rounded-full bg-secondary flex-row items-center justify-center gap-2.5 active:opacity-85 disabled:opacity-60"
                       accessibilityRole="button"
                       accessibilityLabel="Sign up with Google"
                     >
-                      <GoogleIcon size={18} />
-                      <Text className="text-[15px] font-bold text-foreground">
-                        Google
-                      </Text>
+                      {googleLoading ? (
+                        <ActivityIndicator color="#414141" size="small" />
+                      ) : (
+                        <>
+                          <GoogleIcon size={18} />
+                          <Text className="text-[15px] font-bold text-foreground">
+                            Google
+                          </Text>
+                        </>
+                      )}
                     </Pressable>
 
                     {/* Terms & Privacy Agreement Text */}
@@ -918,6 +831,7 @@ export default function SignUpScreen() {
                         if (nameError) setNameError(false);
                         if (nameErrorMessage) setNameErrorMessage(null);
                       }}
+                      clearable
                       hasError={nameError}
                       autoCapitalize="words"
                       returnKeyType="next"
@@ -933,6 +847,7 @@ export default function SignUpScreen() {
                         if (nameError) setNameError(false);
                         if (nameErrorMessage) setNameErrorMessage(null);
                       }}
+                      clearable
                       hasError={nameError}
                       autoCapitalize="words"
                       returnKeyType="done"
@@ -959,34 +874,21 @@ export default function SignUpScreen() {
                   </View>
 
                   <View className="w-full">
-                    <SegmentedDateInput
-                      month={birthMonth}
-                      day={birthDay}
-                      year={birthYear}
-                      onChangeMonth={(val) => {
-                        setBirthMonth(val);
-                        if (birthdayError) setBirthdayError(false);
-                        if (birthdayErrorMessage) setBirthdayErrorMessage(null);
-                      }}
-                      onChangeDay={(val) => {
-                        setBirthDay(val);
-                        if (birthdayError) setBirthdayError(false);
-                        if (birthdayErrorMessage) setBirthdayErrorMessage(null);
-                      }}
-                      onChangeYear={(val) => {
-                        setBirthYear(val);
-                        if (birthdayError) setBirthdayError(false);
-                        if (birthdayErrorMessage) setBirthdayErrorMessage(null);
-                      }}
+                    <FloatingInputField
+                      label="Birthday"
+                      placeholder="MM / DD / YYYY"
+                      value={birthdayInput}
+                      onChangeText={handleBirthdayChange}
                       hasError={birthdayError}
+                      keyboardType="number-pad"
+                      returnKeyType="done"
+                      inputRef={birthdayInputRef}
                       onSubmitEditing={handleFinish}
-                      monthRef={birthMonthRef}
-                      dayRef={birthDayRef}
-                      yearRef={birthYearRef}
+                      clearable
                     />
 
                     {birthdayErrorMessage && (
-                      <Text className="text-xs font-sans text-destructive mt-2 ml-1 text-left">
+                      <Text className="text-xs font-sans text-destructive mt-1.5 ml-1 text-left">
                         {birthdayErrorMessage}
                       </Text>
                     )}
@@ -1070,6 +972,7 @@ export default function SignUpScreen() {
         type={policyType}
         onDismiss={handlePolicyDismiss}
       />
+
 
       {/* Duplicate Email Modal */}
       <ErrorModal

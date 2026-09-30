@@ -1,6 +1,8 @@
 import { createContext, useContext, useCallback, useMemo, useEffect, type ReactNode } from 'react';
-import { useAuth, useUser } from '@clerk/expo';
+import { useAuth, useUser, useSSO } from '@clerk/expo';
 import { useSignIn, useSignUp } from '@clerk/expo/legacy';
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import {
   User,
@@ -9,16 +11,27 @@ import {
   resetPasswordConfirmSchema,
 } from '@/types';
 import { setAuthTokenGetter } from '@/lib/auth-token';
+import { disconnectSocket } from '@/lib/socket';
 import { createLogger } from '@/lib/logger';
 
+WebBrowser.maybeCompleteAuthSession();
+
 const logger = createLogger('AuthContext');
+
+export interface GoogleAuthResult {
+  isNewUserOrIncomplete: boolean;
+  firstName?: string;
+  lastName?: string;
+}
 
 interface AuthContextType {
   isSignedIn: boolean;
   isLoaded: boolean;
   user: User | null;
+  clerkUser: any;
   getToken: () => Promise<string | null>;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<GoogleAuthResult>;
   signUp: (email: string) => Promise<void>;
   verifyEmail: (code: string) => Promise<void>;
   completeSignUp: (firstName: string, lastName: string, birthday: string) => Promise<void>;
@@ -35,6 +48,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { user: clerkUser, isLoaded: userLoaded } = useUser();
   const { signIn: clerkSignIn, setActive: setSignInActive, isLoaded: signInLoaded } = useSignIn();
   const { signUp: clerkSignUp, setActive: setSignUpActive, isLoaded: signUpLoaded } = useSignUp();
+  const { startSSOFlow } = useSSO();
+
+  // Warm up browser engine for fast OAuth presentation
+  useEffect(() => {
+    void WebBrowser.warmUpAsync();
+    return () => {
+      void WebBrowser.coolDownAsync();
+    };
+  }, []);
 
   const isLoaded = authLoaded && userLoaded && signInLoaded && Boolean(signUpLoaded);
 
@@ -53,8 +75,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: clerkUser.primaryEmailAddress?.emailAddress || '',
       contactNumber: metadata.contactNumber || null,
       location: metadata.location || null,
+      birthday: metadata.birthday || null,
     };
   }, [clerkUser]);
+
+  const signInWithGoogle = useCallback(async (): Promise<GoogleAuthResult> => {
+    logger.info('Initiating Google SSO flow');
+    try {
+      const redirectUrl = Linking.createURL('/(auth)/sign-up', { scheme: 'sagana' });
+      const { createdSessionId, setActive, signIn: ssoSignIn, signUp: ssoSignUp } = await startSSOFlow({
+        strategy: 'oauth_google',
+        redirectUrl,
+      });
+
+      if (createdSessionId) {
+        if (setActive) {
+          await setActive({ session: createdSessionId });
+        }
+
+        const metadata = (ssoSignUp?.unsafeMetadata || ssoSignIn?.userData || {}) as Record<string, any>;
+        const hasBirthday = Boolean(metadata?.birthday);
+
+        if (hasBirthday) {
+          logger.info('Google SSO: user already completed profile, navigating to app tabs');
+          router.replace('/(app)/(tabs)');
+          return { isNewUserOrIncomplete: false };
+        }
+
+        logger.info('Google SSO: user needs to confirm name and enter birthday');
+        const googleFirstName =
+          (ssoSignUp as any)?.firstName ||
+          (ssoSignIn as any)?.userData?.firstName ||
+          '';
+        const googleLastName =
+          (ssoSignUp as any)?.lastName ||
+          (ssoSignIn as any)?.userData?.lastName ||
+          '';
+
+        return {
+          isNewUserOrIncomplete: true,
+          firstName: googleFirstName,
+          lastName: googleLastName,
+        };
+      }
+
+      if (ssoSignIn) {
+        logger.warn('Google SSO sign-in status', ssoSignIn.status);
+      }
+      if (ssoSignUp) {
+        logger.warn('Google SSO sign-up status', ssoSignUp.status);
+      }
+
+      return { isNewUserOrIncomplete: false };
+    } catch (err: unknown) {
+      logger.error('Google SSO flow error', err);
+      throw err;
+    }
+  }, [startSSOFlow, router]);
 
   const signIn = useCallback(
     async (email: string, password: string) => {
@@ -147,34 +224,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const completeSignUp = useCallback(
     async (firstName: string, lastName: string, birthday: string) => {
-      if (!clerkSignUp) throw new Error('Sign-up service unavailable');
       const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+      const trimmedBirthday = birthday.trim();
 
-      try {
-        await clerkSignUp.update({
+      // If user is already authenticated (e.g. via Google SSO)
+      if (clerkUser) {
+        logger.info('Updating authenticated user profile metadata');
+        await clerkUser.update({
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
           unsafeMetadata: {
+            ...((clerkUser.unsafeMetadata || {}) as Record<string, any>),
             fullName,
-            birthday: birthday.trim(),
+            birthday: trimmedBirthday,
           },
         });
-      } catch (e) {
-        logger.warn('Metadata update notice', e);
+        logger.info('Profile confirmed and updated for', fullName);
+        router.replace('/(app)/(tabs)');
+        return;
       }
 
-      if (clerkSignUp.createdSessionId) {
-        await setSignUpActive({ session: clerkSignUp.createdSessionId });
-        router.replace('/(app)/(tabs)');
-      } else {
-        router.replace('/(auth)/sign-in');
+      // If user is in standard sign-up flow before session is active
+      if (clerkSignUp) {
+        try {
+          await clerkSignUp.update({
+            firstName: firstName.trim(),
+            lastName: lastName.trim(),
+            unsafeMetadata: {
+              fullName,
+              birthday: trimmedBirthday,
+            },
+          });
+        } catch (e) {
+          logger.warn('Metadata update notice', e);
+        }
+
+        if (clerkSignUp.createdSessionId) {
+          await setSignUpActive({ session: clerkSignUp.createdSessionId });
+          router.replace('/(app)/(tabs)');
+        } else {
+          router.replace('/(auth)/sign-in');
+        }
+        logger.info('Sign up completed for', fullName);
+        return;
       }
-      logger.info('Sign up completed for', fullName);
+
+      throw new Error('No active user or sign-up flow found');
     },
-    [clerkSignUp, setSignUpActive, router]
+    [clerkUser, clerkSignUp, setSignUpActive, router]
   );
 
   const signOut = useCallback(async () => {
     try {
       logger.info('Signing out user');
+      disconnectSocket();
       await clerkSignOut();
       router.replace('/(auth)/sign-in');
     } catch (err: unknown) {
@@ -188,8 +291,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isSignedIn: !!isSignedIn,
       isLoaded,
       user,
+      clerkUser,
       getToken,
       signIn,
+      signInWithGoogle,
       signUp,
       verifyEmail,
       completeSignUp,
@@ -201,8 +306,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isSignedIn,
       isLoaded,
       user,
+      clerkUser,
       getToken,
       signIn,
+      signInWithGoogle,
       signUp,
       verifyEmail,
       completeSignUp,

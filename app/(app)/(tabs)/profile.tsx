@@ -1,111 +1,143 @@
 import React, { useState } from 'react';
-import { View, Text, ActivityIndicator, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Modal, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { User as UserIcon, Mail, Phone, MapPin, LogOut } from 'lucide-react-native';
-import { Button } from '@/components/ui/button';
+import { Lock } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
+import { useRouter } from 'expo-router';
 import { useAuthContext } from '@/context/auth-context';
 import { useProfile } from '@/hooks';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { user: authUser, signOut } = useAuthContext();
-  const { data: profileData, isLoading, isRefetching, refetch } = useProfile();
+  const { data: profileData } = useProfile();
+  const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
 
-  // Prefer backend /me data, fallback to Clerk user in AuthContext
   const user = profileData || authUser;
 
+  const handleLogout = async () => {
+    setIsLogoutModalVisible(false);
+    if (Platform.OS !== 'web') {
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    await signOut();
+  };
+
   return (
-    <View
-      className="flex-1 bg-white"
-      style={{ paddingTop: insets.top + 16, paddingBottom: insets.bottom + 80 }}
-    >
+    <View className="flex-1 bg-background">
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 24 }}
-        refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={refetch}
-            tintColor="#15803d"
-          />
-        }
+        contentContainerStyle={{
+          paddingTop: Math.max(insets.top, 48),
+          paddingBottom: insets.bottom + 100, // Account for floating tab bar
+          paddingHorizontal: 16,
+        }}
+        showsVerticalScrollIndicator={false}
       >
-        <Text className="text-2xl font-bold text-slate-900 mb-1">
-          User Profile
-        </Text>
-        <Text className="text-sm text-slate-500 mb-6">
-          Manage your account and profile settings.
-        </Text>
+        <View className="gap-8">
+          {/* Header */}
+          <Text className="text-[32px] font-bold text-foreground font-bold">
+            Account
+          </Text>
 
-        {isLoading ? (
-          <View className="bg-slate-50 border border-slate-200 rounded-2xl p-8 items-center justify-center mb-6">
-            <ActivityIndicator size="small" color="#15803d" />
-            <Text className="text-xs text-slate-400 mt-2">Loading profile from backend...</Text>
-          </View>
-        ) : (
-          <View className="bg-slate-50 border border-slate-200 rounded-2xl p-5 mb-6 gap-4">
-            <View className="flex-row items-center gap-3">
-              <View className="w-10 h-10 rounded-full bg-emerald-100 items-center justify-center">
-                <UserIcon size={20} color="#15803d" />
-              </View>
-              <View className="flex-1">
-                <Text className="text-xs font-medium text-slate-400">Name</Text>
-                <Text className="text-base font-semibold text-slate-900">
-                  {user?.fullName || 'Not provided'}
-                </Text>
-              </View>
+          {/* User Card */}
+          <View className="flex-row items-center p-4 bg-card border border-border rounded-[14px] gap-4">
+            <LinearGradient
+              colors={['#C9E752', '#518251']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={{ borderRadius: 28 }}
+              className="w-14 h-14 items-center justify-center"
+            >
+              <Text className="text-[20px] font-bold text-background">NN</Text>
+            </LinearGradient>
+            
+            <View className="flex-1 gap-1">
+              <Text className="text-[14px] font-bold text-foreground">
+                {user?.fullName || 'Neo Isaiah D. Nimo'}
+              </Text>
+              <Text className="text-[14px] text-foreground font-sans">
+                {user?.location || 'Barangay 176-E'}
+              </Text>
             </View>
-
-            <View className="flex-row items-center gap-3">
-              <View className="w-10 h-10 rounded-full bg-emerald-100 items-center justify-center">
-                <Mail size={20} color="#15803d" />
-              </View>
-              <View className="flex-1">
-                <Text className="text-xs font-medium text-slate-400">Email</Text>
-                <Text className="text-base font-semibold text-slate-900">
-                  {user?.email || 'Not provided'}
-                </Text>
-              </View>
-            </View>
-
-            {user?.contactNumber && (
-              <View className="flex-row items-center gap-3">
-                <View className="w-10 h-10 rounded-full bg-emerald-100 items-center justify-center">
-                  <Phone size={20} color="#15803d" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-xs font-medium text-slate-400">Contact</Text>
-                  <Text className="text-base font-semibold text-slate-900">
-                    {user.contactNumber}
-                  </Text>
-                </View>
-              </View>
-            )}
-
-            {user?.location && (
-              <View className="flex-row items-center gap-3">
-                <View className="w-10 h-10 rounded-full bg-emerald-100 items-center justify-center">
-                  <MapPin size={20} color="#15803d" />
-                </View>
-                <View className="flex-1">
-                  <Text className="text-xs font-medium text-slate-400">Location</Text>
-                  <Text className="text-base font-semibold text-slate-900">
-                    {user.location}
-                  </Text>
-                </View>
-              </View>
-            )}
           </View>
-        )}
 
-        <Button
-          variant="destructive"
-          onPress={signOut}
-          className="flex-row items-center gap-2"
-        >
-          <LogOut size={18} color="#ffffff" />
-          <Text className="text-sm font-bold text-white">Sign Out</Text>
-        </Button>
+          {/* Actions */}
+          <View className="gap-2">
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push('/change-password/otp');
+              }}
+              className="flex-row items-center h-[60px] px-4.5 bg-card border border-border rounded-[8px] gap-4"
+            >
+              <Lock size={18} color="#96958F" />
+              <Text className="text-[14px] text-foreground font-sans">
+                Change password
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Log Out Button */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => {
+              if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setIsLogoutModalVisible(true);
+            }}
+            className="h-[45px] bg-destructive/[0.08] rounded-full items-center justify-center mt-4"
+          >
+            <Text className="text-[14px] font-bold text-destructive">
+              Log Out
+            </Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
+
+      {/* Logout Confirmation Modal */}
+      <Modal
+        visible={isLogoutModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsLogoutModalVisible(false)}
+      >
+        <View className="flex-1 bg-black/40 items-center justify-center px-6">
+          <View className="w-full bg-card border border-border rounded-[14px] p-6 gap-6 items-center shadow-md">
+            <View className="gap-2.5 items-center">
+              <Text className="text-[14px] font-bold text-foreground">
+                Log Out?
+              </Text>
+              <Text className="text-[14px] text-foreground font-sans text-center">
+                You can still log in anytime.
+              </Text>
+            </View>
+            
+            <View className="flex-row w-full gap-2">
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => setIsLogoutModalVisible(false)}
+                className="flex-1 h-[45px] bg-secondary rounded-full items-center justify-center"
+              >
+                <Text className="text-[14px] font-bold text-[#414141]">
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={handleLogout}
+                className="flex-1 h-[45px] bg-destructive rounded-full items-center justify-center"
+              >
+                <Text className="text-[14px] font-bold text-[#FAF9EE]">
+                  Log Out
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

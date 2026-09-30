@@ -10,6 +10,7 @@ export const userSchema = z.object({
   email: z.string().email('Invalid email address'),
   contactNumber: z.string().nullable().optional(),
   location: z.string().nullable().optional(),
+  birthday: z.string().nullable().optional(),
   createdAt: z.string().or(z.date()).optional(),
   updatedAt: z.string().or(z.date()).optional(),
 });

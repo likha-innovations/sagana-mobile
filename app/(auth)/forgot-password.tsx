@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, type RefObject } from 'react';
+import { useState, useRef, useEffect, type RefObject } from 'react';
 import {
   View,
   Text,
@@ -157,26 +157,30 @@ function FloatingInputField({
         />
       </View>
 
-      {/* Trailing Icon */}
-      {hasError && !isPassword && (
-        <CircleAlert size={18} color="#E84C4C" />
-      )}
-
-      {isPassword && (
-        <Pressable
-          onPress={() => setShowPassword((prev) => !prev)}
-          hitSlop={8}
-          className="p-1 -mr-1"
-          accessibilityRole="button"
-          accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
-        >
-          {showPassword ? (
-            <EyeOff size={18} color={hasError ? '#E84C4C' : '#414141'} />
-          ) : (
-            <Eye size={18} color={hasError ? '#E84C4C' : '#414141'} />
-          )}
-        </Pressable>
-      )}
+      {/* Trailing Icons */}
+      <View className="flex-row items-center gap-1 -mr-1">
+        {isPassword && hasValue && (
+          <Pressable
+            onPress={() => setShowPassword((prev) => !prev)}
+            hitSlop={8}
+            className="p-1"
+            accessibilityRole="button"
+            accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+          >
+            {showPassword ? (
+              <EyeOff size={18} color={hasError ? '#E84C4C' : '#414141'} />
+            ) : (
+              <Eye size={18} color={hasError ? '#E84C4C' : '#414141'} />
+            )}
+          </Pressable>
+        )}
+        
+        {hasError && (
+          <View className="p-1 pointer-events-none">
+            <CircleAlert size={18} color="#E84C4C" />
+          </View>
+        )}
+      </View>
     </Pressable>
   );
 }
@@ -190,6 +194,7 @@ interface OtpInputGroupProps {
 
 function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupProps) {
   const inputRefs = useRef<(TextInput | null)[]>([]);
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
   const handleCharChange = (text: string, index: number) => {
     const cleaned = text.replace(/[^0-9]/g, '');
@@ -225,6 +230,7 @@ function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupPr
     <View className="w-full flex-row justify-between items-center max-w-[380px]">
       {[0, 1, 2, 3, 4, 5].map((index) => {
         const digit = code[index] || '';
+        const isFocused = focusedIndex === index;
         return (
           <TextInput
             key={index}
@@ -234,6 +240,8 @@ function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupPr
             value={digit}
             onChangeText={(text) => handleCharChange(text, index)}
             onKeyPress={(e) => handleKeyPress(e, index)}
+            onFocus={() => setFocusedIndex(index)}
+            onBlur={() => setFocusedIndex(null)}
             keyboardType="number-pad"
             maxLength={1}
             textAlign="center"
@@ -241,8 +249,8 @@ function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupPr
               'w-[52px] h-[61px] rounded-[14px] border-[1.5px] bg-background text-[24px] font-bold text-foreground',
               hasError
                 ? 'border-destructive text-destructive'
-                : digit
-                  ? 'border-foreground/40'
+                : isFocused || digit
+                  ? 'border-foreground/50'
                   : 'border-input'
             )}
           />
@@ -275,9 +283,10 @@ export default function ForgotPasswordScreen() {
   // Step 3: Password State
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordError, setPasswordError] = useState(false);
+  const [newPasswordError, setNewPasswordError] = useState(false);
+  const [confirmPasswordError, setConfirmPasswordError] = useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = useState<string | null>(null);
-  const [failedRequirement, setFailedRequirement] = useState<string | null>(null);
+  const [failedRequirements, setFailedRequirements] = useState<string[]>([]);
 
   const [loading, setLoading] = useState(false);
 
@@ -314,7 +323,7 @@ export default function ForgotPasswordScreen() {
     if (!trimmed) {
       setEmailError(true);
       setEmailErrorMessage('Please enter your email address');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
@@ -322,7 +331,7 @@ export default function ForgotPasswordScreen() {
     if (!emailRegex.test(trimmed)) {
       setEmailError(true);
       setEmailErrorMessage('Please enter a valid email address');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
@@ -339,7 +348,7 @@ export default function ForgotPasswordScreen() {
     } catch {
       setEmailError(true);
       setEmailErrorMessage('Unable to find account with this email address');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setLoading(false);
     }
@@ -373,7 +382,7 @@ export default function ForgotPasswordScreen() {
     if (otpCode.length < 6) {
       setOtpError(true);
       setOtpErrorMessage('Incorrect one-time code');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
@@ -386,10 +395,11 @@ export default function ForgotPasswordScreen() {
   const handleFinishReset = async () => {
     // Figma validation 1: Missing input
     if (!newPassword || !confirmPassword) {
-      setPasswordError(true);
+      if (!newPassword) setNewPasswordError(true);
+      if (!confirmPassword) setConfirmPasswordError(true);
       setPasswordErrorMessage('Please enter and confirm your new password');
-      setFailedRequirement(null);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setFailedRequirements([]);
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
@@ -399,32 +409,34 @@ export default function ForgotPasswordScreen() {
     const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword);
 
     if (!isAtLeast12 || !hasNumber || !hasSymbol) {
-      setPasswordError(true);
-      setPasswordErrorMessage('Password doesn’t meet requirements');
-      if (!hasSymbol) {
-        setFailedRequirement('Must have a special symbol (e.g., !@#$)');
-      } else if (!hasNumber) {
-        setFailedRequirement('Must have a number (0–9)');
-      } else {
-        setFailedRequirement('At least 12+ characters');
-      }
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      const unmet = [];
+      if (!isAtLeast12) unmet.push('At least 12+ characters');
+      if (!hasNumber) unmet.push('Must have a number (0–9)');
+      if (!hasSymbol) unmet.push('Must have a special symbol (e.g., !@#$)');
+
+      setNewPasswordError(true);
+      setConfirmPasswordError(false);
+      setPasswordErrorMessage("Password doesn't meet requirements");
+      setFailedRequirements(unmet);
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
     // Figma validation 3: Password mismatch
     if (newPassword !== confirmPassword) {
-      setPasswordError(true);
-      setPasswordErrorMessage('Passwords doesn’t match');
-      setFailedRequirement(null);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setNewPasswordError(false);
+      setConfirmPasswordError(true);
+      setPasswordErrorMessage("Passwords doesn't match");
+      setFailedRequirements([]);
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
     setLoading(true);
-    setPasswordError(false);
+    setNewPasswordError(false);
+    setConfirmPasswordError(false);
     setPasswordErrorMessage(null);
-    setFailedRequirement(null);
+    setFailedRequirements([]);
 
     try {
       if (isLoaded) {
@@ -432,9 +444,10 @@ export default function ForgotPasswordScreen() {
       }
       setStep('success');
     } catch {
-      setPasswordError(true);
+      setConfirmPasswordError(true);
+      setNewPasswordError(true);
       setPasswordErrorMessage('Failed to reset password. The OTP may have expired.');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setLoading(false);
     }
@@ -460,7 +473,7 @@ export default function ForgotPasswordScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* Top Unified Group: Header + Form Content (Positioned at the upper section) */}
+            {/* Top Unified Group: Header + Form Content */}
             <View className="w-full max-w-[380px] items-center pt-4">
               {/* Header Navigation Bar */}
               <View className="w-full h-11 flex-row items-center justify-between relative mb-6">
@@ -614,11 +627,11 @@ export default function ForgotPasswordScreen() {
                       value={newPassword}
                       onChangeText={(text) => {
                         setNewPassword(text);
-                        if (passwordError) setPasswordError(false);
+                        if (newPasswordError) setNewPasswordError(false);
                         if (passwordErrorMessage) setPasswordErrorMessage(null);
-                        if (failedRequirement) setFailedRequirement(null);
+                        if (failedRequirements.length > 0) setFailedRequirements([]);
                       }}
-                      hasError={passwordError}
+                      hasError={newPasswordError}
                       isPassword
                       returnKeyType="next"
                       inputRef={newPasswordRef}
@@ -630,11 +643,11 @@ export default function ForgotPasswordScreen() {
                       value={confirmPassword}
                       onChangeText={(text) => {
                         setConfirmPassword(text);
-                        if (passwordError) setPasswordError(false);
+                        if (confirmPasswordError) setConfirmPasswordError(false);
                         if (passwordErrorMessage) setPasswordErrorMessage(null);
-                        if (failedRequirement) setFailedRequirement(null);
+                        if (failedRequirements.length > 0) setFailedRequirements([]);
                       }}
-                      hasError={passwordError}
+                      hasError={confirmPasswordError}
                       isPassword
                       returnKeyType="done"
                       inputRef={confirmPasswordRef}
@@ -648,11 +661,15 @@ export default function ForgotPasswordScreen() {
                       </Text>
                     )}
 
-                    {/* Specific Failed Requirement Bullet */}
-                    {failedRequirement && (
-                      <Text className="text-[13px] font-sans text-destructive -mt-1 ml-4 text-left">
-                        • {failedRequirement}
-                      </Text>
+                    {/* Specific Failed Requirement Bullets */}
+                    {failedRequirements.length > 0 && (
+                      <View className="w-full mt-1 pl-2">
+                        {failedRequirements.map((req, idx) => (
+                          <Text key={idx} className="text-[13px] font-sans text-destructive leading-6">
+                            • {req}
+                          </Text>
+                        ))}
+                      </View>
                     )}
 
                     {/* Checklist Requirements matching Figma */}

@@ -10,6 +10,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   TextInput,
+  ActivityIndicator,
   type TextInputProps,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,10 +23,14 @@ import Animated, {
   interpolate,
   Easing,
 } from 'react-native-reanimated';
-import { Eye, EyeOff, X } from 'lucide-react-native';
+import { Eye, EyeOff, X, CircleAlert } from 'lucide-react-native';
 import { GoogleIcon } from '@/components/icons';
 import { ErrorModal } from '@/components/ui/error-modal';
+import { useAuthContext } from '@/context/auth-context';
+import { createLogger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
+
+const logger = createLogger('SignInScreen');
 
 interface AuthInputFieldProps {
   label: string;
@@ -133,34 +138,42 @@ function AuthInputField({
         />
       </View>
 
-      {/* Trailing Icon */}
-      {isPassword && hasValue && (
-        <Pressable
-          onPress={() => setShowPassword((prev) => !prev)}
-          hitSlop={8}
-          className="p-1 -mr-1"
-          accessibilityRole="button"
-          accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
-        >
-          {showPassword ? (
-            <EyeOff size={18} color={hasError ? '#E84C4C' : '#414141'} />
-          ) : (
-            <Eye size={18} color={hasError ? '#E84C4C' : '#414141'} />
-          )}
-        </Pressable>
-      )}
+      {/* Trailing Icons */}
+      <View className="flex-row items-center gap-1 -mr-1">
+        {clearable && hasValue && isFocused && (
+          <Pressable
+            onPress={() => onChangeText('')}
+            hitSlop={8}
+            className="p-1"
+            accessibilityRole="button"
+            accessibilityLabel="Clear input"
+          >
+            <X size={16} color="#414141" />
+          </Pressable>
+        )}
 
-      {clearable && hasValue && isFocused && (
-        <Pressable
-          onPress={() => onChangeText('')}
-          hitSlop={8}
-          className="p-1 -mr-1"
-          accessibilityRole="button"
-          accessibilityLabel="Clear input"
-        >
-          <X size={16} color="#414141" />
-        </Pressable>
-      )}
+        {isPassword && hasValue && (
+          <Pressable
+            onPress={() => setShowPassword((prev) => !prev)}
+            hitSlop={8}
+            className="p-1"
+            accessibilityRole="button"
+            accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+          >
+            {showPassword ? (
+              <EyeOff size={18} color="#414141" />
+            ) : (
+              <Eye size={18} color="#414141" />
+            )}
+          </Pressable>
+        )}
+
+        {hasError && (
+          <View className="p-1">
+            <CircleAlert size={18} color="#E84C4C" />
+          </View>
+        )}
+      </View>
     </Pressable>
   );
 }
@@ -168,6 +181,7 @@ function AuthInputField({
 export default function SignInScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { signIn, signInWithGoogle, isLoaded } = useAuthContext();
   const emailInputRef = useRef<TextInput>(null);
   const passwordInputRef = useRef<TextInput>(null);
 
@@ -178,6 +192,8 @@ export default function SignInScreen() {
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
 
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
 
   const handleEmailChange = (text: string) => {
@@ -192,42 +208,86 @@ export default function SignInScreen() {
     if (errorMessage) setErrorMessage(null);
   };
 
-  const handleLoginPress = () => {
+  const handleLoginPress = async () => {
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const trimmedEmail = emailAddress.trim();
     const missingEmail = !trimmedEmail;
     const missingPassword = !password;
 
     if (missingEmail || missingPassword) {
-      setEmailError(missingEmail);
-      setPasswordError(missingPassword);
+      setEmailError(true);
+      setPasswordError(true);
       setErrorMessage('Please enter your credentials');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(trimmedEmail)) {
       setEmailError(true);
-      setPasswordError(false);
+      setPasswordError(true);
       setErrorMessage('Please enter a valid email address');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
+    setLoading(true);
     setEmailError(false);
     setPasswordError(false);
     setErrorMessage(null);
+
+    try {
+      if (isLoaded) {
+        await signIn(trimmedEmail, password);
+      }
+    } catch (err: any) {
+      logger.error('Login attempt failed', err);
+      
+      const errorCode = err?.errors?.[0]?.code;
+      let message = 'Invalid email or password';
+      
+      if (errorCode === 'form_password_incorrect' || errorCode === 'form_identifier_not_found') {
+        message = 'Incorrect credentials, try again';
+      } else if (errorCode === 'too_many_requests') {
+        message = 'Too many failed attempts, you may try again later';
+      } else if (err?.errors?.[0]?.longMessage) {
+        message = err.errors[0].longMessage;
+      } else if (err?.message) {
+        message = err.message;
+      }
+
+      setErrorMessage(message);
+      setEmailError(true);
+      setPasswordError(true);
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleGooglePress = () => {
-    setShowErrorModal(true);
+  const handleGooglePress = async () => {
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (err: any) {
+      logger.error('Google Sign-In failed', err);
+      const msg = err?.message || '';
+      if (!msg.includes('cancel') && !msg.includes('dismiss')) {
+        setShowErrorModal(true);
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
   };
 
   const handleForgotPasswordPress = () => {
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push('/(auth)/forgot-password');
   };
 
   const handleRequestAccountPress = () => {
+    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push('/(auth)/sign-up');
   };
 
@@ -253,7 +313,7 @@ export default function SignInScreen() {
           >
             {/* Top Logo and Form Section */}
             <View className="w-full max-w-[380px] items-center pt-8">
-              {/* Logo Area: larger visual glyphs, ample bottom margin to lower the form */}
+              {/* Logo Area */}
               <View className="w-full items-center justify-center mb-10 mt-10">
                 <Image
                   source={require('@/assets/sagana-wordmark-side.png')}
@@ -301,12 +361,17 @@ export default function SignInScreen() {
                 {/* Primary Action Button: Log in */}
                 <Pressable
                   onPress={handleLoginPress}
-                  className="w-full h-[45px] rounded-full bg-primary items-center justify-center mt-4 active:opacity-90"
+                  disabled={loading || googleLoading}
+                  className="w-full h-[50px] rounded-full bg-primary items-center justify-center mt-4 active:opacity-90 disabled:opacity-60"
                   accessibilityRole="button"
                 >
-                  <Text className="text-sm font-bold text-primary-foreground">
-                    Log in
-                  </Text>
+                  {loading ? (
+                    <ActivityIndicator color="#FAF9EE" size="small" />
+                  ) : (
+                    <Text className="text-[15px] font-bold text-primary-foreground">
+                      Log in
+                    </Text>
+                  )}
                 </Pressable>
 
                 {/* Forgot Password Link */}
@@ -333,14 +398,21 @@ export default function SignInScreen() {
                 {/* Google SSO Button */}
                 <Pressable
                   onPress={handleGooglePress}
-                  className="w-full h-[45px] rounded-full bg-secondary flex-row items-center justify-center gap-2.5 active:opacity-85"
+                  disabled={loading || googleLoading}
+                  className="w-full h-[50px] rounded-full bg-secondary flex-row items-center justify-center gap-2.5 active:opacity-85 disabled:opacity-60"
                   accessibilityRole="button"
                   accessibilityLabel="Sign in with Google"
                 >
-                  <GoogleIcon size={18} />
-                  <Text className="text-sm font-bold text-foreground">
-                    Google
-                  </Text>
+                  {googleLoading ? (
+                    <ActivityIndicator color="#414141" size="small" />
+                  ) : (
+                    <>
+                      <GoogleIcon size={18} />
+                      <Text className="text-[15px] font-bold text-foreground">
+                        Google
+                      </Text>
+                    </>
+                  )}
                 </Pressable>
               </View>
             </View>
@@ -349,10 +421,11 @@ export default function SignInScreen() {
             <View className="w-full max-w-[380px] pt-12 pb-10">
               <Pressable
                 onPress={handleRequestAccountPress}
-                className="w-full h-[45px] rounded-full border-[1.5px] border-primary bg-transparent items-center justify-center active:opacity-80"
+                disabled={loading || googleLoading}
+                className="w-full h-[50px] rounded-full border-[1.5px] border-primary bg-transparent items-center justify-center active:opacity-80 disabled:opacity-60"
                 accessibilityRole="button"
               >
-                <Text className="text-sm font-bold text-primary">
+                <Text className="text-[15px] font-bold text-primary">
                   Don’t have an account?
                 </Text>
               </Pressable>
@@ -363,6 +436,9 @@ export default function SignInScreen() {
 
       <ErrorModal
         visible={showErrorModal}
+        title="An error occured"
+        description="Try again later."
+        buttonText="Okay"
         onClose={() => setShowErrorModal(false)}
       />
     </View>

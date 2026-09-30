@@ -27,7 +27,7 @@ if (!publishableKey) {
 }
 
 function AuthProtectedNavigation() {
-  const { isSignedIn, isLoaded } = useAuthContext();
+  const { isSignedIn, isLoaded, user } = useAuthContext();
   const segments = useSegments();
   const router = useRouter();
 
@@ -41,15 +41,24 @@ function AuthProtectedNavigation() {
     if (!isLoaded) return;
 
     const inAuthGroup = segments[0] === '(auth)';
+    const hasCompleteProfile = Boolean(user?.birthday);
 
     if (!isSignedIn && !inAuthGroup) {
       authGateLogger.info('Unauthenticated user redirected to sign-in');
       router.replace('/(auth)/sign-in');
-    } else if (isSignedIn && inAuthGroup) {
-      authGateLogger.info('Authenticated user redirected to app tabs');
-      router.replace('/(app)/(tabs)');
+    } else if (isSignedIn && hasCompleteProfile) {
+      if (inAuthGroup) {
+        authGateLogger.info('Authenticated user with complete profile redirected to app tabs');
+        router.replace('/(app)/(tabs)');
+      }
+    } else if (isSignedIn && !hasCompleteProfile) {
+      const isAlreadyOnSignUp = segments[0] === '(auth)' && segments[1] === 'sign-up';
+      if (!isAlreadyOnSignUp) {
+        authGateLogger.info('Authenticated user without complete profile redirected to sign-up to complete onboarding');
+        router.replace('/(auth)/sign-up');
+      }
     }
-  }, [isSignedIn, isLoaded, segments, router]);
+  }, [isSignedIn, isLoaded, user, segments, router]);
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
