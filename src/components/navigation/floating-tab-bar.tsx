@@ -4,7 +4,6 @@ import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { createLogger } from '@/lib/logger';
-import { cn } from '@/lib/utils';
 
 const logger = createLogger('Navigation');
 
@@ -17,15 +16,14 @@ export function FloatingTabBar({
 
   return (
     <View
-      pointerEvents="box-none"
       style={[
         styles.wrapper,
         {
-          bottom: Math.max(insets.bottom + 12, 20),
+          paddingBottom: Math.max(insets.bottom, 20),
         },
       ]}
     >
-      <View style={styles.pillContainer}>
+      <View style={styles.tabContainer}>
         {state.routes.map(
           (route: (typeof state.routes)[number], index: number) => {
             const { options } = descriptors[route.key];
@@ -46,7 +44,7 @@ export function FloatingTabBar({
               });
 
               if (Platform.OS !== 'web') {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }
 
               if (!isFocused && !event.defaultPrevented) {
@@ -62,8 +60,8 @@ export function FloatingTabBar({
               });
             };
 
-            const activeColor = '#15803d';
-            const inactiveColor = '#94a3b8';
+            const activeColor = '#718619';
+            const inactiveColor = '#AFAEA7';
             const color = isFocused ? activeColor : inactiveColor;
 
             return (
@@ -81,13 +79,13 @@ export function FloatingTabBar({
                   {options.tabBarIcon?.({
                     focused: isFocused,
                     color,
-                    size: 22,
+                    size: 24,
                   })}
                 </View>
                 <Text
                   style={[
                     styles.tabLabel,
-                    isFocused ? styles.tabLabelActive : styles.tabLabelInactive,
+                    { color },
                   ]}
                   numberOfLines={1}
                 >
@@ -107,50 +105,33 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    bottom: 0,
+    backgroundColor: '#FAF9EE',
+    borderTopWidth: 1,
+    borderTopColor: '#DCDBD5',
     zIndex: 100,
   },
-  pillContainer: {
+  tabContainer: {
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
-    backgroundColor: '#ffffff',
-    borderRadius: 28,
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.10,
-    shadowRadius: 16,
-    elevation: 8,
+    justifyContent: 'space-between',
+    paddingHorizontal: 40,
+    paddingTop: 15,
   },
   tabButton: {
-    flex: 1,
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 4,
+    gap: 4,
   },
   iconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 3,
   },
   tabLabel: {
-    fontSize: 11,
-    fontFamily: 'SpotifyMix-Medium',
-  },
-  tabLabelActive: {
-    color: '#15803d',
-    fontWeight: '700',
-  },
-  tabLabelInactive: {
-    color: '#94a3b8',
-    fontWeight: '500',
+    fontSize: 12,
+    fontFamily: 'SpotifyMix-Regular',
   },
 });

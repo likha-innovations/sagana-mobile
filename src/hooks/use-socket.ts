@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getSocket, getSocketUrl } from '@/lib/socket';
+import { getSocket, getSocketUrl, disconnectSocket } from '@/lib/socket';
 import { TelemetryData, RealtimeEventLog } from '@/types';
+import { useAuthContext } from '@/context/auth-context';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('useSocket');
 
 export function useSocket() {
+  const { isSignedIn } = useAuthContext();
   const [isConnected, setIsConnected] = useState(false);
   const [socketId, setSocketId] = useState<string | null>(null);
   const [latestTelemetry, setLatestTelemetry] = useState<TelemetryData | null>(null);
@@ -22,6 +24,13 @@ export function useSocket() {
   }, []);
 
   useEffect(() => {
+    if (!isSignedIn) {
+      disconnectSocket();
+      setIsConnected(false);
+      setSocketId(null);
+      return;
+    }
+
     const socket = getSocket();
 
     if (!socket.connected) {
@@ -88,7 +97,7 @@ export function useSocket() {
       socket.off('connect_error', onConnectError);
       socket.off('telemetry', onTelemetry);
     };
-  }, [addLog]);
+  }, [isSignedIn, addLog]);
 
   // Dispatches custom command from mobile to backend -> HiveMQ sagana/commands
   const sendCommand = useCallback(
