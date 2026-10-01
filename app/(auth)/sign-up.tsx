@@ -26,10 +26,14 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { ChevronLeft, Eye, EyeOff, X } from 'lucide-react-native';
+import { ChevronLeft, Eye, EyeOff, X, Calendar } from 'lucide-react-native';
 import { GoogleIcon } from '@/components/icons';
 import { ErrorModal } from '@/components/ui/error-modal';
-import { PolicyBottomSheet } from '@/components/auth';
+import {
+  PolicyBottomSheet,
+  BirthdayBottomSheet,
+  type BirthdayBottomSheetRef,
+} from '@/components/auth';
 import { useAuthContext } from '@/context/auth-context';
 import { useBarangays } from '@/hooks';
 import { createLogger } from '@/lib/logger';
@@ -75,6 +79,8 @@ interface FloatingInputFieldProps {
   inputRef?: RefObject<TextInput | null>;
   trailingIcon?: React.ReactNode;
   onTrailingPress?: () => void;
+  editable?: boolean;
+  onPress?: () => void;
 }
 
 function FloatingInputField({
@@ -92,6 +98,8 @@ function FloatingInputField({
   inputRef,
   trailingIcon,
   onTrailingPress,
+  editable = true,
+  onPress,
 }: FloatingInputFieldProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -120,7 +128,15 @@ function FloatingInputField({
 
   return (
     <Pressable
-      onPress={() => inputRef?.current?.focus()}
+      onPress={() => {
+        if (onPress) {
+          onPress();
+          return;
+        }
+        if (editable) {
+          inputRef?.current?.focus();
+        }
+      }}
       className={cn(
         'w-full h-[58px] rounded-2xl border-[1.5px] px-5 flex-row items-center justify-between bg-background transition-colors',
         hasError
@@ -167,6 +183,8 @@ function FloatingInputField({
           onSubmitEditing={onSubmitEditing}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          editable={editable}
+          pointerEvents={editable ? 'auto' : 'none'}
           style={{
             paddingTop: isFloating ? 14 : 0,
           }}
@@ -351,7 +369,12 @@ export default function SignUpScreen() {
   const [birthdayInput, setBirthdayInput] = useState('');
   const [birthdayError, setBirthdayError] = useState(false);
   const [birthdayErrorMessage, setBirthdayErrorMessage] = useState<string | null>(null);
-  const birthdayInputRef = useRef<TextInput>(null);
+  const birthdaySheetRef = useRef<BirthdayBottomSheetRef>(null);
+
+  const handleOpenBirthdayPicker = useCallback(() => {
+    Keyboard.dismiss();
+    birthdaySheetRef.current?.present();
+  }, []);
 
   const [barangay, setBarangay] = useState('');
   const [barangayError, setBarangayError] = useState(false);
@@ -1020,7 +1043,7 @@ export default function SignUpScreen() {
                       autoCapitalize="words"
                       returnKeyType="next"
                       inputRef={lastNameRef}
-                      onSubmitEditing={() => birthdayInputRef.current?.focus()}
+                      onSubmitEditing={handleOpenBirthdayPicker}
                     />
 
                     {nameErrorMessage && (
@@ -1029,18 +1052,27 @@ export default function SignUpScreen() {
                       </Text>
                     )}
 
-                    <FloatingInputField
-                      label="Birthday"
-                      placeholder="MM / DD / YYYY"
-                      value={birthdayInput}
-                      onChangeText={handleBirthdayChange}
-                      hasError={birthdayError}
-                      keyboardType="number-pad"
-                      returnKeyType="done"
-                      inputRef={birthdayInputRef}
-                      onSubmitEditing={handleNextName}
-                      clearable
-                    />
+                    <Pressable
+                      onPress={handleOpenBirthdayPicker}
+                      className="w-full"
+                    >
+                      <View pointerEvents="none">
+                        <FloatingInputField
+                          label="Birthday"
+                          placeholder="MM / DD / YYYY"
+                          value={birthdayInput}
+                          onChangeText={() => {}}
+                          hasError={birthdayError}
+                          editable={false}
+                          trailingIcon={
+                            <Calendar
+                              size={18}
+                              color={birthdayError ? '#E84C4C' : '#96958F'}
+                            />
+                          }
+                        />
+                      </View>
+                    </Pressable>
 
                     {birthdayErrorMessage && (
                       <Text className="text-xs font-sans text-destructive mt-0.5 ml-1 text-left">
@@ -1237,6 +1269,17 @@ export default function SignUpScreen() {
         ref={policySheetRef}
         type={policyType}
         onDismiss={handlePolicyDismiss}
+      />
+
+      {/* Birthday Picker Gorhom Bottom Sheet Modal */}
+      <BirthdayBottomSheet
+        ref={birthdaySheetRef}
+        value={birthdayInput}
+        onConfirm={(formattedDate) => {
+          setBirthdayInput(formattedDate);
+          setBirthdayError(false);
+          setBirthdayErrorMessage(null);
+        }}
       />
 
 
