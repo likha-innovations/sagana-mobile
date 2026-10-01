@@ -1,4 +1,4 @@
-import React, { useState, useEffect, type RefObject } from 'react';
+import { useState, useEffect, type RefObject, type ReactNode } from 'react';
 import { View, Text, TextInput, Pressable, type TextInputProps } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -21,6 +21,9 @@ export interface FloatingInputFieldProps {
   returnKeyType?: TextInputProps['returnKeyType'];
   onSubmitEditing?: () => void;
   inputRef?: RefObject<TextInput | null>;
+  editable?: boolean;
+  onPress?: () => void;
+  trailingIcon?: ReactNode;
 }
 
 export function FloatingInputField({
@@ -34,6 +37,9 @@ export function FloatingInputField({
   returnKeyType,
   onSubmitEditing,
   inputRef,
+  editable = true,
+  onPress,
+  trailingIcon,
 }: FloatingInputFieldProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -60,9 +66,19 @@ export function FloatingInputField({
     };
   });
 
+  const handleContainerPress = () => {
+    if (onPress) {
+      onPress();
+      return;
+    }
+    if (editable) {
+      inputRef?.current?.focus();
+    }
+  };
+
   return (
     <Pressable
-      onPress={() => inputRef?.current?.focus()}
+      onPress={handleContainerPress}
       className={cn(
         'w-full h-[58px] rounded-2xl border-[1.5px] px-5 flex-row items-center justify-between bg-background transition-colors',
         hasError
@@ -107,6 +123,8 @@ export function FloatingInputField({
           onSubmitEditing={onSubmitEditing}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          editable={editable}
+          pointerEvents={editable ? 'auto' : 'none'}
           style={{
             paddingTop: isFloating ? 14 : 0,
           }}
@@ -116,6 +134,12 @@ export function FloatingInputField({
 
       {/* Trailing Icons */}
       <View className="flex-row items-center gap-1 -mr-1">
+        {trailingIcon && !isPassword && (
+          <View className="p-1 pointer-events-none">
+            {trailingIcon}
+          </View>
+        )}
+
         {isPassword && hasValue && (
           <Pressable
             onPress={() => setShowPassword((prev) => !prev)}
