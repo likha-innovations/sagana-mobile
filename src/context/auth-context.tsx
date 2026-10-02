@@ -39,6 +39,7 @@ interface AuthContextType {
   requestPasswordReset: (email: string) => Promise<void>;
   verifyPasswordResetCode: (code: string) => Promise<void>;
   resetPassword: (codeOrNewPassword: string, maybeNewPassword?: string) => Promise<void>;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -243,6 +244,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [clerkSignIn, setSignInActive, router]
   );
 
+  const updatePassword = useCallback(
+    async (currentPassword: string, newPassword: string) => {
+      if (!clerkUser) throw new Error('User not loaded');
+
+      logger.info('Updating password for logged-in user');
+      await clerkUser.updatePassword({
+        currentPassword,
+        newPassword,
+        signOutOfOtherSessions: true,
+      });
+      logger.info('Password updated successfully');
+    },
+    [clerkUser]
+  );
+
   const signUp = useCallback(
     async (email: string) => {
       if (!clerkSignUp) throw new Error('Sign-up service unavailable');
@@ -351,6 +367,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       requestPasswordReset,
       verifyPasswordResetCode,
       resetPassword,
+      updatePassword,
       signOut,
     }),
     [
@@ -367,6 +384,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       requestPasswordReset,
       verifyPasswordResetCode,
       resetPassword,
+      updatePassword,
       signOut,
     ]
   );

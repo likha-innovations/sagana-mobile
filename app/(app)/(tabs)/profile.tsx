@@ -101,7 +101,7 @@ export default function ProfileScreen() {
               activeOpacity={0.8}
               onPress={() => {
                 if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.push('/change-password/otp');
+                router.push('/change-password/current-password');
               }}
               className="flex-row items-center h-[60px] px-4.5 bg-card border border-border rounded-[8px] gap-4"
             >
