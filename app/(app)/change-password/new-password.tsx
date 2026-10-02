@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,11 +11,12 @@ import {
   type TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { ChevronLeft } from 'lucide-react-native';
 import { useAuthContext } from '@/context/auth-context';
 import { FloatingInputField, PasswordRequirements, ProgressBar } from '@/components/auth';
+import { getPendingCurrentPassword, clearPendingCurrentPassword } from '@/lib/password-flow-store';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('ChangePasswordNew');
@@ -23,8 +24,14 @@ const logger = createLogger('ChangePasswordNew');
 export default function ChangePasswordNewScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { currentPassword = '' } = useLocalSearchParams<{ currentPassword: string }>();
   const { updatePassword } = useAuthContext();
+
+  useEffect(() => {
+    const current = getPendingCurrentPassword();
+    if (!current) {
+      router.replace('/change-password/current-password');
+    }
+  }, [router]);
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -39,6 +46,12 @@ export default function ChangePasswordNewScreen() {
   const confirmPasswordRef = useRef<TextInput>(null);
 
   const handleFinish = async () => {
+    const currentPassword = getPendingCurrentPassword();
+    if (!currentPassword) {
+      router.replace('/change-password/current-password');
+      return;
+    }
+
     // Missing input check
     if (!newPassword || !confirmPassword) {
       if (!newPassword) setNewPasswordError(true);
@@ -62,7 +75,7 @@ export default function ChangePasswordNewScreen() {
     }
 
     // Disallow new password matching current password
-    if (currentPassword && newPassword === currentPassword) {
+    if (newPassword === currentPassword) {
       setNewPasswordError(true);
       setConfirmPasswordError(false);
       setPasswordErrorMessage('New password must be different from current password');
@@ -86,6 +99,7 @@ export default function ChangePasswordNewScreen() {
 
     try {
       await updatePassword(currentPassword, newPassword);
+      clearPendingCurrentPassword();
       logger.info('Password successfully updated via Clerk');
       router.push('/change-password/success');
     } catch (err: unknown) {
@@ -129,7 +143,10 @@ export default function ChangePasswordNewScreen() {
               {/* Header with back button and progress bar */}
               <View className="w-full h-11 flex-row items-center justify-between relative mb-6">
                 <Pressable
-                  onPress={() => router.back()}
+                  onPress={() => {
+                    clearPendingCurrentPassword();
+                    router.back();
+                  }}
                   hitSlop={12}
                   className="w-[30px] h-[30px] items-center justify-center -ml-1"
                   accessibilityRole="button"

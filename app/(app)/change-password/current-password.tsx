@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import * as Haptics from 'expo-haptics';
 import { ChevronLeft } from 'lucide-react-native';
 import { FloatingInputField, ProgressBar } from '@/components/auth';
 import { useAuthContext } from '@/context/auth-context';
+import { setPendingCurrentPassword, clearPendingCurrentPassword } from '@/lib/password-flow-store';
 
 import { useSession } from '@clerk/expo';
 import { createLogger } from '@/lib/logger';
@@ -41,6 +42,10 @@ export default function CurrentPasswordScreen() {
 
   const inputRef = useRef<TextInput>(null);
 
+  useEffect(() => {
+    clearPendingCurrentPassword();
+  }, []);
+
   const handleNext = async () => {
     const trimmed = currentPassword.trim();
     if (!trimmed) {
@@ -63,10 +68,8 @@ export default function CurrentPasswordScreen() {
         });
       }
 
-      router.push({
-        pathname: '/change-password/new-password',
-        params: { currentPassword: trimmed },
-      });
+      setPendingCurrentPassword(trimmed);
+      router.push('/change-password/new-password');
     } catch (err: unknown) {
       logger.error('Failed to verify current password', err);
       setCurrentPasswordError(true);
