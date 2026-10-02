@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
-import { Text, TouchableOpacity, Platform } from 'react-native';
+import { Text, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Haptics from 'expo-haptics';
 
 export interface QuickActionButtonProps {
   label: string;
@@ -11,9 +10,6 @@ export interface QuickActionButtonProps {
 
 export function QuickActionButton({ label, icon, onPress }: QuickActionButtonProps) {
   const handlePress = () => {
-    if (Platform.OS !== 'web') {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
     onPress?.();
   };
 

@@ -109,7 +109,7 @@ export default function DashboardScreen() {
               <Text className="text-[16px] font-bold text-foreground">
                 Your Machines
               </Text>
-              <TouchableOpacity onPress={() => Platform.OS !== 'web' && Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
+              <TouchableOpacity onPress={() => {}}>
                 <Text className="text-[12px] font-bold text-primary">View All</Text>
               </TouchableOpacity>
             </View>

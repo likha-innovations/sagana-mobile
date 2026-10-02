@@ -63,7 +63,6 @@ export default function CurrentPasswordScreen() {
         });
       }
 
-      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       router.push({
         pathname: '/change-password/new-password',
         params: { currentPassword: trimmed },
@@ -97,8 +96,6 @@ export default function CurrentPasswordScreen() {
 
     setForgotLoading(true);
     try {
-      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
       const emailToReset = userEmail;
 
       // Invalidate current session to enable Clerk unauthenticated reset flow
@@ -189,10 +186,7 @@ export default function CurrentPasswordScreen() {
 
                 {/* Forgot Password Link */}
                 <Pressable
-                  onPress={() => {
-                    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setIsForgotModalVisible(true);
-                  }}
+                  onPress={() => setIsForgotModalVisible(true)}
                   hitSlop={10}
                   className="self-end mt-2"
                 >
@@ -240,7 +234,7 @@ export default function CurrentPasswordScreen() {
                 Forgot password?
               </Text>
               <Text className="text-[13px] font-sans text-muted-foreground text-center leading-5">
-                To reset your password using an email verification code, your current session will end and an OTP will be sent to:
+                To reset your password, your current session will end and an OTP will be sent to:
               </Text>
               <Text className="text-[14px] font-bold text-foreground text-center mt-1">
                 {userEmail}

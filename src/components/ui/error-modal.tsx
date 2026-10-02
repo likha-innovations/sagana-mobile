@@ -1,5 +1,4 @@
 import { Modal, View, Text, Pressable } from 'react-native';
-import * as Haptics from 'expo-haptics';
 
 export interface ErrorModalProps {
   visible: boolean;
@@ -17,7 +16,6 @@ export function ErrorModal({
   onClose,
 }: ErrorModalProps) {
   const handleClose = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onClose();
   };
 

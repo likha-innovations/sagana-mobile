@@ -85,7 +85,6 @@ export default function ChangePasswordNewScreen() {
     setPasswordErrorMessage(null);
 
     try {
-      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       await updatePassword(currentPassword, newPassword);
       logger.info('Password successfully updated via Clerk');
       router.push('/change-password/success');
