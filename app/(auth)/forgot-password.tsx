@@ -33,7 +33,7 @@ type FlowStep = 'email' | 'otp' | 'password' | 'success' | 'no_email_access';
 export default function ForgotPasswordScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { requestPasswordReset, resetPassword, isLoaded } = useAuthContext();
+  const { requestPasswordReset, verifyPasswordResetCode, resetPassword, isLoaded } = useAuthContext();
 
   const [step, setStep] = useState<FlowStep>('email');
 
@@ -147,16 +147,36 @@ export default function ForgotPasswordScreen() {
   }, [otpCode, step]);
 
   const handleVerifyOtp = async () => {
-    if (otpCode.length < 6) {
+    const trimmedCode = otpCode.trim();
+    if (trimmedCode.length < 6) {
       setOtpError(true);
       setOtpErrorMessage('Incorrect one-time code');
       if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
+    setLoading(true);
     setOtpError(false);
     setOtpErrorMessage(null);
-    setStep('password');
+
+    try {
+      if (isLoaded) {
+        await verifyPasswordResetCode(trimmedCode);
+      }
+      setStep('password');
+    } catch (err: unknown) {
+      setOtpError(true);
+      const clerkErr = err as { errors?: Array<{ longMessage?: string; message?: string }>; message?: string };
+      const message =
+        clerkErr?.errors?.[0]?.longMessage ||
+        clerkErr?.errors?.[0]?.message ||
+        clerkErr?.message ||
+        'Incorrect one-time code';
+      setOtpErrorMessage(message);
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // --- Step 3: Finish Reset Password ---
@@ -208,13 +228,19 @@ export default function ForgotPasswordScreen() {
 
     try {
       if (isLoaded) {
-        await resetPassword(otpCode.trim(), newPassword);
+        await resetPassword(newPassword, otpCode.trim());
       }
       setStep('success');
-    } catch {
+    } catch (err: unknown) {
       setConfirmPasswordError(true);
       setNewPasswordError(true);
-      setPasswordErrorMessage('Failed to reset password. The OTP may have expired.');
+      const clerkErr = err as { errors?: Array<{ longMessage?: string; message?: string }>; message?: string };
+      const message =
+        clerkErr?.errors?.[0]?.longMessage ||
+        clerkErr?.errors?.[0]?.message ||
+        clerkErr?.message ||
+        'Failed to reset password. The OTP may have expired.';
+      setPasswordErrorMessage(message);
       if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setLoading(false);
@@ -430,31 +456,11 @@ export default function ForgotPasswordScreen() {
                       </Text>
                     )}
 
-                    {/* Specific Failed Requirement Bullets */}
-                    {failedRequirements.length > 0 && (
-                      <View className="w-full mt-1 pl-2">
-                        {failedRequirements.map((req, idx) => (
-                          <Text key={idx} className="text-[13px] font-sans text-destructive leading-6">
-                            • {req}
-                          </Text>
-                        ))}
-                      </View>
-                    )}
-
-                    {/* Checklist Requirements matching Figma */}
-                    {!passwordErrorMessage && (
-                      <View className="w-full mt-2 pl-2">
-                        <Text className="text-[13px] font-sans text-[#96958F] leading-6">
-                          • At least 12+ characters
-                        </Text>
-                        <Text className="text-[13px] font-sans text-[#96958F] leading-6">
-                          • Must have a number (0–9)
-                        </Text>
-                        <Text className="text-[13px] font-sans text-[#96958F] leading-6">
-                          • Must have a special symbol (e.g., !@#$)
-                        </Text>
-                      </View>
-                    )}
+                    {/* Real-time Checklist Requirements */}
+                    <PasswordRequirements
+                      password={newPassword}
+                      hasAttemptedSubmit={newPasswordError}
+                    />
                   </View>
                 </View>
               )}
@@ -526,12 +532,17 @@ export default function ForgotPasswordScreen() {
               {step === 'otp' && (
                 <Pressable
                   onPress={handleVerifyOtp}
-                  className="w-full h-[45px] rounded-full bg-primary items-center justify-center active:opacity-90"
+                  disabled={loading}
+                  className="w-full h-[45px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
                   accessibilityRole="button"
                 >
-                  <Text className="text-[14px] font-bold text-primary-foreground">
-                    Next
-                  </Text>
+                  {loading ? (
+                    <ActivityIndicator color="#FAF9EE" size="small" />
+                  ) : (
+                    <Text className="text-[14px] font-bold text-primary-foreground">
+                      Next
+                    </Text>
+                  )}
                 </Pressable>
               )}
 
