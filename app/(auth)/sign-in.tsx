@@ -276,8 +276,6 @@ export default function SignInScreen() {
         setLockoutUntil(null);
       }
     } catch (err: unknown) {
-      logger.error('Login attempt failed', err);
-
       const nextFailCount = failedAttempts + 1;
       setFailedAttempts(nextFailCount);
 
@@ -289,29 +287,40 @@ export default function SignInScreen() {
         clerkErr?.message ||
         '';
 
+      logger.error('Login attempt failed', {
+        code: errorCode,
+        message: rawMessage,
+        error: err,
+      });
+
+      const isLockout =
+        nextFailCount >= 5 ||
+        errorCode === 'too_many_requests' ||
+        /too many/i.test(rawMessage);
+
       const isInvalidCredentials =
         errorCode === 'form_password_incorrect' ||
         errorCode === 'form_identifier_not_found' ||
         errorCode === 'form_param_format_invalid' ||
-        /password/i.test(rawMessage) ||
-        /incorrect/i.test(rawMessage) ||
-        /invalid/i.test(rawMessage) ||
-        /credential/i.test(rawMessage) ||
-        /identifier/i.test(rawMessage);
+        /incorrect|invalid|credential|identifier|password/i.test(rawMessage);
 
-      let message = 'Incorrect credentials, try again';
-      if (nextFailCount >= 5 || errorCode === 'too_many_requests' || /too many/i.test(rawMessage)) {
+      let message = 'Unable to sign in, please try again';
+      if (isLockout) {
         setLockoutUntil(Date.now() + 30_000);
         message = 'Too many failed attempts, you may try again later';
+        setEmailError(true);
+        setPasswordError(true);
       } else if (isInvalidCredentials) {
         message = 'Incorrect credentials, try again';
-      } else if (rawMessage) {
-        message = rawMessage;
+        setEmailError(true);
+        setPasswordError(true);
+      } else {
+        message = 'Unable to sign in, please try again';
+        setEmailError(false);
+        setPasswordError(false);
       }
 
       setErrorMessage(message);
-      setEmailError(true);
-      setPasswordError(true);
       if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setLoading(false);
