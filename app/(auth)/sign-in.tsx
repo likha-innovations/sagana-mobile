@@ -92,7 +92,7 @@ function AuthInputField({
         hasError
           ? 'border-destructive bg-destructive/[0.03]'
           : isFocused
-            ? 'border-foreground/40'
+            ? 'border-foreground'
             : 'border-input'
       )}
     >
@@ -124,6 +124,7 @@ function AuthInputField({
           ref={inputRef}
           value={value}
           onChangeText={onChangeText}
+          placeholderTextColor={hasError ? '#E84C4C' : '#96958F'}
           secureTextEntry={isPassword && !showPassword}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
@@ -195,6 +196,24 @@ export default function SignInScreen() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
+
+  // Auto-reset lockout after 30s
+  useEffect(() => {
+    if (!lockoutUntil) return;
+    const remainingMs = lockoutUntil - Date.now();
+    if (remainingMs <= 0) {
+      setLockoutUntil(null);
+      setFailedAttempts(0);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setLockoutUntil(null);
+      setFailedAttempts(0);
+    }, remainingMs);
+    return () => clearTimeout(timer);
+  }, [lockoutUntil]);
 
   const handleEmailChange = (text: string) => {
     setEmailAddress(text);
@@ -209,10 +228,25 @@ export default function SignInScreen() {
   };
 
   const handleLoginPress = async () => {
+    // AC10: 5 consecutive failed login attempts guard (30s cooldown)
+    const now = Date.now();
+    if (lockoutUntil && now < lockoutUntil) {
+      setEmailError(true);
+      setPasswordError(true);
+      setErrorMessage('Too many failed attempts, you may try again later');
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+    if (lockoutUntil && now >= lockoutUntil) {
+      setLockoutUntil(null);
+      setFailedAttempts(0);
+    }
+
     const trimmedEmail = emailAddress.trim();
     const missingEmail = !trimmedEmail;
     const missingPassword = !password;
 
+    // AC9: Empty email or password
     if (missingEmail || missingPassword) {
       setEmailError(true);
       setPasswordError(true);
@@ -225,7 +259,7 @@ export default function SignInScreen() {
     if (!emailRegex.test(trimmedEmail)) {
       setEmailError(true);
       setPasswordError(true);
-      setErrorMessage('Please enter a valid email address');
+      setErrorMessage('Incorrect credentials, try again');
       if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
@@ -238,21 +272,41 @@ export default function SignInScreen() {
     try {
       if (isLoaded) {
         await signIn(trimmedEmail, password);
+        setFailedAttempts(0);
+        setLockoutUntil(null);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error('Login attempt failed', err);
-      
-      const errorCode = err?.errors?.[0]?.code;
-      let message = 'Invalid email or password';
-      
-      if (errorCode === 'form_password_incorrect' || errorCode === 'form_identifier_not_found') {
-        message = 'Incorrect credentials, try again';
-      } else if (errorCode === 'too_many_requests') {
+
+      const nextFailCount = failedAttempts + 1;
+      setFailedAttempts(nextFailCount);
+
+      const clerkErr = err as { errors?: Array<{ code?: string; message?: string; longMessage?: string }>; message?: string };
+      const errorCode = clerkErr?.errors?.[0]?.code;
+      const rawMessage =
+        clerkErr?.errors?.[0]?.longMessage ||
+        clerkErr?.errors?.[0]?.message ||
+        clerkErr?.message ||
+        '';
+
+      const isInvalidCredentials =
+        errorCode === 'form_password_incorrect' ||
+        errorCode === 'form_identifier_not_found' ||
+        errorCode === 'form_param_format_invalid' ||
+        /password/i.test(rawMessage) ||
+        /incorrect/i.test(rawMessage) ||
+        /invalid/i.test(rawMessage) ||
+        /credential/i.test(rawMessage) ||
+        /identifier/i.test(rawMessage);
+
+      let message = 'Incorrect credentials, try again';
+      if (nextFailCount >= 5 || errorCode === 'too_many_requests' || /too many/i.test(rawMessage)) {
+        setLockoutUntil(Date.now() + 30_000);
         message = 'Too many failed attempts, you may try again later';
-      } else if (err?.errors?.[0]?.longMessage) {
-        message = err.errors[0].longMessage;
-      } else if (err?.message) {
-        message = err.message;
+      } else if (isInvalidCredentials) {
+        message = 'Incorrect credentials, try again';
+      } else if (rawMessage) {
+        message = rawMessage;
       }
 
       setErrorMessage(message);
@@ -422,7 +476,7 @@ export default function SignInScreen() {
                 accessibilityRole="button"
               >
                 <Text className="text-[15px] font-bold text-primary">
-                  Don’t have an account?
+                  Don't have an account?
                 </Text>
               </Pressable>
             </View>
