@@ -21,6 +21,17 @@
   --color-border: #D3D2CB;
   --color-input: #C8C7BE;
   --color-ring: #718619;
+
+  --font-sans: 'SpotifyMix-Regular';
+  --font-normal: 'SpotifyMix-Regular';
+  --font-regular: 'SpotifyMix-Regular';
+  --font-medium: 'SpotifyMix-Medium';
+  --font-semibold: 'SpotifyMix-Bold';
+  --font-bold: 'SpotifyMix-Bold';
+  --font-extrabold: 'SpotifyMix-Extrabold';
+  --font-black: 'SpotifyMix-Black';
+  --font-light: 'SpotifyMix-Light';
+  --font-thin: 'SpotifyMix-Thin';
 }
 
 @layer base {
@@ -42,6 +53,14 @@
 }
 
 .font-sans {
+  font-family: 'SpotifyMix-Regular';
+}
+
+.font-normal {
+  font-family: 'SpotifyMix-Regular';
+}
+
+.font-regular {
   font-family: 'SpotifyMix-Regular';
 }
 

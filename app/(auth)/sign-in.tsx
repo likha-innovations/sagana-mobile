@@ -209,7 +209,6 @@ export default function SignInScreen() {
   };
 
   const handleLoginPress = async () => {
-    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const trimmedEmail = emailAddress.trim();
     const missingEmail = !trimmedEmail;
     const missingPassword = !password;
@@ -266,7 +265,6 @@ export default function SignInScreen() {
   };
 
   const handleGooglePress = async () => {
-    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
@@ -282,12 +280,10 @@ export default function SignInScreen() {
   };
 
   const handleForgotPasswordPress = () => {
-    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push('/(auth)/forgot-password');
   };
 
   const handleRequestAccountPress = () => {
-    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push('/(auth)/sign-up');
   };
 

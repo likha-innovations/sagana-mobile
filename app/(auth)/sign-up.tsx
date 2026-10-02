@@ -460,7 +460,6 @@ export default function SignUpScreen() {
 
   // --- Step 1: Submit Email ---
   const handleNextEmail = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const trimmed = email.trim();
     if (!trimmed) {
       setEmailError(true);
@@ -502,7 +501,6 @@ export default function SignUpScreen() {
 
   // --- Step 2: Verify OTP ---
   const handleVerifyOtp = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const trimmedCode = otpCode.trim();
     if (trimmedCode.length !== 6) {
       setOtpError(true);
@@ -546,7 +544,6 @@ export default function SignUpScreen() {
 
   // --- Step 3: Validate Password ---
   const handleNextPassword = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
     if (!password || !confirmPassword) {
       if (!password) setPasswordError(true);
@@ -593,7 +590,6 @@ export default function SignUpScreen() {
 
   // --- Step 4: Validate Name & Birthday ---
   const handleNextName = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const trimmedFirst = firstName.trim();
     const trimmedLast = lastName.trim();
 
@@ -677,7 +673,6 @@ export default function SignUpScreen() {
 
   // --- Step 5: Finish Registration ---
   const handleFinish = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     let hasErr = false;
 
     if (!barangay) {
@@ -713,7 +708,6 @@ export default function SignUpScreen() {
   };
 
   const handleGooglePress = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setGoogleLoading(true);
     try {
       const result = await signInWithGoogle();
@@ -906,7 +900,7 @@ export default function SignUpScreen() {
                       className="py-1"
                     >
                       <Text className="text-[14px] font-medium text-foreground">
-                        <Text className="text-[#96958F]">Didn’t receive any code? </Text>
+                        <Text className="text-[#96958F] font-sans">Didn’t receive any code? </Text>
                         <Text
                           className={cn(
                             'font-semibold',

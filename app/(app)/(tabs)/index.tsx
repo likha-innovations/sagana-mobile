@@ -1,7 +1,6 @@
-import { View, Text, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MapPin, Trees, Box } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
 import { mockDashboardData } from '@/lib/mock-data';
 import { useAuthContext } from '@/context/auth-context';
 import { useProfile, useBarangays } from '@/hooks';
