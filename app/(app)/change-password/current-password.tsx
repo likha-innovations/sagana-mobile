@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Modal,
   type TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,6 +16,7 @@ import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { ChevronLeft } from 'lucide-react-native';
 import { FloatingInputField, ProgressBar } from '@/components/auth';
+import { useAuthContext } from '@/context/auth-context';
 
 import { useSession } from '@clerk/expo';
 import { createLogger } from '@/lib/logger';
@@ -25,11 +27,17 @@ export default function CurrentPasswordScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { session } = useSession();
+  const { user, clerkUser, signOut, requestPasswordReset } = useAuthContext();
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [currentPasswordError, setCurrentPasswordError] = useState(false);
   const [currentPasswordErrorMessage, setCurrentPasswordErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const [isForgotModalVisible, setIsForgotModalVisible] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+
+  const userEmail = user?.email || clerkUser?.primaryEmailAddress?.emailAddress || '';
 
   const inputRef = useRef<TextInput>(null);
 
@@ -81,6 +89,38 @@ export default function CurrentPasswordScreen() {
       if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleProceedForgotPassword = async () => {
+    if (!userEmail) return;
+
+    setForgotLoading(true);
+    try {
+      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+      const emailToReset = userEmail;
+
+      // Invalidate current session to enable Clerk unauthenticated reset flow
+      await signOut();
+
+      // Trigger password reset OTP email
+      await requestPasswordReset(emailToReset);
+
+      // Redirect directly to the OTP step in forgot-password screen
+      router.replace({
+        pathname: '/(auth)/forgot-password',
+        params: { email: emailToReset, step: 'otp' },
+      });
+    } catch (err: unknown) {
+      logger.error('Failed to trigger forgot password flow', err);
+      router.replace({
+        pathname: '/(auth)/forgot-password',
+        params: { email: userEmail, step: 'email' },
+      });
+    } finally {
+      setForgotLoading(false);
+      setIsForgotModalVisible(false);
     }
   };
 
@@ -146,6 +186,20 @@ export default function CurrentPasswordScreen() {
                     {currentPasswordErrorMessage}
                   </Text>
                 )}
+
+                {/* Forgot Password Link */}
+                <Pressable
+                  onPress={() => {
+                    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setIsForgotModalVisible(true);
+                  }}
+                  hitSlop={10}
+                  className="self-end mt-2"
+                >
+                  <Text className="text-[13px] font-sans text-primary">
+                    Forgot password?
+                  </Text>
+                </Pressable>
               </View>
             </View>
 
@@ -169,6 +223,61 @@ export default function CurrentPasswordScreen() {
           </View>
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>
+
+      {/* Forgot Password Confirmation Modal */}
+      <Modal
+        visible={isForgotModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          if (!forgotLoading) setIsForgotModalVisible(false);
+        }}
+      >
+        <View className="flex-1 bg-black/50 items-center justify-center px-6">
+          <View className="w-full max-w-[340px] bg-card border border-border rounded-[14px] p-6 gap-5 shadow-lg">
+            <View className="gap-2 items-center">
+              <Text className="text-[18px] font-bold text-foreground text-center">
+                Forgot password?
+              </Text>
+              <Text className="text-[13px] font-sans text-muted-foreground text-center leading-5">
+                To reset your password using an email verification code, your current session will end and an OTP will be sent to:
+              </Text>
+              <Text className="text-[14px] font-bold text-foreground text-center mt-1">
+                {userEmail}
+              </Text>
+              <Text className="text-[13px] font-sans text-muted-foreground text-center leading-5 mt-1">
+                Do you want to proceed?
+              </Text>
+            </View>
+
+            <View className="flex-row items-center gap-3 mt-1">
+              <Pressable
+                onPress={() => setIsForgotModalVisible(false)}
+                disabled={forgotLoading}
+                className="flex-1 h-[42px] rounded-full bg-secondary items-center justify-center active:opacity-80"
+              >
+                <Text className="text-[14px] font-bold text-foreground">
+                  Cancel
+                </Text>
+              </Pressable>
+
+              <Pressable
+                onPress={handleProceedForgotPassword}
+                disabled={forgotLoading}
+                className="flex-1 h-[42px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+              >
+                {forgotLoading ? (
+                  <ActivityIndicator color="#FAF9EE" size="small" />
+                ) : (
+                  <Text className="text-[14px] font-bold text-primary-foreground">
+                    Continue
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

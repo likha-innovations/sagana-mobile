@@ -13,7 +13,7 @@ import {
   type TextInputProps,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import Animated, {
   useSharedValue,
@@ -33,12 +33,13 @@ type FlowStep = 'email' | 'otp' | 'password' | 'success' | 'no_email_access';
 export default function ForgotPasswordScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const params = useLocalSearchParams<{ email?: string; step?: FlowStep }>();
   const { requestPasswordReset, verifyPasswordResetCode, resetPassword, isLoaded } = useAuthContext();
 
-  const [step, setStep] = useState<FlowStep>('email');
+  const [step, setStep] = useState<FlowStep>(params.step || 'email');
 
   // Step 1: Email Form State
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(params.email || '');
   const [emailError, setEmailError] = useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = useState<string | null>(null);
 
@@ -46,7 +47,7 @@ export default function ForgotPasswordScreen() {
   const [otpCode, setOtpCode] = useState('');
   const [otpError, setOtpError] = useState(false);
   const [otpErrorMessage, setOtpErrorMessage] = useState<string | null>(null);
-  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendCooldown, setResendCooldown] = useState(params.step === 'otp' ? 60 : 0);
 
   // Step 3: Password State
   const [newPassword, setNewPassword] = useState('');
@@ -77,7 +78,11 @@ export default function ForgotPasswordScreen() {
     } else if (step === 'no_email_access') {
       setStep('email');
     } else if (step === 'otp') {
-      setStep('email');
+      if (params.step === 'otp') {
+        router.replace('/(auth)/sign-in');
+      } else {
+        setStep('email');
+      }
     } else if (step === 'password') {
       setStep('otp');
     } else if (step === 'success') {
