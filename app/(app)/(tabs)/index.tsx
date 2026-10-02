@@ -1,7 +1,6 @@
-import { View, Text, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MapPin, Trees, Box } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
 import { mockDashboardData } from '@/lib/mock-data';
 import { useAuthContext } from '@/context/auth-context';
 import { useProfile, useBarangays } from '@/hooks';
@@ -109,7 +108,7 @@ export default function DashboardScreen() {
               <Text className="text-[16px] font-bold text-foreground">
                 Your Machines
               </Text>
-              <TouchableOpacity onPress={() => Platform.OS !== 'web' && Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}>
+              <TouchableOpacity onPress={() => {}}>
                 <Text className="text-[12px] font-bold text-primary">View All</Text>
               </TouchableOpacity>
             </View>

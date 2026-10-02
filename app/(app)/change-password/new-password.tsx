@@ -1,144 +1,243 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, KeyboardAvoidingView, Platform, ScrollView, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { useState, useRef, useEffect } from 'react';
+import {
+  View,
+  Text,
+  Pressable,
+  TouchableWithoutFeedback,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  type TextInput,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronLeft, CircleAlert } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { ChevronLeft } from 'lucide-react-native';
+import { useAuthContext } from '@/context/auth-context';
+import { FloatingInputField, PasswordRequirements, ProgressBar } from '@/components/auth';
+import { getPendingCurrentPassword, clearPendingCurrentPassword } from '@/lib/password-flow-store';
+import { createLogger } from '@/lib/logger';
 
-export default function NewPasswordScreen() {
+const logger = createLogger('ChangePasswordNew');
+
+export default function ChangePasswordNewScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { updatePassword } = useAuthContext();
+
+  useEffect(() => {
+    const current = getPendingCurrentPassword();
+    if (!current) {
+      router.replace('/change-password/current-password');
+    }
+  }, [router]);
+
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  
-  const passwordsMatch = newPassword.length > 0 && newPassword === confirmPassword;
-  const isValidLength = newPassword.length >= 12;
-  const hasNumber = /[0-9]/.test(newPassword);
-  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword);
-  const isFormValid = isValidLength && hasNumber && hasSpecial && passwordsMatch;
 
-  const handleFinish = () => {
-    if (isFormValid) {
-      if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      router.replace('/change-password/success');
-    } else {
+  const [newPasswordError, setNewPasswordError] = useState(false);
+  const [confirmPasswordError, setConfirmPasswordError] = useState(false);
+  const [passwordErrorMessage, setPasswordErrorMessage] = useState<string | null>(null);
+
+  const [loading, setLoading] = useState(false);
+
+  const newPasswordRef = useRef<TextInput>(null);
+  const confirmPasswordRef = useRef<TextInput>(null);
+
+  const handleFinish = async () => {
+    const currentPassword = getPendingCurrentPassword();
+    if (!currentPassword) {
+      router.replace('/change-password/current-password');
+      return;
+    }
+
+    // Missing input check
+    if (!newPassword || !confirmPassword) {
+      if (!newPassword) setNewPasswordError(true);
+      if (!confirmPassword) setConfirmPasswordError(true);
+      setPasswordErrorMessage('Please enter and confirm your new password');
       if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+
+    // Password requirements check
+    const isAtLeast12 = newPassword.length >= 12;
+    const hasNumber = /\d/.test(newPassword);
+    const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword);
+
+    if (!isAtLeast12 || !hasNumber || !hasSymbol) {
+      setNewPasswordError(true);
+      setConfirmPasswordError(false);
+      setPasswordErrorMessage("Password doesn't meet requirements");
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+
+    // Disallow new password matching current password
+    if (newPassword === currentPassword) {
+      setNewPasswordError(true);
+      setConfirmPasswordError(false);
+      setPasswordErrorMessage('New password must be different from current password');
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+
+    // Password mismatch check
+    if (newPassword !== confirmPassword) {
+      setNewPasswordError(false);
+      setConfirmPasswordError(true);
+      setPasswordErrorMessage("Passwords don't match");
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+
+    setLoading(true);
+    setNewPasswordError(false);
+    setConfirmPasswordError(false);
+    setPasswordErrorMessage(null);
+
+    try {
+      await updatePassword(currentPassword, newPassword);
+      clearPendingCurrentPassword();
+      logger.info('Password successfully updated via Clerk');
+      router.push('/change-password/success');
+    } catch (err: unknown) {
+      logger.error('Failed to change password', err);
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+
+      const clerkErr = err as { errors?: Array<{ code?: string; message?: string; longMessage?: string }>; message?: string };
+      const rawMessage =
+        clerkErr?.errors?.[0]?.longMessage ||
+        clerkErr?.errors?.[0]?.message ||
+        clerkErr?.message ||
+        '';
+
+      const isCurrentPasswordMismatch =
+        clerkErr?.errors?.[0]?.code === 'form_password_incorrect' ||
+        /current.*password/i.test(rawMessage) ||
+        /incorrect.*password/i.test(rawMessage);
+
+      if (isCurrentPasswordMismatch) {
+        setPasswordErrorMessage('Current password is incorrect. Please tap back to re-enter it.');
+      } else {
+        setPasswordErrorMessage(rawMessage || 'Failed to update password. Please try again.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1 }}
+    <View
+      className="flex-1 bg-background"
+      style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View className="flex-1 bg-background" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
-          <ScrollView
-            contentContainerStyle={{ flexGrow: 1, padding: 16, paddingBottom: 64 }}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            {/* Top Bar */}
-            <View className="flex-row items-center h-11 w-full relative mb-8">
-              <TouchableOpacity
-                onPress={() => router.back()}
-                className="w-8 h-8 justify-center z-10"
-              >
-                <ChevronLeft size={30} color="#414141" />
-              </TouchableOpacity>
-              
-              <View className="absolute w-full flex-row justify-center items-center pointer-events-none">
-                <View className="flex-row items-center w-[144px] h-[6px] gap-2.5">
-                  <View className="flex-1 h-full bg-primary rounded-[14px]" />
-                  <View className="flex-1 h-full bg-primary rounded-[14px]" />
-                </View>
-              </View>
-            </View>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          className="flex-1"
+        >
+          <View className="flex-1 px-4 items-center justify-between pb-10">
+            <View className="w-full max-w-[380px] items-center pt-4">
+              {/* Header with back button and progress bar */}
+              <View className="w-full h-11 flex-row items-center justify-between relative mb-6">
+                <Pressable
+                  onPress={() => {
+                    clearPendingCurrentPassword();
+                    router.back();
+                  }}
+                  hitSlop={12}
+                  className="w-[30px] h-[30px] items-center justify-center -ml-1"
+                  accessibilityRole="button"
+                  accessibilityLabel="Back to Current Password"
+                >
+                  <ChevronLeft size={24} color="#414141" />
+                </Pressable>
 
-            {/* Content */}
-            <View className="gap-8 flex-1">
-              <View className="gap-2.5">
-                <Text className="text-[20px] font-bold text-foreground">
+                <View className="absolute inset-x-0 items-center justify-center pointer-events-none">
+                  <ProgressBar activeStep={2} totalSteps={2} />
+                </View>
+                <View className="w-[30px]" />
+              </View>
+
+              {/* Title & Description */}
+              <View className="w-full gap-2.5 mb-8 mt-2">
+                <Text className="text-[20px] font-bold text-foreground text-left">
                   Enter new password
                 </Text>
-                <Text className="text-[14px] text-foreground font-sans">
+                <Text className="text-[14px] font-sans text-foreground text-left leading-5">
                   Enter and confirm the new password you wish to use for this account.
                 </Text>
               </View>
 
-              <View className="gap-4 w-full">
-                {/* New Password Input */}
-                <View 
-                  className={`flex-row items-center h-[58px] px-[15px] bg-card rounded-[14px] border-[1.5px] ${
-                    newPassword && !isValidLength ? 'border-destructive' : 'border-border'
-                  }`}
-                >
-                  <TextInput
-                    value={newPassword}
-                    onChangeText={setNewPassword}
-                    placeholder="New password"
-                    placeholderTextColor="#96958F"
-                    secureTextEntry
-                    className="flex-1 text-[13px] font-sans text-foreground h-full"
-                  />
-                  {newPassword && !isValidLength && <CircleAlert size={20} color="#E84C4C" />}
-                </View>
+              {/* Form fields */}
+              <View className="w-full gap-3">
+                <FloatingInputField
+                  label="New password"
+                  value={newPassword}
+                  onChangeText={(text) => {
+                    setNewPassword(text);
+                    if (newPasswordError) setNewPasswordError(false);
+                    if (passwordErrorMessage) setPasswordErrorMessage(null);
+                  }}
+                  hasError={newPasswordError}
+                  isPassword
+                  returnKeyType="next"
+                  inputRef={newPasswordRef}
+                  onSubmitEditing={() => confirmPasswordRef.current?.focus()}
+                />
 
-                {/* Confirm Password Input */}
-                <View 
-                  className={`flex-row items-center h-[58px] px-[15px] bg-card rounded-[14px] border-[1.5px] ${
-                    confirmPassword && !passwordsMatch ? 'border-destructive' : 'border-border'
-                  }`}
-                >
-                  <TextInput
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    placeholder="Confirm new password"
-                    placeholderTextColor="#96958F"
-                    secureTextEntry
-                    className="flex-1 text-[13px] font-sans text-foreground h-full"
-                  />
-                  {confirmPassword && !passwordsMatch && <CircleAlert size={20} color="#E84C4C" />}
-                </View>
+                <FloatingInputField
+                  label="Confirm new password"
+                  value={confirmPassword}
+                  onChangeText={(text) => {
+                    setConfirmPassword(text);
+                    if (confirmPasswordError) setConfirmPasswordError(false);
+                    if (passwordErrorMessage) setPasswordErrorMessage(null);
+                  }}
+                  hasError={confirmPasswordError}
+                  isPassword
+                  returnKeyType="done"
+                  inputRef={confirmPasswordRef}
+                  onSubmitEditing={handleFinish}
+                />
 
-                {/* Rules List */}
-                <View className="mt-2 pl-2">
-                  <Text className={`text-[14px] font-sans ${isValidLength ? 'text-primary' : 'text-muted-foreground'}`}>
-                    • At least 12+ characters
+                {/* Inline Error Message */}
+                {passwordErrorMessage && (
+                  <Text className="text-[13px] font-sans text-destructive mt-1 ml-1 text-left">
+                    {passwordErrorMessage}
                   </Text>
-                  <Text className={`text-[14px] font-sans ${hasNumber ? 'text-primary' : 'text-muted-foreground'}`}>
-                    • Must have a number (0–9)
-                  </Text>
-                  <Text className={`text-[14px] font-sans ${hasSpecial ? 'text-primary' : 'text-muted-foreground'}`}>
-                    • Must have a special symbol (e.g., !@#$)
-                  </Text>
-                  {confirmPassword.length > 0 && !passwordsMatch && (
-                    <Text className="text-[14px] font-sans text-destructive mt-1">
-                      • Passwords do not match
-                    </Text>
-                  )}
-                </View>
+                )}
+
+                {/* Real-time Checklist Requirements */}
+                <PasswordRequirements
+                  password={newPassword}
+                  hasAttemptedSubmit={newPasswordError}
+                />
               </View>
             </View>
 
-            {/* Finish Button */}
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={handleFinish}
-              disabled={!isFormValid}
-              className={`w-full h-[45px] rounded-[50px] items-center justify-center ${
-                isFormValid ? 'bg-primary' : 'bg-[#E2E1DC]'
-              }`}
-            >
-              <Text className={`text-[14px] font-bold ${
-                isFormValid ? 'text-primary-foreground' : 'text-[#96958F]'
-              }`}>
-                Finish
-              </Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
+            {/* Bottom Finish Button */}
+            <View className="w-full max-w-[380px]">
+              <Pressable
+                onPress={handleFinish}
+                disabled={loading || !newPassword || !confirmPassword}
+                className="w-full h-[45px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+                accessibilityRole="button"
+              >
+                {loading ? (
+                  <ActivityIndicator color="#FAF9EE" size="small" />
+                ) : (
+                  <Text className="text-[14px] font-bold text-primary-foreground">
+                    Finish
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
       </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+    </View>
   );
 }

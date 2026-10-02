@@ -1,15 +1,12 @@
 import { View, Text, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import * as Haptics from 'expo-haptics';
-import { Platform } from 'react-native';
 
 export default function UhOhScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
   const handleGoBack = () => {
-    if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.replace('/(auth)/sign-in');
   };
 

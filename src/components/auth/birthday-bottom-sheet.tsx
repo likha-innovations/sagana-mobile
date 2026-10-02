@@ -159,7 +159,6 @@ export const BirthdayBottomSheet = forwardRef<
 
   const handleConfirm = useCallback(() => {
     const formatted = format(date, 'MM / dd / yyyy');
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onConfirm(formatted, date);
     bottomSheetRef.current?.dismiss();
   }, [date, onConfirm]);

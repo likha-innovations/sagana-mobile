@@ -34,10 +34,11 @@ export function ResendTimer({ onResend, cooldownSeconds = 60 }: ResendTimerProps
         className="py-1"
       >
         <Text className="text-[14px] font-medium text-foreground">
-          <Text className="text-[#96958F]">Didn't receive any code? </Text>
+          <Text className="text-[#96958F] font-sans">Didn't receive any code? </Text>
           <Text
             className={cn(
-              cooldown > 0 ? 'text-[#C8C7BE]' : 'text-primary font-bold'
+              'font-semibold',
+              cooldown > 0 ? 'text-[#C8C7BE]' : 'text-primary'
             )}
           >
             {cooldown > 0 ? `Resend in ${formattedTime}` : 'Resend'}

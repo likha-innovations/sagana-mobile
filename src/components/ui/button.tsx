@@ -65,6 +65,7 @@ export interface ButtonProps
   children?: ReactNode;
   title?: string;
   loading?: boolean;
+  haptic?: boolean;
   className?: string;
   textClassName?: string;
 }
@@ -78,6 +79,7 @@ export const Button = forwardRef<ElementRef<typeof Pressable>, ButtonProps>(
       size,
       loading = false,
       disabled = false,
+      haptic = false,
       className,
       textClassName,
       onPress,
@@ -87,7 +89,7 @@ export const Button = forwardRef<ElementRef<typeof Pressable>, ButtonProps>(
   ) => {
     const handlePress = (e: any) => {
       if (loading || disabled) return;
-      if (Platform.OS !== 'web') {
+      if (haptic && Platform.OS !== 'web') {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
       onPress?.(e);

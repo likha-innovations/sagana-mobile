@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import {
   User,
   signInSchema,
+  verifyCodeSchema,
   resetPasswordRequestSchema,
   resetPasswordConfirmSchema,
 } from '@/types';
@@ -36,7 +37,9 @@ interface AuthContextType {
   verifyEmail: (code: string) => Promise<void>;
   completeSignUp: (firstName: string, lastName: string, birthday: string, barangayId: string, barangayName: string, password?: string) => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
-  resetPassword: (code: string, newPassword: string) => Promise<void>;
+  verifyPasswordResetCode: (code: string) => Promise<void>;
+  resetPassword: (codeOrNewPassword: string, maybeNewPassword?: string) => Promise<void>;
+  updatePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -175,18 +178,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [clerkSignIn]
   );
 
-  const resetPassword = useCallback(
-    async (code: string, newPassword: string) => {
+  const verifyPasswordResetCode = useCallback(
+    async (code: string) => {
       if (!clerkSignIn) throw new Error('Sign-in service unavailable');
 
       // Zod validation
-      const validated = resetPasswordConfirmSchema.parse({ code, password: newPassword });
+      const validated = verifyCodeSchema.parse({ code });
 
       const result = await clerkSignIn.attemptFirstFactor({
         strategy: 'reset_password_email_code',
         code: validated.code,
-        password: validated.password,
       });
+
+      if (result.status !== 'needs_new_password' && result.status !== 'complete') {
+        logger.warn('Password reset code verification returned unexpected status', result.status);
+        throw new Error(
+          result.status ? `Verification failed with status: ${result.status}` : 'Verification failed'
+        );
+      }
+
+      logger.info('Password reset code verified successfully');
+    },
+    [clerkSignIn]
+  );
+
+  const resetPassword = useCallback(
+    async (arg1: string, arg2?: string) => {
+      if (!clerkSignIn) throw new Error('Sign-in service unavailable');
+
+      let password = arg1;
+      let code = arg2?.trim();
+
+      // If called in reverse order: resetPassword(code, password) where arg1 is 6-digit OTP
+      if (arg2 && /^\d{6}$/.test(arg1.trim())) {
+        code = arg1.trim();
+        password = arg2;
+      }
+
+      let result;
+      // If OTP was pre-verified in Step 2, status is 'needs_new_password'
+      if (clerkSignIn.status === 'needs_new_password') {
+        result = await clerkSignIn.resetPassword({
+          password,
+        });
+      } else if (code) {
+        // Direct combined code + password verification fallback
+        const validated = resetPasswordConfirmSchema.parse({ code, password });
+        result = await clerkSignIn.attemptFirstFactor({
+          strategy: 'reset_password_email_code',
+          code: validated.code,
+          password: validated.password,
+        });
+      } else {
+        result = await clerkSignIn.resetPassword({
+          password,
+        });
+      }
 
       if (result.status === 'complete') {
         logger.info('Password reset complete');
@@ -198,6 +245,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     },
     [clerkSignIn, setSignInActive, router]
+  );
+
+  const updatePassword = useCallback(
+    async (currentPassword: string, newPassword: string) => {
+      if (!clerkUser) throw new Error('User not loaded');
+
+      logger.info('Updating password for logged-in user');
+      await clerkUser.updatePassword({
+        currentPassword,
+        newPassword,
+        signOutOfOtherSessions: true,
+      });
+      logger.info('Password updated successfully');
+    },
+    [clerkUser]
   );
 
   const signUp = useCallback(
@@ -306,7 +368,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       verifyEmail,
       completeSignUp,
       requestPasswordReset,
+      verifyPasswordResetCode,
       resetPassword,
+      updatePassword,
       signOut,
     }),
     [
@@ -321,7 +385,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       verifyEmail,
       completeSignUp,
       requestPasswordReset,
+      verifyPasswordResetCode,
       resetPassword,
+      updatePassword,
       signOut,
     ]
   );
