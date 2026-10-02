@@ -192,9 +192,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (result.status !== 'needs_new_password' && result.status !== 'complete') {
         logger.warn('Password reset code verification returned unexpected status', result.status);
-      } else {
-        logger.info('Password reset code verified successfully');
+        throw new Error(
+          result.status ? `Verification failed with status: ${result.status}` : 'Verification failed'
+        );
       }
+
+      logger.info('Password reset code verified successfully');
     },
     [clerkSignIn]
   );
