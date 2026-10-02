@@ -1,4 +1,5 @@
 export type CompostingPhase = 'Mesophilic' | 'Thermophilic' | 'Cooling';
+export type DashboardMachine = (typeof mockDashboardData.machines)[number];
 
 // Helper to determine which step (1-3) the machine is in based on its phase
 export const getPhaseStep = (phase: CompostingPhase): number => {
