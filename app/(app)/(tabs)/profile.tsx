@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Modal, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Lock } from 'lucide-react-native';
@@ -7,6 +7,7 @@ import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useAuthContext } from '@/context/auth-context';
 import { useProfile, useBarangays } from '@/hooks';
+import { GoogleIcon } from '@/components/icons';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -15,9 +16,21 @@ export default function ProfileScreen() {
   const { data: profileData } = useProfile();
   const { data: barangays = [] } = useBarangays();
   const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
-  const isGoogleUser = clerkUser?.externalAccounts?.some((acc: any) => acc.provider === 'oauth_google');
+  const isGoogleUser = clerkUser?.externalAccounts?.some(
+    (acc: any) => acc.provider === 'oauth_google' || acc.verification?.strategy === 'oauth_google'
+  );
 
   const user = profileData || authUser;
+
+  const userInitials = user?.fullName
+    ? user.fullName
+        .split(' ')
+        .filter(Boolean)
+        .map((n: string) => n[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase()
+    : 'NN';
 
   let barangayName = 'Unknown Location';
   if (user?.barangay) {
@@ -49,7 +62,7 @@ export default function ProfileScreen() {
       >
         <View className="gap-8">
           {/* Header */}
-          <Text className="text-[32px] font-bold text-foreground font-bold">
+          <Text className="text-[32px] font-bold text-foreground">
             Account
           </Text>
 
@@ -62,7 +75,7 @@ export default function ProfileScreen() {
               style={{ borderRadius: 28 }}
               className="w-14 h-14 items-center justify-center"
             >
-              <Text className="text-[20px] font-bold text-background">NN</Text>
+              <Text className="text-[20px] font-bold text-background">{userInitials}</Text>
             </LinearGradient>
             
             <View className="flex-1 gap-1">
@@ -72,31 +85,31 @@ export default function ProfileScreen() {
               <Text className="text-[14px] text-foreground font-sans">
                 {barangayName}
               </Text>
-              {isGoogleUser && (
-                <View className="bg-primary/10 self-start px-2 py-0.5 rounded-full mt-0.5">
-                  <Text className="text-[11px] font-bold text-primary">Google Account</Text>
-                </View>
-              )}
             </View>
           </View>
 
-          {/* Actions */}
-          {!isGoogleUser && (
-            <View className="gap-2">
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => {
-                  if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  router.push('/change-password/otp');
-                }}
-                className="flex-row items-center h-[60px] px-4.5 bg-card border border-border rounded-[8px] gap-4"
-              >
-                <Lock size={18} color="#96958F" />
-                <Text className="text-[14px] text-foreground font-sans">
-                  Change password
-                </Text>
-              </TouchableOpacity>
+          {/* Action Row */}
+          {isGoogleUser ? (
+            <View className="flex-row items-center h-[60px] px-4.5 bg-card border border-border rounded-[8px] gap-4">
+              <GoogleIcon size={18} />
+              <Text className="text-[14px] text-foreground font-sans flex-1">
+                Signed in with Google
+              </Text>
             </View>
+          ) : (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => {
+                if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push('/change-password/otp');
+              }}
+              className="flex-row items-center h-[60px] px-4.5 bg-card border border-border rounded-[8px] gap-4"
+            >
+              <Lock size={18} color="#96958F" />
+              <Text className="text-[14px] text-foreground font-sans flex-1">
+                Change password
+              </Text>
+            </TouchableOpacity>
           )}
 
           {/* Log Out Button */}
