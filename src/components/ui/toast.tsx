@@ -80,7 +80,7 @@ export function Toast() {
         ) : (
           <XCircle color="white" size={20} />
         )}
-        <Text className="text-white font-medium text-[14px] font-sans flex-1">
+        <Text className="text-white font-medium text-[14px] flex-1">
           {message}
         </Text>
       </View>
