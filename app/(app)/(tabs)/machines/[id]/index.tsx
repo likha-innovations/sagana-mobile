@@ -88,7 +88,15 @@ export default function MachineDetailsDashboard() {
               <Text className="text-[28px] font-bold text-brand-700 text-center mb-10">Composting</Text>
               
               {(() => {
-                const currentPhase: 'mesophilic' | 'thermophilic' | 'cooling' = 'thermophilic';
+                const temp = machine.latest_readings?.temperature ?? 0;
+                let currentPhase: 'mesophilic' | 'thermophilic' | 'cooling' = 'mesophilic';
+                
+                if (temp >= 45) {
+                  currentPhase = 'thermophilic';
+                } else if (temp > 0 && temp < 45 && Math.floor((Date.now() - new Date(machine.created_at).getTime()) / (1000 * 60 * 60 * 24)) > 21) {
+                  currentPhase = 'cooling';
+                }
+
                 const phaseIndex = ['mesophilic', 'thermophilic', 'cooling'].indexOf(currentPhase);
                 
                 return (
@@ -135,11 +143,15 @@ export default function MachineDetailsDashboard() {
             {/* Stats Row */}
             <View className="flex-row justify-between gap-4 mb-8">
               <View className="flex-1 bg-card rounded-2xl border border-border py-6 items-center justify-center">
-                <Text className="text-2xl font-bold text-foreground mb-1">15</Text>
+                <Text className="text-2xl font-bold text-foreground mb-1">
+                  {Math.max(0, Math.floor((Date.now() - new Date(machine.created_at).getTime()) / (1000 * 60 * 60 * 24)))}
+                </Text>
                 <Text className="text-xs font-medium text-muted-foreground">Days Composting</Text>
               </View>
               <View className="flex-1 bg-card rounded-2xl border border-border py-6 items-center justify-center">
-                <Text className="text-2xl font-bold text-foreground mb-1">54.2 kg</Text>
+                <Text className="text-2xl font-bold text-foreground mb-1">
+                  {feedstocks?.reduce((sum, item) => sum + item.weight_kg, 0).toFixed(1) ?? '0.0'} kg
+                </Text>
                 <Text className="text-xs font-medium text-muted-foreground">Total Feedstock</Text>
               </View>
             </View>
