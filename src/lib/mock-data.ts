@@ -1,3 +1,5 @@
+import { colors } from '@/constants';
+
 export type CompostingPhase = 'Mesophilic' | 'Thermophilic' | 'Cooling';
 export type DashboardMachine = (typeof mockDashboardData.machines)[number];
 
@@ -24,10 +26,10 @@ export const mockDashboardData = {
       day: 3,
       phase: "Mesophilic" as CompostingPhase,
       sensors: {
-        temperature: { value: 57, unit: "°C", color: "#E84C4C" },
-        moisture: { value: 23, unit: "%", color: "#51A7B1" },
-        oxygen: { value: 67, unit: "%", color: "#DBCC41" },
-        carbonDioxide: { value: 0.04, unit: "%", color: "#6CAD6C" }
+        temperature: { value: 57, unit: "°C", color: colors.sensors.temperature },
+        moisture: { value: 23, unit: "%", color: colors.sensors.moisture },
+        oxygen: { value: 67, unit: "%", color: colors.sensors.oxygen },
+        carbonDioxide: { value: 0.04, unit: "%", color: colors.sensors.carbonDioxide }
       }
     },
     {
@@ -36,10 +38,10 @@ export const mockDashboardData = {
       day: 14,
       phase: "Thermophilic" as CompostingPhase,
       sensors: {
-        temperature: { value: 68, unit: "°C", color: "#E84C4C" },
-        moisture: { value: 45, unit: "%", color: "#51A7B1" },
-        oxygen: { value: 40, unit: "%", color: "#DBCC41" },
-        carbonDioxide: { value: 1.2, unit: "%", color: "#6CAD6C" }
+        temperature: { value: 68, unit: "°C", color: colors.sensors.temperature },
+        moisture: { value: 45, unit: "%", color: colors.sensors.moisture },
+        oxygen: { value: 40, unit: "%", color: colors.sensors.oxygen },
+        carbonDioxide: { value: 1.2, unit: "%", color: colors.sensors.carbonDioxide }
       }
     },
     {
@@ -48,10 +50,10 @@ export const mockDashboardData = {
       day: 28,
       phase: "Cooling" as CompostingPhase,
       sensors: {
-        temperature: { value: 35, unit: "°C", color: "#E84C4C" },
-        moisture: { value: 30, unit: "%", color: "#51A7B1" },
-        oxygen: { value: 85, unit: "%", color: "#DBCC41" },
-        carbonDioxide: { value: 0.1, unit: "%", color: "#6CAD6C" }
+        temperature: { value: 35, unit: "°C", color: colors.sensors.temperature },
+        moisture: { value: 30, unit: "%", color: colors.sensors.moisture },
+        oxygen: { value: 85, unit: "%", color: colors.sensors.oxygen },
+        carbonDioxide: { value: 0.1, unit: "%", color: colors.sensors.carbonDioxide }
       }
     }
   ]
