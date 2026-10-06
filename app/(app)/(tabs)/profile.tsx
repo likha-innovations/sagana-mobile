@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Modal, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Lock } from 'lucide-react-native';
+import { Lock, User as UserIcon } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
@@ -90,27 +90,44 @@ export default function ProfileScreen() {
           </View>
 
           {/* Action Row */}
-          {isGoogleUser ? (
-            <View className="flex-row items-center h-[60px] px-4.5 bg-card border border-border rounded-[8px] gap-4">
-              <GoogleIcon size={18} />
-              <Text className="text-[14px] text-foreground font-sans flex-1">
-                Signed in with Google
-              </Text>
-            </View>
-          ) : (
+          <View className="gap-3">
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => {
-                router.push('/change-password/current-password');
+                router.push('/edit-profile' as any);
               }}
               className="flex-row items-center h-[60px] px-4.5 bg-card border border-border rounded-[8px] gap-4"
             >
-              <Lock size={18} color="#96958F" />
+              <View className="mr-1">
+                <UserIcon size={18} color="#96958F" />
+              </View>
               <Text className="text-[14px] text-foreground font-sans flex-1">
-                Change password
+                Profile Information
               </Text>
             </TouchableOpacity>
-          )}
+
+            {isGoogleUser ? (
+              <View className="flex-row items-center h-[60px] px-4.5 bg-card border border-border rounded-[8px] gap-4">
+                <GoogleIcon size={18} />
+                <Text className="text-[14px] text-foreground font-sans flex-1">
+                  Signed in with Google
+                </Text>
+              </View>
+            ) : (
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  router.push('/change-password/current-password');
+                }}
+                className="flex-row items-center h-[60px] px-4.5 bg-card border border-border rounded-[8px] gap-4"
+              >
+                <Lock size={18} color="#96958F" />
+                <Text className="text-[14px] text-foreground font-sans flex-1">
+                  Change Password
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
           {/* Log Out Button */}
           <TouchableOpacity

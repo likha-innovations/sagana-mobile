@@ -15,6 +15,7 @@ export interface InputProps extends TextInputProps {
   hint?: string;
   isPassword?: boolean;
   leadingIcon?: ReactNode;
+  trailingIcon?: ReactNode;
   containerClassName?: string;
 }
 
@@ -26,6 +27,7 @@ export const Input = forwardRef<TextInput, InputProps>(
       hint,
       isPassword = false,
       leadingIcon,
+      trailingIcon,
       containerClassName,
       secureTextEntry,
       className,
@@ -40,35 +42,39 @@ export const Input = forwardRef<TextInput, InputProps>(
 
     return (
       <View className={cn('w-full mb-3.5', containerClassName)}>
-        {label && (
-          <Text className="text-xs font-semibold text-foreground mb-1.5">
-            {label}
-          </Text>
-        )}
         <View
           className={cn(
-            'w-full h-12 flex-row items-center rounded-2xl border px-3.5 transition-all',
+            'w-full min-h-[58px] flex-row items-center rounded-2xl border px-4 transition-all py-2',
             error
               ? 'border-destructive bg-destructive/5'
               : isFocused
                 ? 'border-primary bg-background ring-2 ring-primary/15'
-                : 'border-input bg-background'
+                : 'border-input bg-card'
           )}
         >
           {leadingIcon && <View className="mr-2.5">{leadingIcon}</View>}
-
-          <TextInput
-            ref={ref}
-            placeholderTextColor="#AFAEA7"
-            secureTextEntry={isSecure}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            className={cn(
-              'flex-1 h-full text-sm font-medium text-foreground',
-              className
+          
+          <View className="flex-1 justify-center">
+            {label && (
+              <Text className="text-xs text-muted-foreground font-sans">
+                {label}
+              </Text>
             )}
-            {...props}
-          />
+            <TextInput
+              ref={ref}
+              placeholderTextColor="#AFAEA7"
+              secureTextEntry={isSecure}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              className={cn(
+                'text-sm font-medium text-foreground p-0 mt-0.5',
+                className
+              )}
+              {...props}
+            />
+          </View>
+
+
 
           {isPassword && (
             <Pressable
@@ -84,6 +90,8 @@ export const Input = forwardRef<TextInput, InputProps>(
               )}
             </Pressable>
           )}
+
+          {trailingIcon && !isPassword && <View className="ml-2.5">{trailingIcon}</View>}
         </View>
 
         {error ? (

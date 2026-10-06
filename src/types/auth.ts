@@ -26,20 +26,20 @@ export type User = z.infer<typeof userSchema>;
  * Matches backend UpdateProfileDto
  */
 export const updateProfileSchema = z.object({
-  fullName: z
+  firstName: z
     .string()
     .trim()
-    .min(2, 'Full name must be at least 2 characters')
+    .min(2, 'First name must be at least 2 characters')
     .optional(),
-  contactNumber: z
+  lastName: z
     .string()
     .trim()
-    .min(5, 'Contact number must be at least 5 characters')
+    .min(2, 'Last name must be at least 2 characters')
     .optional(),
-  barangay: z
+  barangayId: z
     .string()
     .trim()
-    .min(2, 'Location must be at least 2 characters')
+    .min(2, 'Location is required')
     .optional(),
   birthday: z
     .string()

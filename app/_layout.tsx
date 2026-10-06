@@ -10,6 +10,7 @@ import { useFonts } from 'expo-font';
 import { tokenCache } from '@/lib/token-cache';
 import { AuthProvider, useAuthContext } from '@/context/auth-context';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { Toast } from '@/components/ui/toast';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('RootLayout');
@@ -125,6 +126,7 @@ export default function RootLayout() {
               <BottomSheetModalProvider>
                 <StatusBar style="auto" />
                 <AuthProtectedNavigation />
+                <Toast />
               </BottomSheetModalProvider>
             </QueryClientProvider>
           </AuthProvider>
