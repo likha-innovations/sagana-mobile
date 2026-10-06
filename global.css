@@ -13,14 +13,94 @@
   --color-secondary: #E2E1DC;
   --color-secondary-foreground: #414141;
   --color-muted: #E2E1DC;
-  --color-muted-foreground: #96958F;
+  --color-muted-foreground: #AFAEA7;
   --color-accent: #E2E1DC;
   --color-accent-foreground: #414141;
   --color-destructive: #E84C4C;
   --color-destructive-foreground: #FAF9EE;
-  --color-border: #D3D2CB;
+  --color-border: #DCDBD5;
   --color-input: #C8C7BE;
   --color-ring: #718619;
+  --color-skeleton: #E9E8D9;
+
+  /* BRAND · Primary actions & confirmed status */
+  --color-brand-50: #F5F7E8;
+  --color-brand-100: #E5ECC4;
+  --color-brand-200: #CAD88C;
+  --color-brand-300: #A3BA4C;
+  --color-brand-500: #718619;
+  --color-brand-700: #566811;
+  --color-brand-900: #35420A;
+
+  /* BLACK / NEUTRAL · Text, icons & dark surfaces */
+  --color-neutral-50: #F5F5F3;
+  --color-neutral-100: #E5E5E1;
+  --color-neutral-200: #C8C8C2;
+  --color-neutral-300: #8E8E87;
+  --color-neutral-500: #414141;
+  --color-neutral-700: #292929;
+  --color-neutral-900: #171717;
+
+  /* WHITES */
+  --color-white-bg: #FAF9EE;
+  --color-white-skeleton: #E9E8D9;
+
+  /* GRAYS */
+  --color-gray-button: #E2E1DC;
+  --color-gray-border: #DCDBD5;
+  --color-gray-progress: #C8C7BE;
+  --color-gray-text: #AFAEA7;
+
+  /* RED · Errors, destructive actions & alerts */
+  --color-red-50: #FEF2F2;
+  --color-red-100: #FBDDDD;
+  --color-red-200: #F6B1B1;
+  --color-red-300: #F08080;
+  --color-red-500: #E84C4C;
+  --color-red-700: #B83030;
+  --color-red-900: #7B2020;
+
+  /* PURPLE · Temperature */
+  --color-purple-50: #F8F2FC;
+  --color-purple-100: #EEE0F7;
+  --color-purple-200: #DCC1ED;
+  --color-purple-300: #C59BE3;
+  --color-purple-500: #AB6DD5;
+  --color-purple-700: #8146AC;
+  --color-purple-900: #542C73;
+
+  /* TEAL · Moisture */
+  --color-teal-50: #F0F8F9;
+  --color-teal-100: #D8EEF0;
+  --color-teal-200: #AFD8DE;
+  --color-teal-300: #80BFC8;
+  --color-teal-500: #51A7B1;
+  --color-teal-700: #347A83;
+  --color-teal-900: #20515A;
+
+  /* GREEN · Carbon dioxide */
+  --color-green-50: #F2F8F2;
+  --color-green-100: #E0EFE0;
+  --color-green-200: #BFDDBF;
+  --color-green-300: #96C696;
+  --color-green-500: #6CAD6C;
+  --color-green-700: #477E47;
+  --color-green-900: #2D542D;
+
+  /* YELLOW · Oxygen */
+  --color-yellow-50: #FCFAEA;
+  --color-yellow-100: #F7F0C4;
+  --color-yellow-200: #EEE59A;
+  --color-yellow-300: #E5D968;
+  --color-yellow-500: #DBCC41;
+  --color-yellow-700: #948719;
+  --color-yellow-900: #60570F;
+
+  /* Telemetry Sensor Semantics */
+  --color-temp: #AB6DD5;
+  --color-moisture: #51A7B1;
+  --color-o2: #DBCC41;
+  --color-co2: #6CAD6C;
 
   --font-sans: 'SpotifyMix-Regular';
   --font-normal: 'SpotifyMix-Regular';
@@ -45,10 +125,11 @@
     --secondary: #E2E1DC;
     --secondary-foreground: #414141;
     --muted: #E2E1DC;
-    --muted-foreground: #96958F;
-    --border: #D3D2CB;
+    --muted-foreground: #AFAEA7;
+    --border: #DCDBD5;
     --input: #C8C7BE;
     --destructive: #E84C4C;
+    --skeleton: #E9E8D9;
   }
 }
 
