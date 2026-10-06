@@ -4,41 +4,44 @@ Sagana Mobile uses **Uniwind** (Tailwind CSS v4 for React Native) paired with **
 
 ---
 
-## 🎨 Theme Variables & Semantic Tokens
+## 🎨 Theme Variables & Palette Tokens
 
-Theme tokens are defined in `global.css` using CSS custom properties with automatic light/dark mode switching:
+All colors follow the Figma **Color Schema and Usage Guide** (node `679:1957`). Tokens are exposed as Tailwind utilities via `global.css` and as strongly-typed constants via `@/constants`:
 
-```css
-@layer base {
-  :root {
-    --background: 55 55% 96%;        /* #FAF9EE - Warm Cream */
-    --foreground: 0 0% 25.5%;        /* #414141 - Dark Charcoal */
-    --card: 55 55% 96%;
-    --card-foreground: 0 0% 25.5%;
-    --primary: 71.6 68.6% 31.2%;     /* #718619 - Sagana Olive */
-    --primary-foreground: 55 55% 96%;
-    --secondary: 50 9.4% 87.5%;      /* #E2E1DC - Stone Gray */
-    --secondary-foreground: 0 0% 25.5%;
-    --muted: 50 9.4% 87.5%;
-    --muted-foreground: 51 3.5% 57.5%; /* #96958F - Muted Text */
-    --border: 52 8% 81.2%;           /* #D3D2CB - Card Border */
-    --input: 54 8.5% 76.5%;          /* #C8C7BE - Input Border */
-    --destructive: 0 77.2% 60.4%;    /* #E84C4C - Error Red */
-    --ring: 71.6 68.6% 31.2%;
-  }
+### Semantic Tokens
 
-  .dark {
-    --background: 60 10% 10%;
-    --foreground: 55 55% 96%;
-    --card: 60 11% 13%;
-    --card-foreground: 55 55% 96%;
-    --primary: 71 68% 44%;
-    --primary-foreground: 60 10% 10%;
-    --border: 60 11% 22%;
-    --input: 60 11% 22%;
-  }
-}
-```
+| Token | Class | Hex | Description |
+| :--- | :--- | :--- | :--- |
+| `background` | `bg-background` | `#FAF9EE` | Warm cream page background |
+| `card` | `bg-card` | `#FAF9EE` | Surface cards |
+| `skeleton` | `bg-skeleton` | `#E9E8D9` | Skeleton loading screens |
+| `primary` | `bg-primary`, `text-primary` | `#718619` | Primary action buttons & confirmed status |
+| `secondary` | `bg-secondary` | `#E2E1DC` | Secondary gray button background |
+| `foreground` | `text-foreground` | `#414141` | Primary text and icons |
+| `muted-foreground` | `text-muted-foreground` | `#AFAEA7` | Gray text & inactive navigation |
+| `border` | `border-border` | `#DCDBD5` | Card and separator borders |
+| `input` | `border-input`, `bg-gray-progress` | `#C8C7BE` | Input strokes & progress bar tracks |
+| `destructive` | `bg-destructive`, `text-destructive` | `#E84C4C` | Errors, alerts, destructive actions |
+
+### IoT Sensor Telemetry Palette
+
+| Sensor | Color Ramp | Base (500) | Notes |
+| :--- | :--- | :--- | :--- |
+| **Temperature** | `purple-50` .. `purple-900` | `#AB6DD5` | Thermometer indicators |
+| **Moisture** | `teal-50` .. `teal-900` | `#51A7B1` | Droplets moisture indicators |
+| **Oxygen (O2)** | `yellow-50` .. `yellow-900` | `#DBCC41` | Wind / O2 status indicators |
+| **Carbon Dioxide (CO2)** | `green-50` .. `green-900` | `#6CAD6C` | Cloud / CO2 status indicators |
+
+### Brand & Red Shade Ramps
+
+- **BRAND**: `50 (#F5F7E8)` · `100 (#E5ECC4)` · `200 (#CAD88C)` · `300 (#A3BA4C)` · `500 (#718619)` · `700 (#566811)` · `900 (#35420A)`
+- **NEUTRAL**: `50 (#F5F5F3)` · `100 (#E5E5E1)` · `200 (#C8C8C2)` · `300 (#8E8E87)` · `500 (#414141)` · `700 (#292929)` · `900 (#171717)`
+- **RED**: `50 (#FEF2F2)` · `100 (#FBDDDD)` · `200 (#F6B1B1)` · `300 (#F08080)` · `500 (#E84C4C)` · `700 (#B83030)` · `900 (#7B2020)`
+
+### Gradients (237°)
+
+- **Stat Cards**: `linear-gradient(237deg, #C9E752 33%, #518251 100%)`
+- **Dashboard Action Buttons**: `linear-gradient(237deg, #C9E752 0%, #518251 90%)`
 
 ---
 

@@ -16,19 +16,27 @@ description: UI standards for ui-craftsman using honey-design, React Native Reus
 - **Complete State Coverage**:
   - Always implement all interactive states shown in Figma: idle, focused, loading, disabled, error states (e.g., incorrect OTP, password mismatch), and confirmation/success modals.
 
-## 2. Strict Adherence to Global Theme Colors (`global.css`)
+## 2. Strict Adherence to Global Theme Colors (`global.css` & `src/constants/colors.ts`)
 
-- Style **exclusively** with semantic theme variables defined in `global.css`. Never use raw hex/rgb values or hardcoded generic palette classes (`bg-emerald-*`, `bg-slate-*`, `bg-white`) for themed surfaces:
-  - Background: `bg-background` (`#FAF9EE` warm cream)
+- Style **exclusively** with semantic theme variables defined in `global.css` and typed constants in `src/constants/colors.ts`. Never use raw uncurated hex/rgb values or hardcoded generic palette classes (`bg-emerald-*`, `bg-slate-*`, `bg-white`):
+  - Page Background: `bg-background` (`#FAF9EE` warm cream)
   - Card & Surfaces: `bg-card` (`#FAF9EE`)
-  - Primary Brand: `bg-primary` (`#718619` olive green), `text-primary-foreground` (`#FAF9EE`)
-  - Secondary Action: `bg-secondary` (`#E2E1DC` stone gray), `text-secondary-foreground` (`#414141`)
-  - Primary Text / Headings: `text-foreground` (`#414141` charcoal)
-  - Secondary / Helper Text: `text-muted-foreground` (`#96958F`)
-  - Inactive Navigation: `text-[#AFAEA7]`
-  - Borders: `border-border` (`#D3D2CB` card outlines), `border-input` (`#C8C7BE` input strokes)
-  - Destructive / Errors: `bg-destructive`, `text-destructive`, `border-destructive` (`#E84C4C`)
-  - Accent / Focus Ring: `ring-primary`
+  - Skeleton Screens: `bg-skeleton` (`#E9E8D9`)
+  - Primary Brand Ramp: `bg-primary` / `bg-brand-500` (`#718619` olive green), `brand-50` (`#F5F7E8`), `brand-100` (`#E5ECC4`), `brand-200` (`#CAD88C`), `brand-300` (`#A3BA4C`), `brand-500` (`#718619`), `brand-700` (`#566811`), `brand-900` (`#35420A`)
+  - Neutral Ramp: `neutral-50` (`#F5F5F3`), `neutral-100` (`#E5E5E1`), `neutral-200` (`#C8C8C2`), `neutral-300` (`#8E8E87`), `text-foreground` / `neutral-500` (`#414141`), `neutral-700` (`#292929`), `neutral-900` (`#171717`)
+  - Gray Action / Button: `bg-secondary` / `bg-gray-button` (`#E2E1DC`)
+  - Gray Text & Inactive Icons: `text-muted-foreground` / `text-gray-text` (`#AFAEA7`)
+  - Borders: `border-border` / `border-gray-border` (`#DCDBD5` card/divider outlines)
+  - Input / Empty Progress Tracks: `border-input` / `bg-gray-progress` (`#C8C7BE`)
+  - Errors & Alerts (Red Ramp): `bg-destructive` / `text-destructive` (`#E84C4C`), `red-50` (`#FEF2F2`) .. `red-900` (`#7B2020`)
+  - IoT Telemetry Sensors:
+    - Temperature: `purple-500` (`#AB6DD5`), ramp `purple-50`..`900`
+    - Moisture: `teal-500` (`#51A7B1`), ramp `teal-50`..`900`
+    - Carbon Dioxide (CO2): `green-500` (`#6CAD6C`), ramp `green-50`..`900`
+    - Oxygen (O2): `yellow-500` (`#DBCC41`), ramp `yellow-50`..`900`
+  - Gradients (Figma 237deg):
+    - Stat cards: `linear-gradient(237deg, #C9E752 33%, #518251 100%)`
+    - Dashboard action buttons: `linear-gradient(237deg, #C9E752 0%, #518251 90%)`
 
 ## 3. Mandatory Keyboard Avoidance & Form Handling
 
