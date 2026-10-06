@@ -1,0 +1,70 @@
+{
+  "machines": [
+    {
+      "machine_id": "1",
+      "barangay_id": "b-1",
+      "mac_address": "00:11:22:33:44:55",
+      "name": "SAGANA-1",
+      "status": "active",
+      "wifi_ssid": "SaganaNet",
+      "last_seen": "2026-10-06T10:00:00.000Z",
+      "created_at": "2026-10-01T10:00:00.000Z",
+      "removed_at": null,
+      "latest_readings": {
+        "temperature": 57,
+        "moisture": 23,
+        "oxygen": 67,
+        "co2": 0.04,
+        "updated_at": "2026-10-06T19:30:00.000Z"
+      }
+    }
+  ],
+  "feedstocks": [
+    { "id": "f1", "machine_id": "1", "name": "Coffee Grounds", "weight_kg": 10 },
+    { "id": "f2", "machine_id": "1", "name": "Cardboards", "weight_kg": 10 },
+    { "id": "f3", "machine_id": "1", "name": "Grass Clippings", "weight_kg": 10 },
+    { "id": "f4", "machine_id": "1", "name": "Dried Leaves", "weight_kg": 10 },
+    { "id": "f5", "machine_id": "1", "name": "Woodchips", "weight_kg": 10 },
+    { "id": "f6", "machine_id": "1", "name": "Vegetable Waste", "weight_kg": 12 }
+  ],
+  "automation_logs": [
+    {
+      "id": "1",
+      "machine_id": "1",
+      "type": "blower_on",
+      "message": "The air blower has been turned on to maintain temperature.",
+      "created_at": "2026-10-06T19:19:00.000Z"
+    },
+    {
+      "id": "2",
+      "machine_id": "1",
+      "type": "sprinkler_on",
+      "message": "The sprinkler has been turned on to increase moisture.",
+      "created_at": "2026-10-06T19:06:00.000Z"
+    },
+    {
+      "id": "3",
+      "machine_id": "1",
+      "type": "emergency_stop",
+      "message": "The air blower has been stopped due to an emergency.",
+      "created_at": "2026-10-06T18:21:00.000Z"
+    },
+    {
+      "id": "4",
+      "machine_id": "1",
+      "type": "ventilation_adjust",
+      "message": "Ventilation system adjusted for optimal oxygen levels.",
+      "created_at": "2026-10-06T16:21:00.000Z"
+    }
+  ],
+  "sensor_history": [
+    {
+      "machine_id": "1",
+      "date": "2026-09-30",
+      "temperature": [20, 30, 45, 55, 60, 45, 40],
+      "moisture": [30, 40, 50, 60, 55, 45, 50],
+      "oxygen": [20, 30, 45, 60, 65, 50, 55],
+      "co2": [10, 20, 35, 45, 50, 40, 45]
+    }
+  ]
+}
