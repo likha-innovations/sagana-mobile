@@ -59,7 +59,7 @@ export const Input = forwardRef<TextInput, InputProps>(
 
           <TextInput
             ref={ref}
-            placeholderTextColor="#96958F"
+            placeholderTextColor="#AFAEA7"
             secureTextEntry={isSecure}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
@@ -78,9 +78,9 @@ export const Input = forwardRef<TextInput, InputProps>(
               accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? (
-                <EyeOff size={18} color="#64748b" />
+                <EyeOff size={18} color="#414141" />
               ) : (
-                <Eye size={18} color="#64748b" />
+                <Eye size={18} color="#414141" />
               )}
             </Pressable>
           )}

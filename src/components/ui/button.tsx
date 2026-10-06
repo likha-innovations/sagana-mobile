@@ -106,7 +106,7 @@ export const Button = forwardRef<ElementRef<typeof Pressable>, ButtonProps>(
         {loading ? (
           <ActivityIndicator
             size="small"
-            color={variant === 'outline' || variant === 'ghost' ? '#15803d' : '#ffffff'}
+            color={variant === 'outline' || variant === 'ghost' ? '#718619' : '#FAF9EE'}
           />
         ) : typeof children === 'string' || title ? (
           <Text className={cn(buttonTextVariants({ variant, size }), textClassName)}>

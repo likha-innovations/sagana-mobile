@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { View, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { colors } from '@/constants';
 
 export interface GradientMetricCardProps {
   value: string | number;
@@ -12,10 +13,10 @@ export interface GradientMetricCardProps {
 export function GradientMetricCard({ value, unit, label, icon }: GradientMetricCardProps) {
   return (
     <LinearGradient
-      colors={['#C9E752', '#518251']}
-      locations={[0.33, 1]}
-      start={{ x: 0.85, y: 0 }}
-      end={{ x: 0.1, y: 1 }}
+      colors={[colors.gradient.statCard.colors[0], colors.gradient.statCard.colors[1]]}
+      locations={[colors.gradient.statCard.locations[0], colors.gradient.statCard.locations[1]]}
+      start={colors.gradient.statCard.start}
+      end={colors.gradient.statCard.end}
       style={{ borderRadius: 14 }}
       className="w-[217px] h-[121px] p-4 justify-between"
     >

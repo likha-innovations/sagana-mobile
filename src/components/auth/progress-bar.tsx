@@ -21,7 +21,7 @@ export function ProgressBar({ activeStep, totalSteps }: ProgressBarProps) {
             className={cn(
               'h-full rounded-[14px]',
               isActive ? 'flex-[4]' : 'flex-[1]',
-              isActive || isCompleted ? 'bg-primary' : 'bg-[#C8C7BE]'
+              isActive || isCompleted ? 'bg-primary' : 'bg-gray-progress'
             )}
           />
         );

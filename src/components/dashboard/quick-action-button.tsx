@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 import { Text, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
+import { colors } from '@/constants';
+
 export interface QuickActionButtonProps {
   label: string;
   icon: ReactNode;
@@ -16,10 +18,10 @@ export function QuickActionButton({ label, icon, onPress }: QuickActionButtonPro
   return (
     <TouchableOpacity activeOpacity={0.85} onPress={handlePress}>
       <LinearGradient
-        colors={['#C9E752', '#518251', '#518251']}
-        locations={[0, 0.47, 1]}
-        start={{ x: 0.9, y: 0 }}
-        end={{ x: 0.1, y: 1 }}
+        colors={[colors.gradient.actionButton.colors[0], colors.gradient.actionButton.colors[1]]}
+        locations={[colors.gradient.actionButton.locations[0], colors.gradient.actionButton.locations[1]]}
+        start={colors.gradient.actionButton.start}
+        end={colors.gradient.actionButton.end}
         style={{
           borderRadius: 8,
           shadowColor: '#000',

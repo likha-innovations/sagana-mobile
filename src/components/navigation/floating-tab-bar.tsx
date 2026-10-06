@@ -4,6 +4,7 @@ import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { createLogger } from '@/lib/logger';
+import { colors } from '@/constants';
 
 const logger = createLogger('Navigation');
 
@@ -60,8 +61,8 @@ export function FloatingTabBar({
               });
             };
 
-            const activeColor = '#718619';
-            const inactiveColor = '#AFAEA7';
+            const activeColor = colors.brand[500];
+            const inactiveColor = colors.gray.textIcon;
             const color = isFocused ? activeColor : inactiveColor;
 
             return (
@@ -106,9 +107,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: '#FAF9EE',
+    backgroundColor: colors.white.bg,
     borderTopWidth: 1,
-    borderTopColor: '#DCDBD5',
+    borderTopColor: colors.gray.border,
     zIndex: 100,
   },
   tabContainer: {

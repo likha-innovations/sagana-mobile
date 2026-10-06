@@ -62,7 +62,7 @@ export function PasswordRequirements({
               </View>
             ) : (
               <View className="w-4 h-4 items-center justify-center">
-                <View className="w-1.5 h-1.5 rounded-full bg-[#96958F]" />
+                <View className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />
               </View>
             )}
             <Text
@@ -72,7 +72,7 @@ export function PasswordRequirements({
                   ? 'text-primary font-medium'
                   : isError
                   ? 'text-destructive font-sans'
-                  : 'text-[#96958F] font-sans'
+                  : 'text-muted-foreground font-sans'
               )}
             >
               {rule.label}

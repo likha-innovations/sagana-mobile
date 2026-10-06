@@ -22,9 +22,9 @@ export function MachineCard({ machine }: MachineCardProps) {
 
       {/* Progress Bar */}
       <View className="flex-row h-[6px] gap-2.5">
-        <View className={`flex-1 rounded-full ${step >= 1 ? 'bg-primary' : 'bg-[#C8C7BE]'}`} />
-        <View className={`flex-1 rounded-full ${step >= 2 ? 'bg-primary' : 'bg-[#C8C7BE]'}`} />
-        <View className={`flex-1 rounded-full ${step >= 3 ? 'bg-primary' : 'bg-[#C8C7BE]'}`} />
+        <View className={`flex-1 rounded-full ${step >= 1 ? 'bg-primary' : 'bg-gray-progress'}`} />
+        <View className={`flex-1 rounded-full ${step >= 2 ? 'bg-primary' : 'bg-gray-progress'}`} />
+        <View className={`flex-1 rounded-full ${step >= 3 ? 'bg-primary' : 'bg-gray-progress'}`} />
       </View>
 
       {/* Sensor Grid (Row) */}
