@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import { useAuthContext } from '@/context/auth-context';
 import { useProfile, useBarangays } from '@/hooks';
 import { GoogleIcon } from '@/components/icons';
+import { colors } from '@/constants';
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -69,7 +70,7 @@ export default function ProfileScreen() {
           {/* User Card */}
           <View className="flex-row items-center p-4 bg-card border border-border rounded-[14px] gap-4">
             <LinearGradient
-              colors={['#C9E752', '#518251']}
+              colors={[colors.gradient.statCard.colors[0], colors.gradient.statCard.colors[1]]}
               start={{ x: 0, y: 0 }}
               end={{ x: 0, y: 1 }}
               style={{ borderRadius: 28 }}
