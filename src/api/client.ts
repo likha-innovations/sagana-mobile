@@ -46,7 +46,8 @@ export interface FetchOptions extends RequestInit {
 // Typed Native Fetch Wrapper for Sagana Backend with auto JWT injection
 export async function apiFetch<T>(
   endpoint: string,
-  options: FetchOptions = {}
+  options: FetchOptions = {},
+  isRetry = false
 ): Promise<T> {
   const { withAuth = true, headers, ...restOptions } = options;
 
@@ -60,7 +61,8 @@ export async function apiFetch<T>(
   };
 
   if (withAuth) {
-    const token = await getAuthToken();
+    // If it's a retry, we force Clerk to bypass its cache and fetch a fresh token
+    const token = await getAuthToken(isRetry);
 
     if (!token) {
       logger.warn(`Missing token for protected endpoint: ${normalizedEndpoint}`);
@@ -70,7 +72,7 @@ export async function apiFetch<T>(
     requestHeaders['Authorization'] = `Bearer ${token}`;
   }
 
-  logger.debug(`${options.method || 'GET'} -> ${url}`);
+  logger.debug(`${options.method || 'GET'} -> ${url}${isRetry ? ' (RETRY)' : ''}`);
 
   const timeout = options.timeoutMs || 10000; // Default 10 seconds timeout
   const controller = new AbortController();
@@ -84,6 +86,12 @@ export async function apiFetch<T>(
     });
 
     clearTimeout(id);
+
+    // Intercept 401 Unauthorized errors
+    if (response.status === 401 && withAuth && !isRetry) {
+      logger.warn(`401 Unauthorized -> ${url}. Forcing token refresh and retrying...`);
+      return apiFetch<T>(endpoint, options, true);
+    }
 
     const json = await response.json().catch(() => null);
 

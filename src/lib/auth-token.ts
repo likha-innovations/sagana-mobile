@@ -3,7 +3,7 @@ import { createLogger } from './logger';
 
 const logger = createLogger('AuthToken');
 
-type TokenGetter = () => Promise<string | null | undefined>;
+type TokenGetter = (options?: { skipCache?: boolean }) => Promise<string | null | undefined>;
 
 let activeTokenGetter: TokenGetter | null = null;
 
@@ -13,12 +13,12 @@ export function setAuthTokenGetter(getter: TokenGetter | null): void {
 }
 
 // Resolve active JWT Bearer token from Clerk session or SecureStore fallback
-export async function getAuthToken(): Promise<string | null> {
+export async function getAuthToken(forceRefresh = false): Promise<string | null> {
   let token: string | null = null;
 
   if (activeTokenGetter) {
     try {
-      const dynamicToken = await activeTokenGetter();
+      const dynamicToken = await activeTokenGetter({ skipCache: forceRefresh });
       if (dynamicToken) {
         token = dynamicToken;
       }
