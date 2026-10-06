@@ -1,17 +1,22 @@
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { MapPin, Trees, Box } from 'lucide-react-native';
 import { mockDashboardData } from '@/lib/mock-data';
 import { useAuthContext } from '@/context/auth-context';
 import { useProfile, useBarangays } from '@/hooks';
+import { useMachines } from '@/hooks/use-machines';
 import { CompostIcon, BroccoliIcon } from '@/components/icons';
-import { GradientMetricCard, QuickActionButton, MachineCard } from '@/components/dashboard';
+import { GradientMetricCard, QuickActionButton } from '@/components/dashboard';
+import { MachineCard } from '@/components/devices/machine-card';
 
 export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { user: authUser } = useAuthContext();
   const { data: profileData } = useProfile();
   const { data: barangays = [] } = useBarangays();
+  const { data: realMachines, isLoading: machinesLoading } = useMachines();
   
   const user = profileData || authUser;
   const firstName = user?.fullName?.split(' ')[0] || 'Operator';
@@ -108,15 +113,25 @@ export default function DashboardScreen() {
               <Text className="text-[16px] font-bold text-foreground">
                 Your Machines
               </Text>
-              <TouchableOpacity onPress={() => {}}>
+              <TouchableOpacity onPress={() => router.push('/(app)/(tabs)/machines' as any)}>
                 <Text className="text-[12px] font-bold text-primary">View All</Text>
               </TouchableOpacity>
             </View>
 
-            {/* Dashboard Cards mapped from mock data */}
-            {machines.map((machine) => (
-              <MachineCard key={machine.id} machine={machine} />
-            ))}
+            {/* Dashboard Cards mapped from real data */}
+            {machinesLoading ? (
+              <Text className="text-sm text-muted-foreground">Loading machines...</Text>
+            ) : realMachines && realMachines.length > 0 ? (
+              realMachines.map((machine) => (
+                <MachineCard 
+                  key={machine.machine_id} 
+                  machine={machine} 
+                  onPress={() => router.push(`/(app)/(tabs)/machines/${machine.machine_id}` as any)} 
+                />
+              ))
+            ) : (
+              <Text className="text-sm text-muted-foreground">No machines found.</Text>
+            )}
           </View>
 
         </View>
