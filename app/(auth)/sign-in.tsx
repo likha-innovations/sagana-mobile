@@ -110,7 +110,7 @@ function AuthInputField({
         >
           <Text
             className={cn(
-              'text-[14px] font-sans select-none',
+              'text-[14px] select-none',
               hasError
                 ? 'text-destructive font-medium'
                 : 'text-muted-foreground'

@@ -34,6 +34,8 @@ Mobile client for Sagana platform built with Expo SDK 57, React 19, React Native
   - Icons strictly imported from `lucide-react-native` (or custom SVGs in `src/components/icons/`).
   - Safe area metrics handled exclusively via `useSafeAreaInsets()` (legacy `<SafeAreaView>` is banned).
   - Tactile feedback with `expo-haptics` and toast notifications via `burnt`.
+  - **Bottom Sheets**: Use `@gorhom/bottom-sheet` (via `BottomSheetModal`) for all bottom sheet modals to ensure smooth animations and native-like physics.
+  - **Floating Tab Bar**: The custom `FloatingTabBar` has a height of ~100px and `zIndex: 100`. Absolute elements anchored to the bottom of screens (like floating pills) MUST use `bottom: 110` to sit above it, and `ScrollView`s MUST use `paddingBottom: 150` to `180` so content isn't trapped underneath.
 - **Telemetry & Logging**:
   - Centralized logger (`src/lib/logger.ts`) formatted in `Asia/Manila` timezone. No raw `console.log` in production.
 - **Git & Commits**:
