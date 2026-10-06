@@ -13,6 +13,13 @@ app/
 ├── (app)/                         # 🔒 Protected Group
 │   ├── (tabs)/                    # 📑 Tab Navigator
 │   │   ├── index.tsx              # Home / Dashboard tab
+│   │   ├── machines/              # ⚙️ Nested Machines Stack
+│   │   │   ├── index.tsx          # Machines List
+│   │   │   ├── _layout.tsx        # Stack Layout (Headerless)
+│   │   │   └── [id]/              # Individual Machine Dashboards
+│   │   │       ├── index.tsx      # Detailed Machine UI & Controls
+│   │   │       ├── automation-logs.tsx
+│   │   │       └── sensors-history.tsx
 │   │   ├── profile.tsx            # User Profile tab
 │   │   └── _layout.tsx            # Tabs Layout (Floating Bar)
 │   └── _layout.tsx                # Protected Stack Layout

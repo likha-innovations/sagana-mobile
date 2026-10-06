@@ -34,6 +34,7 @@ sagana-mobile/
 - Exclusively dedicated to HTTP communication.
 - Uses a typed native `apiFetch<T>` wrapper around `fetch` (Zero Axios).
 - Handles base URL resolution, JWT token injection, API envelope unwrapping, and throwing structured `ApiError` instances.
+- **Auto-Recovery Interceptor**: Automatically catches `401 Unauthorized` responses caused by Clerk's short-lived (1-minute) token lifecycles, forcefully skips the token cache to generate a brand new JWT, and seamlessly replays the request so mutations and background polls never fail unexpectedly.
 
 ### 3. `src/hooks/` (Server State & Query Factories)
 - Contains all **TanStack Query v5** queries and mutations.
@@ -42,10 +43,11 @@ sagana-mobile/
 
 ### 4. `src/components/` (Presentation & UI)
 - Divided into reusable sub-layers:
-  - `ui/`: Core primitives built with `@rn-primitives` and `class-variance-authority` (Button, Input, Card).
+  - `ui/`: Core primitives built with `@rn-primitives` and `class-variance-authority` (Button, Input, Card). Also includes global layout primitives like `FilterBottomSheet`.
+  - `devices/`: Specialized IoT hardware UI components (`MachineCard`, `SensorStatCard`, `AutomationLogCard`) heavily optimized for 1:1 Figma adherence.
   - `navigation/`: Custom application navigation bars (FloatingTabBar).
   - `icons/`: Custom vector SVGs (GoogleIcon) and brand iconography.
-- **Rule**: Components must be presentational and accept props/callbacks.
+- **Rule**: Components must be presentational and accept props/callbacks. Screen padding is centralized using `useDynamicLayout()` to enforce uniform Safe Area boundaries.
 
 ### 5. `src/context/` (Global App State)
 - Houses global reactive state providers, such as `AuthProvider` (`AuthContext`).
