@@ -27,6 +27,7 @@ import { useProfile, useUpdateProfile } from '@/hooks/use-profile';
 import { useBarangays } from '@/hooks/use-barangays';
 import { updateProfileSchema, type UpdateProfileInput } from '@/types/auth';
 import { Input } from '@/components/ui/input';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 
 export default function EditProfileScreen() {
   const insets = useSafeAreaInsets();
@@ -38,6 +39,7 @@ export default function EditProfileScreen() {
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ['50%', '80%'], []);
   const [isEditing, setIsEditing] = useState(false);
+  const [isBackModalVisible, setIsBackModalVisible] = useState(false);
   const { showToast } = useToast();
 
   // Split full name for initial values
@@ -112,6 +114,24 @@ export default function EditProfileScreen() {
     }
   };
 
+  const handleBackPress = () => {
+    if (isEditing) {
+      setIsBackModalVisible(true);
+    } else {
+      router.back();
+    }
+  };
+
+  const handleConfirmGoBack = () => {
+    setIsBackModalVisible(false);
+    setIsEditing(false);
+    router.back();
+  };
+
+  const handleCancelGoBack = () => {
+    setIsBackModalVisible(false);
+  };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -130,7 +150,7 @@ export default function EditProfileScreen() {
             <View className="flex-row items-center gap-2.5">
               <TouchableOpacity
                 activeOpacity={0.8}
-                onPress={() => router.back()}
+                onPress={handleBackPress}
                 className="p-2 -ml-2"
               >
                 <ChevronLeft size={24} color="#414141" />
@@ -284,6 +304,16 @@ export default function EditProfileScreen() {
           </View>
         </BottomSheetScrollView>
       </BottomSheetModal>
+
+      <ConfirmModal
+        visible={isBackModalVisible}
+        title="Go Back?"
+        description="Your details won't be saved."
+        cancelText="Cancel"
+        confirmText="Yes, go back"
+        onCancel={handleCancelGoBack}
+        onConfirm={handleConfirmGoBack}
+      />
     </KeyboardAvoidingView>
   );
 }
