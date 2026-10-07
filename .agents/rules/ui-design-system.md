@@ -67,11 +67,19 @@ description: UI standards for ui-craftsman using honey-design, React Native Reus
 - Place custom brand vector icons in **`src/components/icons/`** using `react-native-svg` (e.g. `GoogleIcon`).
 - Use theme tokens or palette colors for icon strokes (e.g. `color="#414141"` or `color="#718619"`).
 
-## 7. Safe Area — `useSafeAreaInsets()` Hook
+## 7. Dynamic Layout & Safe Area — `useDynamicLayout()` Hook
 
-- Use `useSafeAreaInsets()` from `react-native-safe-area-context` for safe area handling.
-- **Do NOT** use the legacy `<SafeAreaView>` wrapper component.
-- Apply insets directly via style: `style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}`.
+- Always use `useDynamicLayout()` from `@/hooks` for screen layout metrics:
+  - Tab screens: apply `contentContainerStyle={{ paddingBottom: scrollPaddingBottom }}` to ScrollViews and FlatLists so list items clear the floating tab bar completely.
+  - Non-tab stack screens: apply `contentContainerStyle={{ paddingBottom: stackScrollPadding }}` to guarantee comfortable clearance of gesture bars and home indicators.
+  - Floating elements: use `bottom: floatingBottom` for action pills and FABs resting directly above the tab bar.
+  - Custom headers: apply `paddingTop: headerPaddingTop` for headers not handled by Expo Router.
+- **Strictly Banned**:
+  - Hardcoded bottom paddings (e.g. `paddingBottom: 100` or `pb-[100px]`).
+  - Manual raw calculations (e.g. `insets.bottom + 100`).
+  - Duplicate calls to `useSafeAreaInsets()` in screens already importing `useDynamicLayout()`.
+  - Legacy `<SafeAreaView>` wrapper component.
+- Apply safe insets directly via styles when needed: `style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}`.
 
 ## 8. Honey-Design Efficiency
 

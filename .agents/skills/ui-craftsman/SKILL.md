@@ -43,10 +43,15 @@ Style **exclusively** with semantic theme variables defined in `global.css`. Nev
   - `font-bold`: `SpotifyMix-Bold` (700) — screen titles (`text-2xl`/`text-3xl`), primary button labels
 - Never leave text unstyled with default system fonts.
 
-## 5. Primitives, Icons & Safe Area
+## 5. Primitives, Icons, Safe Area & Dynamic Layout
 - Use `@rn-primitives` in `src/components/ui/` with `cva` for core primitives (`Button`, `Input`, `Card`).
 - Icons must come from `lucide-react-native` (or custom SVG in `src/components/icons/`).
-- Safe area handling must strictly use `useSafeAreaInsets()` from `react-native-safe-area-context` (never legacy `<SafeAreaView>`).
+- Standardize screen spacing with `useDynamicLayout()` from `@/hooks`:
+  - Tab screens: `contentContainerStyle={{ paddingBottom: scrollPaddingBottom }}` on ScrollViews/FlatLists.
+  - Stack screens: `contentContainerStyle={{ paddingBottom: stackScrollPadding }}` on ScrollViews.
+  - Floating pills/FABs: `style={{ bottom: floatingBottom }}` above tab bar.
+  - Headers: `style={{ paddingTop: headerPaddingTop }}`.
+- Safe area: Use `insets` from `useDynamicLayout()` (or `useSafeAreaInsets()`). Never use legacy `<SafeAreaView>`.
 - Haptics: `expo-haptics` on button presses (`Light`) and validation errors (`NotificationFeedbackType.Error`).
 - Native toasts: `burnt` for API errors and success alerts.
 
