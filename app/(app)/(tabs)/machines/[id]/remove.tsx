@@ -1,13 +1,13 @@
 import { View, Text, Pressable, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft, AlertTriangle } from 'lucide-react-native';
 import { useRemoveMachine } from '@/hooks/use-machines';
+import { useDynamicLayout } from '@/hooks';
 
 export default function RemoveMachineScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
+  const { insets } = useDynamicLayout();
   
   const { mutate: removeMachine, isPending } = useRemoveMachine();
 
@@ -27,7 +27,7 @@ export default function RemoveMachineScreen() {
         <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-neutral-100">
           <ChevronLeft size={24} color="#414141" />
         </Pressable>
-        <Text className="text-lg font-bold text-text-foreground ml-2">
+        <Text className="text-lg font-bold text-foreground ml-2">
           Remove Machine
         </Text>
       </View>
@@ -37,7 +37,7 @@ export default function RemoveMachineScreen() {
           <AlertTriangle size={48} color="#E84C4C" />
         </View>
         
-        <Text className="text-2xl font-bold text-text-foreground mb-4 text-center">
+        <Text className="text-2xl font-bold text-foreground mb-4 text-center">
           Are you absolutely sure?
         </Text>
         
@@ -54,7 +54,7 @@ export default function RemoveMachineScreen() {
             {isPending ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text className="text-base font-bold text-white">
+              <Text className="text-base font-bold text-primary-foreground">
                 Yes, remove machine
               </Text>
             )}
@@ -65,7 +65,7 @@ export default function RemoveMachineScreen() {
             disabled={isPending}
             className="bg-secondary rounded-full p-4 items-center justify-center"
           >
-            <Text className="text-base font-bold text-text-foreground">
+            <Text className="text-base font-bold text-foreground">
               Cancel
             </Text>
           </Pressable>

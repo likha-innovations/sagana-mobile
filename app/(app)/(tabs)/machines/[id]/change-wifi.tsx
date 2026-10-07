@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { View, Text, Pressable, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import { useMachine, useUpdateMachineWifi } from '@/hooks/use-machines';
+import { useDynamicLayout } from '@/hooks';
 
 export default function ChangeWifiScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
+  const { insets, stackScrollPadding } = useDynamicLayout();
   
   const { data: machine } = useMachine(id);
   const { mutate: updateWifi, isPending } = useUpdateMachineWifi();
@@ -45,21 +45,22 @@ export default function ChangeWifiScreen() {
             <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-neutral-100">
               <ChevronLeft size={24} color="#414141" />
             </Pressable>
-            <Text className="text-lg font-bold text-text-foreground ml-2">
+            <Text className="text-lg font-bold text-foreground ml-2">
               Wi-Fi Credentials
             </Text>
           </View>
 
           <ScrollView 
             className="flex-1 px-4 pt-6"
+            contentContainerStyle={{ paddingBottom: stackScrollPadding }}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <Text className="text-sm font-semibold text-text-foreground mb-2">
+            <Text className="text-sm font-semibold text-foreground mb-2">
               Network Name (SSID)
             </Text>
             <TextInput
-              className="bg-card border-[1.5px] border-input rounded-2xl p-4 text-base font-medium text-text-foreground mb-4"
+              className="bg-card border-[1.5px] border-input rounded-2xl p-4 text-base font-medium text-foreground mb-4"
               value={ssid}
               onChangeText={setSsid}
               placeholder="e.g. Home Wi-Fi"
@@ -68,11 +69,11 @@ export default function ChangeWifiScreen() {
               autoCorrect={false}
             />
 
-            <Text className="text-sm font-semibold text-text-foreground mb-2">
+            <Text className="text-sm font-semibold text-foreground mb-2">
               Password
             </Text>
             <TextInput
-              className="bg-card border-[1.5px] border-input rounded-2xl p-4 text-base font-medium text-text-foreground mb-8"
+              className="bg-card border-[1.5px] border-input rounded-2xl p-4 text-base font-medium text-foreground mb-8"
               value={password}
               onChangeText={setPassword}
               placeholder="Enter password"
@@ -92,7 +93,7 @@ export default function ChangeWifiScreen() {
               {isPending ? (
                 <ActivityIndicator color={!ssid.trim() ? '#AFAEA7' : '#FFFFFF'} />
               ) : (
-                <Text className={`text-base font-bold ${!ssid.trim() ? 'text-muted-foreground' : 'text-white'}`}>
+                <Text className={`text-base font-bold ${!ssid.trim() ? 'text-muted-foreground' : 'text-primary-foreground'}`}>
                   Connect
                 </Text>
               )}
