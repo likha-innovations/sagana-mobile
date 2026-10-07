@@ -1,6 +1,7 @@
 import { View, Text, Pressable } from 'react-native';
 import { ChevronRight, Radio, Thermometer, Droplets, Wind, Cloud, Clock, Mountain } from 'lucide-react-native';
-import type { Machine } from '@/types/device';
+import type { Machine } from '@/types/machine';
+import { formatTimeAgo } from '@/lib/utils';
 
 interface MachineCardProps {
   machine: Machine;
@@ -9,7 +10,7 @@ interface MachineCardProps {
 
 export function MachineCard({ machine, onPress }: MachineCardProps) {
   const isOffline = machine.status === 'offline';
-  const isVacant = machine.status === 'maintenance' || !machine.latest_readings;
+  const isVacant = machine.status === 'maintenance' || machine.status === 'available' || !machine.latest_readings;
 
   // Values
   const temp = isVacant ? '--' : `${machine.latest_readings?.temperature}°C`;
@@ -27,13 +28,7 @@ export function MachineCard({ machine, onPress }: MachineCardProps) {
   const phaseText = isVacant ? 'Vacant' : 'Thermophilic Phase';
   const phaseColorClass = isVacant ? 'text-muted-foreground' : 'text-primary';
   const phaseIconColor = isVacant ? '#AFAEA7' : '#718619';
-
-  // Time ago mock
-  let timeAgo = '--';
-  if (!isVacant && machine.latest_readings?.updated_at) {
-    const diffMins = Math.floor((new Date('2026-10-06T19:21:00Z').getTime() - new Date(machine.latest_readings.updated_at).getTime()) / 60000);
-    timeAgo = diffMins > 0 ? `${diffMins}m ago` : 'just now';
-  }
+  const timeAgo = isVacant ? '--' : formatTimeAgo(machine.latest_readings?.updated_at);
 
   return (
     <Pressable

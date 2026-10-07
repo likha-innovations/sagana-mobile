@@ -8,10 +8,35 @@ interface SensorTrendGraphProps {
   iconColor: string;
   yLabels: string[];
   xLabels: string[];
-  mockPath: string;
+  data?: number[];
+  maxVal?: number;
+  mockPath?: string;
 }
 
-export function SensorTrendGraph({ title, icon: Icon, iconColor, yLabels, xLabels, mockPath }: SensorTrendGraphProps) {
+// Converts a series of numbers into an SVG path string
+function buildSvgPath(data?: number[], maxVal = 100): string {
+  if (!data || data.length === 0) return 'M 0 50 L 348 50';
+  const xStep = 348 / Math.max(1, data.length - 1);
+  const points = data.map((val, i) => {
+    const x = i * xStep;
+    const y = 100 - ((val / maxVal) * 100);
+    return `${x} ${y}`;
+  });
+  return `M ${points[0]} ` + points.slice(1).map((p) => `L ${p}`).join(' ');
+}
+
+export function SensorTrendGraph({
+  title,
+  icon: Icon,
+  iconColor,
+  yLabels,
+  xLabels,
+  data,
+  maxVal = 100,
+  mockPath,
+}: SensorTrendGraphProps) {
+  const pathD = mockPath ?? buildSvgPath(data, maxVal);
+
   return (
     <View className="bg-card rounded-2xl border border-border p-5 gap-4">
       {/* Header */}
@@ -39,12 +64,12 @@ export function SensorTrendGraph({ title, icon: Icon, iconColor, yLabels, xLabel
           <View className="absolute top-0 w-full h-[1px] bg-border opacity-50" />
           <View className="absolute top-[50px] w-full h-[1px] bg-border opacity-50" />
           <View className="absolute bottom-0 w-full h-[1px] bg-border opacity-50" />
-          
+
           {/* SVG Line */}
           <View className="absolute inset-0">
             <Svg width="100%" height="100%" viewBox="0 0 348 100" preserveAspectRatio="none">
               <Path
-                d={mockPath}
+                d={pathD}
                 stroke={iconColor}
                 strokeWidth="2"
                 fill="none"

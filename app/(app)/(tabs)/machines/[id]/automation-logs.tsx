@@ -8,7 +8,7 @@ import { FilterBottomSheet } from '@/components/ui/filter-bottom-sheet';
 import { AutomationLogCard } from '@/components/devices/automation-log-card';
 
 import { useAutomationLogs } from '@/hooks/use-machines';
-import type { AutomationLog } from '@/types/device';
+import type { AutomationLog } from '@/types/machine';
 
 export default function AutomationLogsScreen() {
   const router = useRouter();

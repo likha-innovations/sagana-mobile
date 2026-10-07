@@ -2,18 +2,21 @@ import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-nati
 import { useLocalSearchParams, useRouter, Link } from 'expo-router';
 import { ChevronLeft, Wifi, WifiOff, Settings, Clock, Thermometer, Droplets, Wind, Cloud, Fan, FlaskConical, ShowerHead } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useMachine, useFeedstocks } from '@/hooks/use-machines';
+import { useMachine } from '@/hooks/use-machines';
+import { useActiveBatch } from '@/hooks/use-batches';
 import { useDynamicLayout } from '@/hooks';
 import { SensorStatCard } from '@/components/devices/sensor-stat-card';
+import { formatTimeAgo } from '@/lib/utils';
+import type { CompostingPhase } from '@/types/machine';
 
 export default function MachineDetailsDashboard() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { insets, scrollPaddingBottom } = useDynamicLayout();
-  const { data: machine, isLoading } = useMachine(id);
-  const { data: feedstocks } = useFeedstocks(id);
+  const { data: machine, isLoading: isMachineLoading } = useMachine(id);
+  const { data: activeBatch, isLoading: isBatchLoading } = useActiveBatch(id);
 
-  if (isLoading) {
+  if (isMachineLoading || isBatchLoading) {
     return (
       <View className="flex-1 bg-background items-center justify-center">
         <ActivityIndicator size="small" color="#718619" />
@@ -24,7 +27,16 @@ export default function MachineDetailsDashboard() {
   if (!machine) return null;
 
   const isOffline = machine.status === 'offline';
-  const isVacant = machine.status === 'maintenance'; // We mapped maintenance to Vacant in mock data
+  const isVacant = machine.status === 'maintenance' || machine.status === 'available' || !activeBatch;
+
+  // Derived composting metrics
+  const temp = machine.latest_readings?.temperature ?? 0;
+  const startDate = activeBatch?.start_date ? new Date(activeBatch.start_date) : new Date(machine.created_at);
+  const daysComposting = Math.max(0, Math.floor((Date.now() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
+  const currentPhase: CompostingPhase =
+    temp >= 45 ? 'thermophilic' : temp > 0 && daysComposting > 21 ? 'cooling' : 'mesophilic';
+  const phaseIndex = currentPhase === 'thermophilic' ? 1 : currentPhase === 'cooling' ? 2 : 0;
+  const timeAgo = formatTimeAgo(machine.latest_readings?.updated_at);
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
@@ -65,7 +77,16 @@ export default function MachineDetailsDashboard() {
             <Text className="text-xs font-medium text-foreground text-center mb-1">Your machine is</Text>
             <Text className="text-2xl font-bold text-foreground text-center mb-6">Vacant</Text>
             
-            <Pressable className="w-full" disabled={isOffline}>
+            <Pressable 
+              className="w-full" 
+              disabled={isOffline}
+              onPress={() =>
+                router.push({
+                  pathname: '/(app)/batch/new',
+                  params: { machineId: machine.machine_id },
+                } as any)
+              }
+            >
               {isOffline ? (
                 <View className="bg-secondary rounded-lg px-4 py-4 w-full flex-row items-center justify-center gap-2 opacity-50">
                   <FlaskConical size={18} color="#414141" strokeWidth={1.5} />
@@ -91,56 +112,41 @@ export default function MachineDetailsDashboard() {
               <Text className="text-sm font-medium text-brand-500 text-center mb-1">Your machine is</Text>
               <Text className="text-[28px] font-bold text-brand-700 text-center mb-10">Composting</Text>
               
-              {(() => {
-                const temp = machine.latest_readings?.temperature ?? 0;
-                let currentPhase: 'mesophilic' | 'thermophilic' | 'cooling' = 'mesophilic';
-                
-                if (temp >= 45) {
-                  currentPhase = 'thermophilic';
-                } else if (temp > 0 && temp < 45 && Math.floor((Date.now() - new Date(machine.created_at).getTime()) / (1000 * 60 * 60 * 24)) > 21) {
-                  currentPhase = 'cooling';
-                }
+              <View className="relative mb-6">
+                {/* Connecting Lines (Absolute positioned behind) */}
+                <View className="absolute top-[10px] left-[16.66%] right-[16.66%] h-1.5 bg-[#E2E1DC] rounded-full" />
+                {phaseIndex > 0 && (
+                  <View 
+                    className="absolute top-[10px] left-[16.66%] h-1.5 bg-brand-500 rounded-full" 
+                    style={{ right: phaseIndex === 2 ? '16.66%' : '50%' }} 
+                  />
+                )}
 
-                const phaseIndex = ['mesophilic', 'thermophilic', 'cooling'].indexOf(currentPhase);
-                
-                return (
-                  <View className="relative mb-6">
-                    {/* Connecting Lines (Absolute positioned behind) */}
-                    <View className="absolute top-[10px] left-[16.66%] right-[16.66%] h-1.5 bg-[#E2E1DC] rounded-full" />
-                    {phaseIndex > 0 && (
-                      <View 
-                        className="absolute top-[10px] left-[16.66%] h-1.5 bg-brand-500 rounded-full" 
-                        style={{ right: phaseIndex === 2 ? '16.66%' : '50%' }} 
-                      />
-                    )}
-
-                    {/* Step Containers */}
-                    <View className="flex-row items-center justify-between">
-                      {/* Step 0 */}
-                      <View className="items-center flex-1">
-                        <View className="w-6 h-6 rounded-full bg-brand-500 z-10" />
-                        <Text className={`mt-3 text-[11px] ${phaseIndex === 0 ? 'font-bold text-brand-500' : 'font-medium text-[#AFAEA7]'}`}>Mesophilic</Text>
-                      </View>
-                      
-                      {/* Step 1 */}
-                      <View className="items-center flex-1">
-                        <View className={`w-6 h-6 rounded-full z-10 ${phaseIndex >= 1 ? 'bg-brand-500' : 'bg-[#E2E1DC]'}`} />
-                        <Text className={`mt-3 text-[11px] ${phaseIndex === 1 ? 'font-bold text-brand-500' : 'font-medium text-[#AFAEA7]'}`}>Thermophilic</Text>
-                      </View>
-                      
-                      {/* Step 2 */}
-                      <View className="items-center flex-1">
-                        <View className={`w-6 h-6 rounded-full z-10 ${phaseIndex >= 2 ? 'bg-brand-500' : 'bg-[#E2E1DC]'}`} />
-                        <Text className={`mt-3 text-[11px] ${phaseIndex === 2 ? 'font-bold text-brand-500' : 'font-medium text-[#AFAEA7]'}`}>Cooling</Text>
-                      </View>
-                    </View>
+                {/* Step Containers */}
+                <View className="flex-row items-center justify-between">
+                  {/* Step 0 */}
+                  <View className="items-center flex-1">
+                    <View className="w-6 h-6 rounded-full bg-brand-500 z-10" />
+                    <Text className={`mt-3 text-[11px] ${phaseIndex === 0 ? 'font-bold text-brand-500' : 'font-medium text-[#AFAEA7]'}`}>Mesophilic</Text>
                   </View>
-                );
-              })()}
+                  
+                  {/* Step 1 */}
+                  <View className="items-center flex-1">
+                    <View className={`w-6 h-6 rounded-full z-10 ${phaseIndex >= 1 ? 'bg-brand-500' : 'bg-[#E2E1DC]'}`} />
+                    <Text className={`mt-3 text-[11px] ${phaseIndex === 1 ? 'font-bold text-brand-500' : 'font-medium text-[#AFAEA7]'}`}>Thermophilic</Text>
+                  </View>
+                  
+                  {/* Step 2 */}
+                  <View className="items-center flex-1">
+                    <View className={`w-6 h-6 rounded-full z-10 ${phaseIndex >= 2 ? 'bg-brand-500' : 'bg-[#E2E1DC]'}`} />
+                    <Text className={`mt-3 text-[11px] ${phaseIndex === 2 ? 'font-bold text-brand-500' : 'font-medium text-[#AFAEA7]'}`}>Cooling</Text>
+                  </View>
+                </View>
+              </View>
               
               <View className="flex-row items-center justify-center gap-1.5 mt-2">
                 <Clock size={14} color="#AFAEA7" />
-                <Text className="text-[13px] font-medium text-muted-foreground">2m ago</Text>
+                <Text className="text-[13px] font-medium text-muted-foreground">{timeAgo}</Text>
               </View>
             </View>
 
@@ -148,13 +154,13 @@ export default function MachineDetailsDashboard() {
             <View className="flex-row justify-between gap-4 mb-8">
               <View className="flex-1 bg-card rounded-2xl border border-border py-6 items-center justify-center">
                 <Text className="text-2xl font-bold text-foreground mb-1">
-                  {Math.max(0, Math.floor((Date.now() - new Date(machine.created_at).getTime()) / (1000 * 60 * 60 * 24)))}
+                  {daysComposting}
                 </Text>
                 <Text className="text-xs font-medium text-muted-foreground">Days Composting</Text>
               </View>
               <View className="flex-1 bg-card rounded-2xl border border-border py-6 items-center justify-center">
                 <Text className="text-2xl font-bold text-foreground mb-1">
-                  {feedstocks?.reduce((sum, item) => sum + item.weight_kg, 0).toFixed(1) ?? '0.0'} kg
+                  {activeBatch?.total_weight ? activeBatch.total_weight.toFixed(1) : '0.0'} kg
                 </Text>
                 <Text className="text-xs font-medium text-muted-foreground">Total Feedstock</Text>
               </View>
@@ -163,13 +169,17 @@ export default function MachineDetailsDashboard() {
             {/* Feedstocks */}
             <Text className="text-sm font-bold text-foreground mb-3">Feedstocks</Text>
             <View className="flex-row flex-wrap justify-between gap-y-6 mb-8 px-2">
-              {feedstocks?.map((item) => (
-                <View key={item.id} className="w-[30%] items-center">
-                  <View className="w-16 h-16 bg-neutral-200 rounded-lg mb-2" />
-                  <Text className="text-[10px] font-medium text-foreground text-center leading-3">{item.name}</Text>
-                  <Text className="text-[10px] font-medium text-muted-foreground">{item.weight_kg} kg</Text>
-                </View>
-              ))}
+              {activeBatch?.feedstocks && activeBatch.feedstocks.length > 0 ? (
+                activeBatch.feedstocks.map((item) => (
+                  <View key={item.id} className="w-[30%] items-center">
+                    <View className="w-16 h-16 bg-skeleton rounded-2xl mb-2 items-center justify-center" />
+                    <Text className="text-[10px] font-medium text-foreground text-center leading-3">{item.name}</Text>
+                    <Text className="text-[10px] font-medium text-muted-foreground">{item.weight_kg} kg</Text>
+                  </View>
+                ))
+              ) : (
+                <Text className="text-xs text-muted-foreground">No feedstocks added yet.</Text>
+              )}
             </View>
 
             {/* Live Sensor Readings */}
@@ -191,7 +201,7 @@ export default function MachineDetailsDashboard() {
             <View className="flex-row items-center justify-center gap-1 mb-8">
               <Clock size={12} color="#AFAEA7" />
               <Text className="text-xs font-medium text-muted-foreground">
-                {machine.latest_readings?.updated_at ? 'Updated recently' : 'No data'}
+                {machine.latest_readings?.updated_at ? `Updated ${timeAgo}` : 'No data'}
               </Text>
             </View>
 

@@ -25,18 +25,6 @@ export default function SensorsHistoryScreen() {
 
   const { data: history } = useSensorHistory(id, format(selectedDate, 'yyyy-MM-dd'));
 
-  const generatePath = (data: number[], maxVal: number) => {
-    if (!data || data.length === 0) return "M 0 50 L 348 50";
-    
-    const xStep = 348 / (data.length - 1);
-    const points = data.map((val, i) => {
-      const x = i * xStep;
-      const y = 100 - ((val / maxVal) * 100);
-      return `${x} ${y}`;
-    });
-    
-    return `M ${points[0]} ` + points.slice(1).map(p => `L ${p}`).join(' ');
-  };
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       {/* Header */}
@@ -65,7 +53,8 @@ export default function SensorsHistoryScreen() {
               iconColor="#AB6DD5"
               yLabels={['60°C', '40°C', '20°C']}
               xLabels={['00:00', '06:00', '12:00', '18:00', '24:00']}
-              mockPath={generatePath(history.temperature, 60)}
+              data={history.temperature}
+              maxVal={60}
             />
 
             <SensorTrendGraph
@@ -74,7 +63,8 @@ export default function SensorsHistoryScreen() {
               iconColor="#51A7B1"
               yLabels={['40%', '20%', '0%']}
               xLabels={['00:00', '06:00', '12:00', '18:00', '24:00']}
-              mockPath={generatePath(history.moisture, 60)}
+              data={history.moisture}
+              maxVal={60}
             />
 
             <SensorTrendGraph
@@ -83,7 +73,8 @@ export default function SensorsHistoryScreen() {
               iconColor="#DBCC41"
               yLabels={['100%', '50%', '0%']}
               xLabels={['00:00', '06:00', '12:00', '18:00', '24:00']}
-              mockPath={generatePath(history.oxygen, 100)}
+              data={history.oxygen}
+              maxVal={100}
             />
 
             <SensorTrendGraph
@@ -92,7 +83,8 @@ export default function SensorsHistoryScreen() {
               iconColor="#6CAD6C"
               yLabels={['0.1%', '0.05%', '0%']}
               xLabels={['00:00', '06:00', '12:00', '18:00', '24:00']}
-              mockPath={generatePath(history.co2, 50)} // scaled for visualization
+              data={history.co2}
+              maxVal={50}
             />
           </>
         )}

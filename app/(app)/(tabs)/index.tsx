@@ -1,13 +1,21 @@
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MapPin, Trees, Box } from 'lucide-react-native';
-import { mockDashboardData } from '@/lib/mock-data';
 import { useAuthContext } from '@/context/auth-context';
 import { useProfile, useBarangays, useDynamicLayout } from '@/hooks';
 import { useMachines } from '@/hooks/use-machines';
+import { useDashboardMetrics } from '@/hooks/use-batches';
+import type { DashboardMetrics } from '@/types/batch';
 import { CompostIcon, BroccoliIcon } from '@/components/icons';
 import { GradientMetricCard, QuickActionButton } from '@/components/dashboard';
 import { MachineCard } from '@/components/devices/machine-card';
+import { getBarangayName } from '@/lib/utils';
+
+const defaultMetrics: DashboardMetrics = {
+  totalCompost: { value: 0, unit: 'kg' },
+  totalGreens: { value: 0, unit: 'kg' },
+  totalBrowns: { value: 0, unit: 'kg' },
+};
 
 export default function DashboardScreen() {
   const { insets, scrollPaddingBottom } = useDynamicLayout();
@@ -16,20 +24,12 @@ export default function DashboardScreen() {
   const { data: profileData } = useProfile();
   const { data: barangays = [] } = useBarangays();
   const { data: realMachines, isLoading: machinesLoading } = useMachines();
+  const { data: dynamicMetrics } = useDashboardMetrics();
   
   const user = profileData || authUser;
   const firstName = user?.fullName?.split(' ')[0] || 'Operator';
-  const { metrics, machines } = mockDashboardData;
-  
-  let barangayName = 'Unknown Location';
-  if (user?.barangay) {
-    if (typeof user.barangay === 'object' && user.barangay.name) {
-      barangayName = user.barangay.name;
-    } else if (typeof user.barangay === 'string') {
-      const bId = user.barangay;
-      barangayName = barangays.find(b => b.id === bId || b.name === bId)?.name || bId;
-    }
-  }
+  const metrics = dynamicMetrics ?? defaultMetrics;
+  const barangayName = getBarangayName(user, barangays);
 
   return (
     <View className="flex-1 bg-background">
@@ -93,7 +93,7 @@ export default function DashboardScreen() {
                 label="Start new compost batch"
                 icon={<CompostIcon size={20} color="#FAF9EE" />}
                 onPress={() => {
-                  // Phase 4: Navigate to new compost batch flow
+                  router.push('/(app)/batch/new' as any);
                 }}
               />
               <QuickActionButton
