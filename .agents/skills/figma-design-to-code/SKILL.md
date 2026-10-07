@@ -89,21 +89,19 @@ Always follow:
 ```text
 Figma URL
     ↓
-Identify exact target node/frame
+Identify exact target node/frame & parent flow
     ↓
-Retrieve Figma design context
+Retrieve complete Figma design AST (get_figma_data)
     ↓
-Retrieve/inspect visual screenshot/reference
+Enumerate flow state matrix (idle, dirty, error, modal, toast)
     ↓
-Inspect existing codebase
+Inspect component variants (componentSetId) for shifting geometry
     ↓
-Inspect existing components
+Retrieve/inspect visual screenshot/reference (download_figma_images)
     ↓
-Inspect existing design system
+Inspect existing codebase & design system
     ↓
-Inspect assets and fonts
-    ↓
-Map Figma → existing code
+Extract exact tokens (radii, borders, SpotifyMix fonts, verbatim copy)
     ↓
 Create implementation plan
     ↓
@@ -113,16 +111,12 @@ Run application
     ↓
 Visually compare implementation against Figma
     ↓
-Identify discrepancies
-    ↓
 Fix discrepancies
-    ↓
-Render again
     ↓
 Verify
 ```
 
-The first implementation is never automatically considered finished.
+The first implementation is never automatically considered finished. Always cross-examine against adjacent flow states (e.g. error frames) before marking complete.
 
 ---
 
