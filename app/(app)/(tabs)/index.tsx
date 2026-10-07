@@ -100,9 +100,7 @@ export default function DashboardScreen() {
               <QuickActionButton
                 label="Add new SAGANA Machine"
                 icon={<Box size={20} color="#FAF9EE" />}
-                onPress={() => {
-                  // Phase 4: Navigate to machine provisioning
-                }}
+                onPress={() => router.push('/(app)/machine-registration')}
               />
             </View>
           </View>

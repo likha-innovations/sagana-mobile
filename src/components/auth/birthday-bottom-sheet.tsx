@@ -13,7 +13,11 @@ import {
   BottomSheetBackdrop,
   type BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
-import DateTimePicker from '@react-native-community/datetimepicker';
+// Lazy-load: native module only exists on iOS dev client builds
+const DateTimePicker =
+  Platform.OS === 'ios'
+    ? require('@react-native-community/datetimepicker').default
+    : null;
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { X, Check } from 'lucide-react-native';

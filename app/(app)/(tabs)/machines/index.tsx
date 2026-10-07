@@ -33,9 +33,7 @@ export default function MachinesListScreen() {
             <QuickActionButton
               label="Add new SAGANA Machine"
               icon={<Box size={20} color="#FAF9EE" />}
-              onPress={() => {
-                // Future: Navigate to add machine flow
-              }}
+              onPress={() => router.push('/(app)/machine-registration')}
             />
           </View>
         ) : (
