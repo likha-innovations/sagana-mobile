@@ -77,8 +77,9 @@ export function useUpdateMachineName() {
         mockMachines[idx] = { ...mockMachines[idx], name };
       }
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
+      queryClient.invalidateQueries({ queryKey: machineKeys.detail(variables.id) });
     },
   });
 }
@@ -93,8 +94,9 @@ export function useUpdateMachineWifi() {
         mockMachines[idx] = { ...mockMachines[idx], wifi_ssid };
       }
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
+      queryClient.invalidateQueries({ queryKey: machineKeys.detail(variables.id) });
     },
   });
 }
@@ -106,8 +108,9 @@ export function useRemoveMachine() {
       await new Promise((resolve) => setTimeout(resolve, 500));
       mockMachines = mockMachines.filter((m) => m.machine_id !== id);
     },
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
+      queryClient.invalidateQueries({ queryKey: machineKeys.detail(id) });
     },
   });
 }

@@ -44,7 +44,12 @@ export default function MachineDetailsDashboard() {
           ) : (
             <Wifi size={20} color="#718619" strokeWidth={1.5} />
           )}
-          <Pressable>
+          <Pressable
+            onPress={() => router.push(`/(app)/(tabs)/machines/${id}/settings` as any)}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Machine Settings"
+          >
             <Settings size={20} color="#414141" strokeWidth={1.5} />
           </Pressable>
         </View>
