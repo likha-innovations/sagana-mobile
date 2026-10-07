@@ -14,10 +14,18 @@ export function useDynamicLayout() {
   // The absolute bottom offset for floating pills/buttons to sit right above the tab bar
   const floatingBottom = tabBarHeight + 24;
 
+  // Standard bottom padding for stack/non-tab ScrollViews to comfortably clear device insets
+  const stackScrollPadding = Math.max(insets.bottom, 24) + 16;
+
+  // Standard top padding for custom screen headers
+  const headerPaddingTop = Math.max(insets.top, 16);
+
   return {
     insets,
     tabBarHeight,
     scrollPaddingBottom,
     floatingBottom,
+    stackScrollPadding,
+    headerPaddingTop,
   };
 }
