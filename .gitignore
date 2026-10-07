@@ -51,3 +51,6 @@ docs/.vitepress/cache/
 # graphify
 graphify-out/
 .graphify*
+
+# local task tracking
+tasks/
