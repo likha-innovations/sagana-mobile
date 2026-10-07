@@ -1,17 +1,16 @@
 import { useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Modal, Platform } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Lock, User as UserIcon } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useAuthContext } from '@/context/auth-context';
-import { useProfile, useBarangays } from '@/hooks';
+import { useProfile, useBarangays, useDynamicLayout } from '@/hooks';
 import { GoogleIcon } from '@/components/icons';
 import { colors } from '@/constants';
 
 export default function ProfileScreen() {
-  const insets = useSafeAreaInsets();
+  const { insets, scrollPaddingBottom } = useDynamicLayout();
   const router = useRouter();
   const { user: authUser, signOut, clerkUser } = useAuthContext();
   const { data: profileData } = useProfile();
@@ -56,7 +55,7 @@ export default function ProfileScreen() {
       <ScrollView
         contentContainerStyle={{
           paddingTop: Math.max(insets.top, 48),
-          paddingBottom: insets.bottom + 100, // Account for floating tab bar
+          paddingBottom: scrollPaddingBottom,
           paddingHorizontal: 16,
         }}
         showsVerticalScrollIndicator={false}
@@ -168,7 +167,7 @@ export default function ProfileScreen() {
                 onPress={() => setIsLogoutModalVisible(false)}
                 className="flex-1 h-[45px] bg-secondary rounded-full items-center justify-center"
               >
-                <Text className="text-[14px] font-bold text-[#414141]">
+                <Text className="text-[14px] font-bold text-foreground">
                   Cancel
                 </Text>
               </TouchableOpacity>
@@ -178,7 +177,7 @@ export default function ProfileScreen() {
                 onPress={handleLogout}
                 className="flex-1 h-[45px] bg-destructive rounded-full items-center justify-center"
               >
-                <Text className="text-[14px] font-bold text-[#FAF9EE]">
+                <Text className="text-[14px] font-bold text-primary-foreground">
                   Log Out
                 </Text>
               </TouchableOpacity>

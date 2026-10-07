@@ -1,17 +1,16 @@
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { MapPin, Trees, Box } from 'lucide-react-native';
 import { mockDashboardData } from '@/lib/mock-data';
 import { useAuthContext } from '@/context/auth-context';
-import { useProfile, useBarangays } from '@/hooks';
+import { useProfile, useBarangays, useDynamicLayout } from '@/hooks';
 import { useMachines } from '@/hooks/use-machines';
 import { CompostIcon, BroccoliIcon } from '@/components/icons';
 import { GradientMetricCard, QuickActionButton } from '@/components/dashboard';
 import { MachineCard } from '@/components/devices/machine-card';
 
 export default function DashboardScreen() {
-  const insets = useSafeAreaInsets();
+  const { insets, scrollPaddingBottom } = useDynamicLayout();
   const router = useRouter();
   const { user: authUser } = useAuthContext();
   const { data: profileData } = useProfile();
@@ -37,7 +36,7 @@ export default function DashboardScreen() {
       <ScrollView
         contentContainerStyle={{
           paddingTop: Math.max(insets.top, 48),
-          paddingBottom: insets.bottom + 100, // Account for floating tab bar
+          paddingBottom: scrollPaddingBottom,
         }}
         showsVerticalScrollIndicator={false}
         className="flex-1"

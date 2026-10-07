@@ -1,13 +1,13 @@
 import { View, Text, ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Box } from 'lucide-react-native';
+import { useDynamicLayout } from '@/hooks';
 import { useMachines } from '@/hooks/use-machines';
 import { MachineCard } from '@/components/devices/machine-card';
 import { QuickActionButton } from '@/components/dashboard';
 
 export default function MachinesListScreen() {
-  const insets = useSafeAreaInsets();
+  const { insets, scrollPaddingBottom } = useDynamicLayout();
   const router = useRouter();
   const { data: machines, refetch, isRefetching, isLoading } = useMachines();
 
@@ -15,7 +15,7 @@ export default function MachinesListScreen() {
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 24, paddingBottom: 100, flexGrow: 1 }}
+        contentContainerStyle={{ padding: 24, paddingBottom: scrollPaddingBottom, flexGrow: 1 }}
         refreshControl={
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
         }
