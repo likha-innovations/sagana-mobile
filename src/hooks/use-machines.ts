@@ -1,9 +1,27 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { Machine, Feedstock, AutomationLog, SensorHistory } from '@/types/device';
+import type { Machine, AutomationLog, SensorHistory } from '@/types/machine';
 import mockData from '@/data/data.json';
 
 // Initialize mutable state from the global JSON
 let mockMachines: Machine[] = [...(mockData.machines as Machine[])];
+
+// ponytail: direct in-memory mutation helper for mock state transition
+export function setMockMachineStatus(id: string, status: Machine['status']) {
+  const idx = mockMachines.findIndex((m) => m.machine_id === id);
+  if (idx > -1) {
+    const updated = { ...mockMachines[idx], status };
+    if (status === 'active' && !updated.latest_readings) {
+      updated.latest_readings = {
+        temperature: 32,
+        moisture: 45,
+        oxygen: 68,
+        co2: 0.03,
+        updated_at: new Date().toISOString(),
+      };
+    }
+    mockMachines[idx] = updated;
+  }
+}
 
 export const machineKeys = {
   all: ['machines'] as const,
@@ -32,16 +50,6 @@ export function useMachine(id: string) {
       const machine = mockMachines.find((m) => m.machine_id === id);
       if (!machine) throw new Error('Machine not found');
       return { ...machine };
-    },
-  });
-}
-
-export function useFeedstocks(machineId: string) {
-  return useQuery({
-    queryKey: machineKeys.feedstocks(machineId),
-    queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      return mockData.feedstocks.filter((f) => f.machine_id === machineId) as Feedstock[];
     },
   });
 }
