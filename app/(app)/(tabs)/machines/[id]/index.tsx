@@ -1,16 +1,15 @@
 import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ChevronLeft, Wifi, WifiOff, Settings, Clock, Thermometer, Droplets, Wind, Cloud, AlertTriangle, Fan, FlaskConical, ShowerHead } from 'lucide-react-native';
+import { useLocalSearchParams, useRouter, Link } from 'expo-router';
+import { ChevronLeft, Wifi, WifiOff, Settings, Clock, Thermometer, Droplets, Wind, Cloud, Fan, FlaskConical, ShowerHead } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMachine, useFeedstocks } from '@/hooks/use-machines';
+import { useDynamicLayout } from '@/hooks';
 import { SensorStatCard } from '@/components/devices/sensor-stat-card';
-import { Link } from 'expo-router';
 
 export default function MachineDetailsDashboard() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
+  const { insets, scrollPaddingBottom } = useDynamicLayout();
   const { data: machine, isLoading } = useMachine(id);
   const { data: feedstocks } = useFeedstocks(id);
 
@@ -35,7 +34,7 @@ export default function MachineDetailsDashboard() {
           <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full">
             <ChevronLeft size={24} color="#414141" />
           </Pressable>
-          <Text className="text-base font-bold text-text-foreground ml-2">
+          <Text className="text-base font-bold text-foreground ml-2">
             {machine.name}
           </Text>
         </View>
@@ -51,10 +50,10 @@ export default function MachineDetailsDashboard() {
         </View>
       </View>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
+      <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: scrollPaddingBottom }}>
         
         {/* Overview Section */}
-        <Text className="text-sm font-bold text-text-foreground mb-3">Overview</Text>
+        <Text className="text-sm font-bold text-foreground mb-3">Overview</Text>
         
         {isVacant ? (
           <View className="bg-card rounded-2xl border border-border p-6 mb-6">
@@ -75,7 +74,7 @@ export default function MachineDetailsDashboard() {
                   className="rounded-lg px-4 py-4 w-full flex-row items-center justify-center gap-2"
                 >
                   <FlaskConical size={18} color="#FFFFFF" strokeWidth={1.5} />
-                  <Text className="text-sm font-bold text-white">Start new compost batch</Text>
+                  <Text className="text-sm font-bold text-primary-foreground">Start new compost batch</Text>
                 </LinearGradient>
               )}
             </Pressable>

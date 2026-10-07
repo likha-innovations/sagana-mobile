@@ -2,10 +2,8 @@ import { useState, useRef } from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft, ChevronDown, Fan, ShowerHead, AlertTriangle, Wind } from 'lucide-react-native';
-import { format, addDays, subDays } from 'date-fns';
-import { useDynamicLayout } from '@/hooks/use-layout';
+import { useDynamicLayout } from '@/hooks';
 import { FilterBottomSheet } from '@/components/ui/filter-bottom-sheet';
 import { AutomationLogCard } from '@/components/devices/automation-log-card';
 
@@ -15,9 +13,8 @@ import type { AutomationLog } from '@/types/device';
 export default function AutomationLogsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { insets, scrollPaddingBottom, floatingBottom } = useDynamicLayout();
+  const { insets, scrollPaddingBottom } = useDynamicLayout();
 
-  const [selectedDate, setSelectedDate] = useState(new Date('2026-09-30T12:00:00Z'));
   const filterSheetRef = useRef<BottomSheetModal>(null);
   const [selectedFilter, setSelectedFilter] = useState('Today');
 
