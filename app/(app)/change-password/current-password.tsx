@@ -11,12 +11,12 @@ import {
   Modal,
   type TextInput,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { ChevronLeft } from 'lucide-react-native';
 import { FloatingInputField, ProgressBar } from '@/components/auth';
 import { useAuthContext } from '@/context/auth-context';
+import { useDynamicLayout } from '@/hooks';
 import { setPendingCurrentPassword, clearPendingCurrentPassword } from '@/lib/password-flow-store';
 
 import { useSession } from '@clerk/expo';
@@ -25,7 +25,7 @@ import { createLogger } from '@/lib/logger';
 const logger = createLogger('CurrentPasswordScreen');
 
 export default function CurrentPasswordScreen() {
-  const insets = useSafeAreaInsets();
+  const { insets } = useDynamicLayout();
   const router = useRouter();
   const { session } = useSession();
   const { user, clerkUser, signOut, requestPasswordReset } = useAuthContext();

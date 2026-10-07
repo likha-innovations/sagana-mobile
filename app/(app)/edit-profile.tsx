@@ -9,7 +9,6 @@ import {
   TouchableWithoutFeedback,
   TouchableOpacity,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,12 +24,13 @@ import { useToast } from '@/components/ui/toast';
 
 import { useProfile, useUpdateProfile } from '@/hooks/use-profile';
 import { useBarangays } from '@/hooks/use-barangays';
+import { useDynamicLayout } from '@/hooks';
 import { updateProfileSchema, type UpdateProfileInput } from '@/types/auth';
 import { Input } from '@/components/ui/input';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 
 export default function EditProfileScreen() {
-  const insets = useSafeAreaInsets();
+  const { insets, stackScrollPadding } = useDynamicLayout();
   const router = useRouter();
   const { data: profile } = useProfile();
   const { data: barangays = [] } = useBarangays();
@@ -183,7 +183,7 @@ export default function EditProfileScreen() {
           <ScrollView
             contentContainerStyle={{
               paddingHorizontal: 16,
-              paddingBottom: insets.bottom + 100,
+              paddingBottom: stackScrollPadding,
             }}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"

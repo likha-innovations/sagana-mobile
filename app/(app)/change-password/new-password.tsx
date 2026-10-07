@@ -10,11 +10,11 @@ import {
   ActivityIndicator,
   type TextInput,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { ChevronLeft } from 'lucide-react-native';
 import { useAuthContext } from '@/context/auth-context';
+import { useDynamicLayout } from '@/hooks';
 import { FloatingInputField, PasswordRequirements, ProgressBar } from '@/components/auth';
 import { getPendingCurrentPassword, clearPendingCurrentPassword } from '@/lib/password-flow-store';
 import { createLogger } from '@/lib/logger';
@@ -22,7 +22,7 @@ import { createLogger } from '@/lib/logger';
 const logger = createLogger('ChangePasswordNew');
 
 export default function ChangePasswordNewScreen() {
-  const insets = useSafeAreaInsets();
+  const { insets } = useDynamicLayout();
   const router = useRouter();
   const { updatePassword } = useAuthContext();
 
