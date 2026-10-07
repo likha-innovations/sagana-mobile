@@ -1,4 +1,0 @@
-allowBuilds:
-  browser-tabs-lock: true
-  core-js: true
-  esbuild: true
