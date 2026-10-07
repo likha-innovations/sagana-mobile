@@ -8,7 +8,7 @@
       "status": "active",
       "wifi_ssid": "SaganaNet",
       "last_seen": "2026-10-06T10:00:00.000Z",
-      "created_at": "2026-10-01T10:00:00.000Z",
+      "created_at": "2026-09-23T10:00:00.000Z",
       "removed_at": null,
       "latest_readings": {
         "temperature": 57,
@@ -17,16 +17,174 @@
         "co2": 0.04,
         "updated_at": "2026-10-06T19:30:00.000Z"
       }
+    },
+    {
+      "machine_id": "2",
+      "barangay_id": "b-1",
+      "mac_address": "00:11:22:33:44:66",
+      "name": "SAGANA-2",
+      "status": "available",
+      "wifi_ssid": "SaganaNet",
+      "last_seen": "2026-10-07T08:00:00.000Z",
+      "created_at": "2026-10-05T10:00:00.000Z",
+      "removed_at": null
+    },
+    {
+      "machine_id": "3",
+      "barangay_id": "b-1",
+      "mac_address": "00:11:22:33:44:77",
+      "name": "SAGANA-3",
+      "status": "active",
+      "wifi_ssid": "SaganaNet",
+      "last_seen": "2026-10-07T09:00:00.000Z",
+      "created_at": "2026-09-12T10:00:00.000Z",
+      "removed_at": null,
+      "latest_readings": {
+        "temperature": 34,
+        "moisture": 38,
+        "oxygen": 78,
+        "co2": 0.08,
+        "updated_at": "2026-10-07T09:00:00.000Z"
+      }
+    },
+    {
+      "machine_id": "4",
+      "barangay_id": "b-1",
+      "mac_address": "00:11:22:33:44:88",
+      "name": "SAGANA-4",
+      "status": "offline",
+      "wifi_ssid": null,
+      "last_seen": "2026-10-01T12:00:00.000Z",
+      "created_at": "2026-09-01T10:00:00.000Z",
+      "removed_at": null
     }
   ],
   "feedstocks": [
-    { "id": "f1", "machine_id": "1", "name": "Coffee Grounds", "weight_kg": 10 },
-    { "id": "f2", "machine_id": "1", "name": "Cardboards", "weight_kg": 10 },
-    { "id": "f3", "machine_id": "1", "name": "Grass Clippings", "weight_kg": 10 },
-    { "id": "f4", "machine_id": "1", "name": "Dried Leaves", "weight_kg": 10 },
-    { "id": "f5", "machine_id": "1", "name": "Woodchips", "weight_kg": 10 },
-    { "id": "f6", "machine_id": "1", "name": "Vegetable Waste", "weight_kg": 12 }
+    {
+      "feedstock_id": "fs-1",
+      "name": "Vegetable Waste",
+      "category": "Greens",
+      "description": "Kitchen and raw vegetable scraps",
+      "status": "active"
+    },
+    {
+      "feedstock_id": "fs-2",
+      "name": "Dried Leaves",
+      "category": "Greens",
+      "description": "Yard waste and dried garden foliage",
+      "status": "active"
+    },
+    {
+      "feedstock_id": "fs-3",
+      "name": "Cardboards",
+      "category": "Browns",
+      "description": "Shredded corrugated cardboard and paper",
+      "status": "active"
+    },
+    {
+      "feedstock_id": "fs-4",
+      "name": "Tea Bags",
+      "category": "Browns",
+      "description": "Used tea leaves and paper tea bags",
+      "status": "active"
+    },
+    {
+      "feedstock_id": "fs-5",
+      "name": "Fruit Peels",
+      "category": "Greens",
+      "description": "Fruit rinds and peels",
+      "status": "active"
+    },
+    {
+      "feedstock_id": "fs-6",
+      "name": "Wood Shavings",
+      "category": "Browns",
+      "description": "Clean untreated sawdust and wood shavings",
+      "status": "active"
+    }
   ],
+  "active_batches": [
+    {
+      "batch_id": "b-1",
+      "machine_id": "1",
+      "user_id": "user_1",
+      "total_weight": 62,
+      "batch_code": "BATCH-202610-001",
+      "start_date": "2026-09-23T10:00:00.000Z",
+      "completion_date": null,
+      "status": "active",
+      "feedstocks": [
+        {
+          "id": "bf-1",
+          "feedstock_id": "fs-1",
+          "name": "Vegetable Waste",
+          "category": "Greens",
+          "weight_kg": 12
+        },
+        {
+          "id": "bf-2",
+          "feedstock_id": "fs-2",
+          "name": "Dried Leaves",
+          "category": "Greens",
+          "weight_kg": 10
+        },
+        {
+          "id": "bf-3",
+          "feedstock_id": "fs-3",
+          "name": "Cardboards",
+          "category": "Browns",
+          "weight_kg": 20
+        },
+        {
+          "id": "bf-4",
+          "feedstock_id": "fs-4",
+          "name": "Tea Bags",
+          "category": "Browns",
+          "weight_kg": 20
+        }
+      ]
+    },
+    {
+      "batch_id": "b-2",
+      "machine_id": "3",
+      "user_id": "user_1",
+      "total_weight": 48,
+      "batch_code": "BATCH-202609-002",
+      "start_date": "2026-09-12T10:00:00.000Z",
+      "completion_date": null,
+      "status": "active",
+      "feedstocks": [
+        {
+          "id": "bf-5",
+          "feedstock_id": "fs-1",
+          "name": "Vegetable Waste",
+          "category": "Greens",
+          "weight_kg": 18
+        },
+        {
+          "id": "bf-6",
+          "feedstock_id": "fs-3",
+          "name": "Cardboards",
+          "category": "Browns",
+          "weight_kg": 30
+        }
+      ]
+    }
+  ],
+  "dashboard_metrics": {
+    "totalCompost": {
+      "value": 110.0,
+      "unit": "kg"
+    },
+    "totalGreens": {
+      "value": 40.0,
+      "unit": "kg"
+    },
+    "totalBrowns": {
+      "value": 70.0,
+      "unit": "kg"
+    }
+  },
   "automation_logs": [
     {
       "id": "1",
