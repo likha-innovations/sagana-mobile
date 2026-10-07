@@ -8,6 +8,7 @@ import { useAuthContext } from '@/context/auth-context';
 import { useProfile, useBarangays, useDynamicLayout } from '@/hooks';
 import { GoogleIcon } from '@/components/icons';
 import { colors } from '@/constants';
+import { getBarangayName } from '@/lib/utils';
 
 export default function ProfileScreen() {
   const { insets, scrollPaddingBottom } = useDynamicLayout();
@@ -32,15 +33,7 @@ export default function ProfileScreen() {
         .toUpperCase()
     : 'NN';
 
-  let barangayName = 'Unknown Location';
-  if (user?.barangay) {
-    if (typeof user.barangay === 'object' && user.barangay.name) {
-      barangayName = user.barangay.name;
-    } else if (typeof user.barangay === 'string') {
-      const bId = user.barangay;
-      barangayName = barangays.find(b => b.id === bId || b.name === bId)?.name || bId;
-    }
-  }
+  const barangayName = getBarangayName(user, barangays);
 
   const handleLogout = async () => {
     setIsLogoutModalVisible(false);

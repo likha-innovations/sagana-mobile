@@ -22,6 +22,7 @@ export default function TabsLayout() {
         options={{
           title: 'Machines',
           tabBarIcon: ({ color, size }) => <Box color={color} size={size} />,
+          popToTopOnBlur: true,
         }}
       />
       <Tabs.Screen
