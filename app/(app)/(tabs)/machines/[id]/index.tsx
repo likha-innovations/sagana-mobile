@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter, Link } from 'expo-router';
 import { ChevronLeft, Wifi, WifiOff, Settings, Clock, Thermometer, Droplets, Wind, Cloud, Fan, FlaskConical, ShowerHead } from 'lucide-react-native';
@@ -8,6 +9,7 @@ import { useDynamicLayout } from '@/hooks';
 import { SensorStatCard } from '@/components/devices/sensor-stat-card';
 import { formatTimeAgo } from '@/lib/utils';
 import type { CompostingPhase } from '@/types/machine';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 
 export default function MachineDetailsDashboard() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -15,6 +17,7 @@ export default function MachineDetailsDashboard() {
   const { insets, scrollPaddingBottom } = useDynamicLayout();
   const { data: machine, isLoading: isMachineLoading } = useMachine(id);
   const { data: activeBatch, isLoading: isBatchLoading } = useActiveBatch(id);
+  const [isFinishModalVisible, setIsFinishModalVisible] = useState(false);
 
   if (isMachineLoading || isBatchLoading) {
     return (
@@ -250,9 +253,32 @@ export default function MachineDetailsDashboard() {
                 </View>
               </View>
             </View>
+
+            {/* Finish Batch Button */}
+            <Pressable 
+              onPress={() => setIsFinishModalVisible(true)}
+              className="w-full bg-destructive rounded-full px-4 py-4 mt-2 mb-6 flex-row items-center justify-center"
+            >
+              <Text className="text-sm font-bold text-white">Finish Batch</Text>
+            </Pressable>
           </>
         )}
       </ScrollView>
+
+      {/* Finish Batch Confirmation Modal */}
+      <ConfirmModal
+        visible={isFinishModalVisible}
+        title="Finish Batch"
+        description="Are you sure you want to finish the current composting batch? This action cannot be undone."
+        confirmText="Finish Batch"
+        isDestructive={true}
+        onCancel={() => setIsFinishModalVisible(false)}
+        onConfirm={() => {
+          setIsFinishModalVisible(false);
+          // TODO: Implement finish batch API mutation
+          router.replace('/(app)/(tabs)/machines');
+        }}
+      />
     </View>
   );
 }
