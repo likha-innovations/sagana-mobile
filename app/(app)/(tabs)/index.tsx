@@ -110,7 +110,7 @@ export default function DashboardScreen() {
                 label="Add new SAGANA Machine"
                 icon={<Box size={20} color="#FAF9EE" />}
                 onPress={() => {
-                  router.push('/(app)/machine/new');
+                  router.push('/(app)/machine-registration/new');
                 }}
               />
             </View>
