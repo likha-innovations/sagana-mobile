@@ -93,15 +93,17 @@ export default function MachineDetailsDashboard() {
                   <Text className="text-sm font-bold text-foreground">Start new compost batch</Text>
                 </View>
               ) : (
-                <LinearGradient
-                  colors={['#C9E752', '#518251']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  className="rounded-lg px-4 py-4 w-full flex-row items-center justify-center gap-2"
-                >
-                  <FlaskConical size={18} color="#FFFFFF" strokeWidth={1.5} />
-                  <Text className="text-sm font-bold text-primary-foreground">Start new compost batch</Text>
-                </LinearGradient>
+                <View className="w-full rounded-lg overflow-hidden">
+                  <LinearGradient
+                    colors={['#C9E752', '#518251']}
+                    start={{ x: 1, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                    className="px-4 py-4 w-full flex-row items-center justify-center gap-2"
+                  >
+                    <FlaskConical size={18} color="#FFFFFF" strokeWidth={1.5} />
+                    <Text className="text-sm font-bold text-white">Start new compost batch</Text>
+                  </LinearGradient>
+                </View>
               )}
             </Pressable>
           </View>
