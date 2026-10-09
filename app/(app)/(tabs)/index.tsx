@@ -37,7 +37,7 @@ export default function DashboardScreen() {
     
     // Filter to ONLY active machines (composting), then sort by earliest
     return realMachines
-      .filter(m => m.status === 'composting')
+      .filter(m => m.status === 'active')
       .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
   }, [realMachines]);
 
