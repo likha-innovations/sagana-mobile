@@ -7,7 +7,8 @@ import { format, addDays, subDays } from 'date-fns';
 import { useDynamicLayout } from '@/hooks';
 import { DateFilterToggle } from '@/components/ui/date-filter-toggle';
 import { FilterBottomSheet } from '@/components/ui/filter-bottom-sheet';
-import { useSensorHistory } from '@/hooks/use-machines';
+import { DateRangePicker } from '@/components/ui';
+import { useSensorHistory, useMachine } from '@/hooks/use-machines';
 import { SensorTrendGraph } from '@/components/devices/sensor-trend-graph';
 
 export default function SensorsHistoryScreen() {
@@ -16,14 +17,17 @@ export default function SensorsHistoryScreen() {
   const { insets, scrollPaddingBottom, floatingBottom } = useDynamicLayout();
 
   const filterSheetRef = useRef<BottomSheetModal>(null);
+  const dateRangePickerRef = useRef<BottomSheetModal>(null);
   const [selectedFilter, setSelectedFilter] = useState('Per day');
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>();
   const [selectedDate, setSelectedDate] = useState(new Date('2026-09-30T12:00:00Z'));
 
   const handlePrevDate = () => setSelectedDate(prev => subDays(prev, 1));
   const handleNextDate = () => setSelectedDate(prev => addDays(prev, 1));
   const dateLabel = format(selectedDate, 'MMMM d, yyyy');
 
-  const { data: history } = useSensorHistory(id, format(selectedDate, 'yyyy-MM-dd'));
+  const { data: machine } = useMachine(id);
+  const { data: history } = useSensorHistory(id, selectedFilter, format(selectedDate, 'yyyy-MM-dd'), dateRange);
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
@@ -108,8 +112,24 @@ export default function SensorsHistoryScreen() {
         ref={filterSheetRef}
         selectedFilter={selectedFilter}
         onSelectFilter={(val) => {
-          setSelectedFilter(val);
-          filterSheetRef.current?.dismiss();
+          if (val === 'Custom range') {
+            filterSheetRef.current?.dismiss();
+            dateRangePickerRef.current?.present();
+          } else {
+            setSelectedFilter(val);
+            filterSheetRef.current?.dismiss();
+          }
+        }}
+      />
+      
+      {/* Date Range Picker */}
+      <DateRangePicker 
+        ref={dateRangePickerRef}
+        minDate={machine?.created_at}
+        maxDate={new Date().toISOString()}
+        onApply={(range) => {
+          setDateRange({ start: range.startDate, end: range.endDate });
+          setSelectedFilter('Custom range');
         }}
       />
     </View>
