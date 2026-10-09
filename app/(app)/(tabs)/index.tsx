@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MapPin, Trees, Box } from 'lucide-react-native';
@@ -30,6 +31,15 @@ export default function DashboardScreen() {
   const firstName = user?.fullName?.split(' ')[0] || 'Operator';
   const metrics = dynamicMetrics ?? defaultMetrics;
   const barangayName = getBarangayName(user, barangays);
+
+  const dashboardMachines = useMemo(() => {
+    if (!realMachines || realMachines.length === 0) return [];
+    
+    // Filter to ONLY active machines (composting), then sort by earliest
+    return realMachines
+      .filter(m => m.status === 'composting')
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  }, [realMachines]);
 
   return (
     <View className="flex-1 bg-background">
@@ -100,7 +110,7 @@ export default function DashboardScreen() {
                 label="Add new SAGANA Machine"
                 icon={<Box size={20} color="#FAF9EE" />}
                 onPress={() => {
-                  // Phase 4: Navigate to machine provisioning
+                  router.push('/(app)/machine/new');
                 }}
               />
             </View>
@@ -117,11 +127,11 @@ export default function DashboardScreen() {
               </TouchableOpacity>
             </View>
 
-            {/* Dashboard Cards mapped from real data */}
+            {/* Dashboard Cards mapped from derived subset */}
             {machinesLoading ? (
               <Text className="text-sm text-muted-foreground">Loading machines...</Text>
-            ) : realMachines && realMachines.length > 0 ? (
-              realMachines.map((machine) => (
+            ) : dashboardMachines.length > 0 ? (
+              dashboardMachines.map((machine) => (
                 <MachineCard 
                   key={machine.machine_id} 
                   machine={machine} 
