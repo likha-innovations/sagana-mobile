@@ -24,3 +24,10 @@ export interface RealtimeEventLog {
   timestamp: string;
 }
 
+
+export const machineRegistrationSchema = z.object({
+  ssid: z.string().min(1, 'Please enter required field'),
+  password: z.string().min(1, 'Please enter required field'),
+  machineName: z.string().min(1, 'Please enter required field'),
+});
+export type MachineRegistrationInput = z.infer<typeof machineRegistrationSchema>;
