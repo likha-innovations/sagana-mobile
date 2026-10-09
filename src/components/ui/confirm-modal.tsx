@@ -6,6 +6,7 @@ export interface ConfirmModalProps {
   description: string;
   cancelText?: string;
   confirmText?: string;
+  isDestructive?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
 }
@@ -16,6 +17,7 @@ export function ConfirmModal({
   description,
   cancelText = 'Cancel',
   confirmText = 'Confirm',
+  isDestructive = false,
   onCancel,
   onConfirm,
 }: ConfirmModalProps) {
@@ -55,7 +57,9 @@ export function ConfirmModal({
             <TouchableOpacity
               activeOpacity={0.8}
               onPress={onConfirm}
-              className="flex-1 h-11 rounded-full bg-primary items-center justify-center"
+              className={`flex-1 h-11 rounded-full items-center justify-center ${
+                isDestructive ? 'bg-destructive' : 'bg-primary'
+              }`}
             >
               <Text className="text-[13px] font-bold text-white text-center">
                 {confirmText}
