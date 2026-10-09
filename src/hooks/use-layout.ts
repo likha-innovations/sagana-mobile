@@ -9,7 +9,7 @@ export function useDynamicLayout() {
   const tabBarHeight = layout.tabBar.contentHeight + Math.max(insets.bottom, layout.tabBar.minBottomPadding);
   
   // The padding to add to the bottom of ScrollViews so the last item clears the tab bar
-  const scrollPaddingBottom = tabBarHeight + 100;
+  const scrollPaddingBottom = tabBarHeight + 24;
   
   // The absolute bottom offset for floating pills/buttons to sit right above the tab bar
   const floatingBottom = tabBarHeight + 24;
