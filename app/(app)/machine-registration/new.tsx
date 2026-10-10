@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   View, 
   Pressable, 
@@ -12,9 +12,11 @@ import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import * as burnt from 'burnt';
 import { useDynamicLayout } from '@/hooks';
 import { Button } from '@/components/ui/button';
 import { machineRegistrationSchema, type MachineRegistrationInput } from '@/types/device';
+import { useBluetooth } from '@/hooks/use-bluetooth';
 import { 
   TurnOnStep, 
   ConnectStep, 
@@ -27,29 +29,75 @@ export default function AddMachineScreen() {
   const router = useRouter();
   const { insets, stackScrollPadding } = useDynamicLayout();
   const [step, setStep] = useState(1);
+  const [isWriting, setIsWriting] = useState(false);
 
-  const { control, trigger, getValues } = useForm<MachineRegistrationInput>({
+  // Manual BLE hook
+  const { 
+    status, 
+    devices, 
+    connectedDevice,
+    errorMessage,
+    startScan,
+    connectToDevice,
+    writeCredentials, 
+    reset 
+  } = useBluetooth();
+
+  const { control, trigger, getValues, setValue } = useForm<MachineRegistrationInput>({
     resolver: zodResolver(machineRegistrationSchema),
     defaultValues: { ssid: '', password: '', machineName: '' },
     mode: 'onChange'
   });
 
   const handleNext = async () => {
+    // Moving from Step 1 to Step 2: Start scanning
+    if (step === 1) {
+      setStep(2);
+      startScan();
+      return;
+    }
+
+    // Step 2 & 3: Connection phase
+    if (step === 2 || step === 3) {
+      if (status !== 'connected') {
+        burnt.toast({ title: 'Please select and connect to a machine first.', preset: 'error' });
+        return;
+      }
+    }
+
+    // Step 4: Wi-Fi credentials phase
     if (step === 4) {
       const isWifiValid = await trigger(['ssid', 'password']);
       if (!isWifiValid) return;
+
+      try {
+        setIsWriting(true);
+        const { ssid, password } = getValues();
+        await writeCredentials(ssid, password);
+      } catch (error) {
+        burnt.toast({ title: 'Failed to send credentials to machine', preset: 'error' });
+        setIsWriting(false);
+        return;
+      }
+      setIsWriting(false);
     }
+
+    // Step 5: Naming & Backend Registration phase
     if (step === 5) {
       const isNameValid = await trigger(['machineName']);
       if (!isNameValid) return;
-      // TODO: Actually submit the payload here in Phase 4
-      // const payload = getValues();
+      // TODO: Submit payload to backend POST /api/machines/register
     }
+    
     setStep((prev) => prev + 1);
   };
 
   const handleBack = () => {
     if (step > 1) {
+      // If backing out of connection step, cancel scanning
+      if (step === 2 || step === 3) {
+        reset();
+      }
       setStep((prev) => prev - 1);
     } else {
       router.back();
@@ -103,8 +151,19 @@ export default function AddMachineScreen() {
             className="px-6"
           >
             {step === 1 && <TurnOnStep />}
-            {(step === 2 || step === 3) && <ConnectStep />}
-            {step === 4 && <WifiCredentialsStep control={control} />}
+            
+            {(step === 2 || step === 3) && (
+              <ConnectStep 
+                status={status} 
+                devices={devices}
+                connectedDevice={connectedDevice}
+                errorMessage={errorMessage}
+                onConnect={connectToDevice}
+                onRetry={startScan} 
+              />
+            )}
+            
+            {step === 4 && <WifiCredentialsStep control={control} setValue={setValue} />}
             {step === 5 && <NameMachineStep control={control} />}
             {step === 6 && <SuccessStep />}
 
@@ -115,6 +174,8 @@ export default function AddMachineScreen() {
                 <Button 
                   title="Next" 
                   onPress={handleNext} 
+                  disabled={(step === 2 || step === 3) ? status !== 'connected' : isWriting}
+                  loading={isWriting}
                   haptic 
                 />
               ) : step === 5 ? (
