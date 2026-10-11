@@ -4,7 +4,6 @@
   "main": "expo-router/entry",
   "dependencies": {
     "@clerk/expo": "^4.4.0",
-    "@config-plugins/react-native-ble-plx": "^7.0.0",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@hookform/resolvers": "^5.9.1",
     "@react-native-community/datetimepicker": "9.1.0",
@@ -103,8 +102,5 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs"
   },
-  "private": true,
-  "overrides": {
-    "lightningcss": "1.30.1"
-  }
+  "private": true
 }
