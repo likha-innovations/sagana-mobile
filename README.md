@@ -8,15 +8,15 @@ Operators use the app to monitor composting cycles, check sensor readings, and m
 
 ### Prerequisites
 
-- Node.js 20 or higher
-- npm or pnpm
-- Expo Go on iOS or Android, or an emulator / simulator
+- Node.js 24.13.0 (the CI version)
+- pnpm 12.11.2 (the CI version; package.json and EAS pins are still pending)
+- An Android development build on a device or emulator; Bluetooth requires a physical device
 
 ### Setup
 
 1. Install dependencies:
    ```bash
-   npm install
+   pnpm install --frozen-lockfile
    ```
 
 2. Create your environment file:
@@ -32,23 +32,23 @@ Operators use the app to monitor composting cycles, check sensor readings, and m
 
 4. Start the app:
    ```bash
-   npm run start
+   pnpm run start:app --dev-client
    ```
 
-Press `a` for Android, `i` for iOS simulator, `w` for web preview, or scan the QR code using Expo Go.
+Open the development client and connect it to Metro. Expo Go does not include this app's custom Bluetooth native module.
 
 ## Commands
 
 | Command | Purpose |
 | :--- | :--- |
-| `npm run start` | Starts Expo Metro bundler and documentation preview |
-| `npm run dev` | Starts Expo Metro bundler directly |
-| `npm run android` | Starts Metro and launches the Android emulator |
-| `npm run ios` | Starts Metro and launches the iOS simulator |
-| `npm run web` | Launches web preview |
-| `npm run typecheck` | Checks TypeScript types without building |
-| `npm run lint` | Runs ESLint and fixes auto-fixable issues |
-| `npm run format` | Formats code with Prettier |
+| `pnpm run start` | Starts Expo Metro bundler and documentation preview |
+| `pnpm run start:app` | Starts Expo Metro bundler directly |
+| `pnpm run android` | Builds and runs Android locally |
+| `pnpm run ios` | Builds and runs iOS locally on macOS |
+| `pnpm run web` | Launches web preview |
+| `pnpm run typecheck` | Checks TypeScript types without building |
+| `pnpm run lint` | Runs ESLint and fixes auto-fixable issues |
+| `pnpm run format` | Formats code with Prettier |
 
 ## Before submitting an EAS development build
 

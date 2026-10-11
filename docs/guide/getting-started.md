@@ -1,5 +1,7 @@
 # Getting Started
 
+For the planned Node 24.13.0 / pnpm 12.11.2 setup, collaborator onboarding, and EAS migration checklist, see [Team Setup: pnpm, CI, and EAS](/guide/team-setup). CI uses these exact versions; package.json and EAS version pins are still pending.
+
 This guide walks you through setting up the development environment, configuring credentials, and launching the **Sagana Mobile** application on iOS, Android, and web simulators.
 
 ---
@@ -8,12 +10,12 @@ This guide walks you through setting up the development environment, configuring
 
 Before starting, ensure your machine satisfies the following prerequisites:
 
-- **Node.js**: `v20.x` or `v22.x` (LTS recommended)
-- **Package Manager**: `npm` (v10+) or `pnpm` (v9+)
+- **Node.js**: `24.13.0` (CI version)
+- **Package Manager**: `pnpm` 12.11.2 (CI version; no package.json pin yet)
 - **Mobile Runtime**:
-  - **Expo Go** app on your physical mobile device, OR
+  - **Expo development client** on your physical mobile device (required for Bluetooth), OR
   - **Xcode** (iOS Simulator) on macOS, OR
-  - **Android Studio** (Android Emulator with SDK 34/35)
+  - **Android Studio** with the Android SDK required by Expo SDK 57
 - **Git**: Configured for local commit hooks (Husky).
 
 ---
@@ -30,7 +32,7 @@ cd sagana-mobile
 ### 2. Install Dependencies
 
 ```bash
-npm install
+pnpm install --frozen-lockfile
 ```
 
 > [!NOTE]
@@ -70,7 +72,7 @@ Start the Metro development server with Expo CLI:
 
 ### Start Development Server
 ```bash
-npm run start
+pnpm run start:app --dev-client
 ```
 
 ### Platform-Specific Launchers
@@ -79,17 +81,17 @@ npm run start
 
 ```bash [Android]
 # Launch in connected Android emulator or USB device
-npm run android
+pnpm run android
 ```
 
 ```bash [iOS]
 # Launch in iOS simulator (macOS only)
-npm run ios
+pnpm run ios
 ```
 
 ```bash [Web]
 # Preview in Chrome / Safari
-npm run web
+pnpm run web
 ```
 
 :::
@@ -102,13 +104,13 @@ Sagana Mobile maintains strict formatting, type-safety, and linting standards:
 
 ```bash
 # Verify static TypeScript types without emitting artifacts
-npm run typecheck
+pnpm run typecheck
 
 # Lint all code and auto-fix stylistic issues
-npm run lint
+pnpm run lint
 
 # Format TypeScript, JavaScript, and JSON files with Prettier
-npm run format
+pnpm run format
 ```
 
 ---
@@ -119,11 +121,11 @@ You can run this VitePress documentation locally:
 
 ```bash
 # Start VitePress in hot-reload dev mode
-npm run docs:dev
+pnpm run docs:dev
 
 # Build documentation for static deployment
-npm run docs:build
+pnpm run docs:build
 
 # Preview production documentation build
-npm run docs:preview
+pnpm run docs:preview
 ```
