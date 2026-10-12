@@ -45,7 +45,7 @@ sagana-mobile/
 - Divided into reusable sub-layers:
   - `ui/`: Core primitives built with `@rn-primitives` and `class-variance-authority` (Button, Input, Card). Also includes global layout primitives like `FilterBottomSheet`.
   - `devices/`: Specialized IoT hardware UI components (`MachineCard`, `SensorStatCard`, `AutomationLogCard`) heavily optimized for 1:1 Figma adherence.
-  - `navigation/`: Custom application navigation bars (FloatingTabBar).
+  - `navigation/`: Custom application navigation bars (BottomTabBar).
   - `icons/`: Custom vector SVGs (GoogleIcon) and brand iconography.
 - **Rule**: Components must be presentational and accept props/callbacks. Screen padding is centralized using `useDynamicLayout()` to enforce uniform Safe Area boundaries.
 

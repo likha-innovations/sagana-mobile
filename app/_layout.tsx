@@ -59,7 +59,7 @@ function AuthProtectedNavigation() {
         router.replace('/(app)/(tabs)');
       }
     } else if (isSignedIn && !hasCompleteProfile) {
-      const isAlreadyOnSignUp = segments[0] === '(auth)' && segments[1] === 'sign-up';
+      const isAlreadyOnSignUp = segments[0] === '(auth)' && segments.at(1) === 'sign-up';
       if (!isAlreadyOnSignUp) {
         authGateLogger.info('Authenticated user without complete profile redirected to sign-up to complete onboarding');
         router.replace('/(auth)/sign-up');
