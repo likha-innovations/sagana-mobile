@@ -1,0 +1,76 @@
+name: Mobile quality
+
+on:
+  pull_request:
+    branches: [main, development]
+
+concurrency:
+  group: mobile-quality-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Typecheck and main readiness
+    runs-on: ubuntu-latest
+    env:
+      EXPO_NO_DOTENV: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Detect dependency changes
+        id: dependencies
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if git diff --quiet "$BASE_SHA"..."$HEAD_SHA" -- package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc .github/workflows/mobile-quality.yml; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          else
+            status=$?
+            if [ "$status" -ne 1 ]; then exit "$status"; fi
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.13.0'
+      - uses: pnpm/action-setup@v6
+        with:
+          version: '12.11.2'
+          run_install: false
+          cache: true
+      - name: Log toolchain
+        run: |
+          node --version
+          pnpm --version
+      - name: Snapshot dependency files
+        id: snapshot
+        if: steps.dependencies.outputs.changed == 'true'
+        run: sha256sum package.json pnpm-workspace.yaml pnpm-lock.yaml > "$RUNNER_TEMP/dependency-files.sha256"
+      - name: Frozen install
+        run: pnpm install --frozen-lockfile
+      - name: Verify dependency files were not changed
+        if: (success() || failure()) && steps.snapshot.outcome == 'success'
+        run: sha256sum --check "$RUNNER_TEMP/dependency-files.sha256"
+      - name: Typecheck
+        run: pnpm run typecheck
+      - name: Expo dependency compatibility (main)
+        if: github.base_ref == 'main'
+        run: pnpm exec expo install --check
+      - name: Expo Doctor (main)
+        if: github.base_ref == 'main'
+        run: pnpm exec expo-doctor
+
+  merge-ready:
+    name: Mobile merge ready
+    needs: quality
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all applicable checks
+        env:
+          QUALITY: ${{ needs.quality.result }}
+        run: test "$QUALITY" = success

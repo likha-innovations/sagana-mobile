@@ -83,7 +83,7 @@ useEffect(() => {
 
 ## 🚀 Floating Tab Bar Navigation
 
-The main app tab navigator utilizes a custom floating tab bar component (`FloatingTabBar`) located at `src/components/navigation/floating-tab-bar.tsx`.
+The main app tab navigator uses the custom `BottomTabBar` component in `src/components/navigation/bottom-tab-bar.tsx`.
 
 ### Key Capabilities
 

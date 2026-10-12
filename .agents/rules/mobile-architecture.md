@@ -26,7 +26,7 @@ src/
 ├── components/           # 🎨 ALL VISUAL UI
 │   ├── ui/               # Base primitives (@rn-primitives: button, input, card)
 │   ├── auth/             # Auth UI (auth-header.tsx, oauth-buttons.tsx)
-│   ├── navigation/       # App navigation (floating-tab-bar.tsx)
+│   ├── navigation/       # App navigation (bottom-tab-bar.tsx)
 │   └── devices/          # (Phase 4) Device UI cards & telemetry charts
 │
 ├── context/              # 🔐 GLOBAL APP STATE MACHINES

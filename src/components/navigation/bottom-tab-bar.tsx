@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { type ComponentProps } from 'react';
 import { View, Text, Pressable, Platform, StyleSheet } from 'react-native';
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import type { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { createLogger } from '@/lib/logger';
@@ -8,7 +8,10 @@ import { colors } from '@/constants';
 
 const logger = createLogger('Navigation');
 
-export function FloatingTabBar({
+// Derive from Expo Router's Tabs to avoid a duplicate @react-navigation type mismatch.
+type BottomTabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
+
+export function BottomTabBar({
   state,
   descriptors,
   navigation,
@@ -26,7 +29,7 @@ export function FloatingTabBar({
     >
       <View style={styles.tabContainer}>
         {state.routes.map(
-          (route: (typeof state.routes)[number], index: number) => {
+          (route, index) => {
             const { options } = descriptors[route.key];
             const isFocused = state.index === index;
 

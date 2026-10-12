@@ -28,6 +28,7 @@ export default defineConfig({
         text: '📖 Overview & Setup',
         items: [
           { text: 'Getting Started', link: '/guide/getting-started' },
+          { text: 'Team Setup: pnpm & EAS', link: '/guide/team-setup' },
           { text: 'Architecture & Layers', link: '/guide/architecture' },
           { text: 'Routing & Navigation', link: '/guide/routing-navigation' },
         ],

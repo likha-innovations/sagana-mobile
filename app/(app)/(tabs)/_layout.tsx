@@ -1,11 +1,11 @@
 import { Tabs } from 'expo-router';
 import { House, Box, User } from 'lucide-react-native';
-import { FloatingTabBar } from '@/components/navigation/floating-tab-bar';
+import { BottomTabBar } from '@/components/navigation/bottom-tab-bar';
 
 export default function TabsLayout() {
   return (
     <Tabs
-      tabBar={(props) => <FloatingTabBar {...props} />}
+      tabBar={(props) => <BottomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
       }}
