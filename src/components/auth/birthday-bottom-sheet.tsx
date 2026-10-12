@@ -50,6 +50,10 @@ const MONTHS = [
 
 function parseBirthday(value?: string): Date {
   if (!value) return new Date(2000, 0, 1);
+  const directDate = new Date(value);
+  if (!isNaN(directDate.getTime())) {
+    return directDate;
+  }
   const digits = value.replace(/\D/g, '');
   if (digits.length === 8) {
     const month = parseInt(digits.slice(0, 2), 10) - 1;

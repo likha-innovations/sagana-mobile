@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useCallback } from 'react';
+import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import {
   BottomSheetBackdrop,
   BottomSheetScrollView,
 } from '@gorhom/bottom-sheet';
+import { format } from 'date-fns';
 
 import { useToast } from '@/components/ui/toast';
 
@@ -28,6 +29,21 @@ import { useDynamicLayout } from '@/hooks';
 import { updateProfileSchema, type UpdateProfileInput } from '@/types/auth';
 import { Input } from '@/components/ui/input';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
+import {
+  BirthdayBottomSheet,
+  type BirthdayBottomSheetRef,
+} from '@/components/auth/birthday-bottom-sheet';
+
+function formatDisplayBirthday(raw?: string | null): string {
+  if (!raw) return '';
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+  const date = new Date(trimmed);
+  if (!isNaN(date.getTime())) {
+    return format(date, 'MMMM d, yyyy');
+  }
+  return trimmed;
+}
 
 export default function EditProfileScreen() {
   const { insets, stackScrollPadding } = useDynamicLayout();
@@ -37,6 +53,7 @@ export default function EditProfileScreen() {
   const { mutateAsync: updateProfile, isPending } = useUpdateProfile();
   
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const birthdaySheetRef = useRef<BirthdayBottomSheetRef>(null);
   const snapPoints = useMemo(() => ['50%', '80%'], []);
   const [isEditing, setIsEditing] = useState(false);
   const [isBackModalVisible, setIsBackModalVisible] = useState(false);
@@ -61,6 +78,7 @@ export default function EditProfileScreen() {
     control,
     handleSubmit,
     setValue,
+    reset,
     watch,
     formState: { errors },
   } = useForm<UpdateProfileInput>({
@@ -68,10 +86,27 @@ export default function EditProfileScreen() {
     defaultValues: {
       firstName: initialFirstName,
       lastName: initialLastName,
-      birthday: profile?.birthday || '',
+      birthday: formatDisplayBirthday(profile?.birthday),
       barangayId: initialBarangayId,
     },
   });
+
+  useEffect(() => {
+    if (profile) {
+      const p = (profile.fullName || '').split(' ');
+      reset({
+        firstName: p.length > 0 ? p[0] : '',
+        lastName: p.length > 1 ? p.slice(1).join(' ') : '',
+        birthday: formatDisplayBirthday(profile.birthday),
+        barangayId:
+          typeof profile.barangay === 'object' && profile.barangay?.id
+            ? profile.barangay.id
+            : typeof profile.barangay === 'string'
+              ? profile.barangay
+              : '',
+      });
+    }
+  }, [profile, reset]);
 
   const selectedBarangayId = watch('barangayId');
   const selectedBarangay = barangays.find((b) => b.id === selectedBarangayId);
@@ -224,17 +259,29 @@ export default function EditProfileScreen() {
               <Controller
                 control={control}
                 name="birthday"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <Input
-                    label="Birthday"
-                    placeholder="January 1, 2000"
-                    onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value}
-                    error={errors.birthday?.message}
-                    trailingIcon={<Calendar size={20} color="#AFAEA7" />}
-                    editable={isEditing}
-                  />
+                render={({ field: { value } }) => (
+                  <TouchableOpacity
+                    activeOpacity={isEditing ? 0.8 : 1}
+                    onPress={
+                      isEditing
+                        ? () => {
+                            Keyboard.dismiss();
+                            birthdaySheetRef.current?.present();
+                          }
+                        : undefined
+                    }
+                  >
+                    <View pointerEvents="none">
+                      <Input
+                        label="Birthday"
+                        placeholder="January 1, 2000"
+                        value={formatDisplayBirthday(value)}
+                        error={errors.birthday?.message}
+                        trailingIcon={<Calendar size={20} color="#AFAEA7" />}
+                        editable={false}
+                      />
+                    </View>
+                  </TouchableOpacity>
                 )}
               />
 
@@ -304,6 +351,14 @@ export default function EditProfileScreen() {
           </View>
         </BottomSheetScrollView>
       </BottomSheetModal>
+
+      <BirthdayBottomSheet
+        ref={birthdaySheetRef}
+        value={watch('birthday') || ''}
+        onConfirm={(formattedDate) => {
+          setValue('birthday', formattedDate, { shouldValidate: true });
+        }}
+      />
 
       <ConfirmModal
         visible={isBackModalVisible}
