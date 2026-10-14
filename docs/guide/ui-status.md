@@ -15,7 +15,7 @@ Paths below omit `.tsx` and are relative to `app/`.
 | Home · `(app)/(tabs)/index`                                    | Greeting/location, five derived metrics, three recent completed batches, new batch and add-machine actions; non-removed machines sorted oldest first | Profile/location wired; metrics and machines mocked                                        |
 | Machines · `(app)/(tabs)/machines/index`                       | Machine cards, loading, pull-to-refresh; add-machine action when empty                                                                               | Mock list; refresh rereads local data                                                      |
 | Machine detail · `machines/[id]/index` under tabs              | Vacant/composting state, phase indicator, batch feedstocks, sensor cards, automation display, links to history/settings, Finish Batch confirmation   | Mock readings/batch; Finish Batch only closes the modal and navigates away                 |
-| Machine settings · `machines/[id]/settings` under tabs         | Rename, Wi-Fi form, remove confirmation; Android back returns to the settings menu                                                                   | In-memory mutations only; Wi-Fi save updates SSID, not the password or hardware            |
+| Machine settings · `machines/[id]/settings` under tabs         | Rename, Wi-Fi form, disabled batch removal, machine removal; Android back returns to the menu                                                                   | In-memory mutations only; Wi-Fi save updates SSID, not the password or hardware            |
 | Automation logs · `machines/[id]/automation-logs` under tabs   | All time by default; Today, last 7/31 days and custom ranges; retry/empty states                                                                     | Shared screen and fixed-timestamp events across all batches for the machine                |
 | Sensor history · `machines/[id]/sensors-history` under tabs    | Latest recorded day; day/week/month/custom ranges and bounded navigation                                                                             | Shared screen; hourly/daily means with missing intervals preserved                         |
 | History · `(app)/(tabs)/history/index`                         | Batch-code search, committed date filters, newest-first completed rows, retry and empty states                                                       | Shared completed-batch fixtures; local calendar boundaries                                 |
@@ -57,7 +57,7 @@ The route has six internal step values; steps 2 and 3 currently render the same 
 2. Finish Batch has no mutation. Machine and batch history share aggregation and preserve missing readings as gaps. Machine history spans batches; batch history requires explicit membership and lifetime bounds.
 3. Socket.IO and REST command helpers exist, but no current screen calls `useSocket()` or `deviceApi.sendCommand()`.
 4. Notifications have a dependency/plugin and Android permission, but no runtime notification flow was found in `app/` or `src/`. Camera configuration likewise does not establish a QR-scanning flow.
-5. Power/transfer instructions still include gray illustration placeholders. Loading and error coverage varies; missing machine detail currently renders nothing.
+5. Power/transfer instructions still include gray illustration placeholders. Machine list, detail and settings now have initial skeletons and retry states, including missing-machine feedback.
 
 For a device handoff, check sign-in/onboarding, all tabs and back navigation, profile saving, keyboard/sheet behavior, mock batch creation, history filters, and BLE permission denial/disconnection. Record outcomes separately from this source audit.
 
@@ -82,3 +82,16 @@ The four sensor/log routes are thin wrappers around two shared screens. Each wra
 Legacy machine sensor values now have explicit timestamps at evenly spaced positions from 00:00 through the following midnight on their fixture date (Asia/Manila). Historical timestamps are never shifted to today. Mock machine registration dates for machines 1 and 3 were moved before their earliest completed batches; this also changes their oldest-first Dashboard order. Batch timestamps, feedstocks and Dashboard totals are preserved.
 
 The shared implementation passes 17 focused tests for scope isolation, aggregation, local-date filtering, fixture integrity and sheet state. Native tab/back navigation and visual comparison still require a development client.
+
+
+## Machine management update · 14 October 2026
+
+Machine list, active details, vacant/disconnected states and settings follow the inspected Figma hierarchy. Cards use active-batch membership for occupancy, independently of connectivity or missing readings. Initial loading uses static skeletons; refresh preserves loaded content. Shared machine-card skeletons live under devices and are also used by Dashboard.
+
+Details reuse the sensor cards and feedstock artwork. The validated `machine_overviews` mock collection supplies current weight and recorded automation status by machine and batch ID. Initial feedstock weight and completed-batch totals remain unchanged; new batches without a snapshot show unavailable values. No backend DTOs changed.
+
+The sensor date control attaches above the tabs in both Machines and History. `useDynamicLayout()` uses the tab bar's measured height, including scaled labels and safe areas; sensor content also reserves the measured date-control height.
+
+Settings reuse Input, Button and ConfirmModal. Rename/SSID validation lives at the mutation boundary; recoverable failures retain drafts. Remove current batch is disabled. Wi-Fi saving only changes the mock SSID: it neither stores passwords nor provisions hardware. Machine removal only changes the in-memory machine list; it does not stop hardware or delete history. Finish Batch retains its existing navigation-only behavior. Focus logs include machine ID and settings subview, never credentials.
+
+TypeScript, the documentation build, and an Android JavaScript export (5,115 modules including all six feedstock images) pass. All 20 focused tests pass, including occupancy without telemetry, disconnected combinations, snapshot validation, separate weights, settings validation and unchanged Dashboard totals. Test-file ESLint passes; the existing configuration skips TS/TSX. No Android device is connected, so native visual comparison, keyboard behavior, accessibility scaling, and tap/back interactions remain pending. Web preview is unavailable without the existing missing react-native-web dependency.

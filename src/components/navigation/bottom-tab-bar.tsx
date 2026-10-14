@@ -4,6 +4,7 @@ import type { Tabs } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { createLogger } from "@/lib/logger";
+import { useTabBarHeight } from "@/hooks/use-tab-bar-height";
 import { colors } from "@/constants";
 
 const logger = createLogger("Navigation");
@@ -19,9 +20,11 @@ export function BottomTabBar({
   navigation,
 }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const setHeight = useTabBarHeight((state) => state.setHeight);
 
   return (
     <View
+      onLayout={(event) => setHeight(event.nativeEvent.layout.height)}
       style={[
         styles.wrapper,
         {

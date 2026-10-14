@@ -25,7 +25,7 @@ export function DateFilterToggle({
     <View
       className={
         prominent
-          ? "flex-row items-center rounded-[14px] bg-primary px-2 py-1"
+          ? "w-full flex-row justify-between items-center rounded-t-[14px] bg-primary px-2 py-1"
           : "flex-row items-center rounded-full border border-border bg-card px-2 py-1 shadow-md"
       }
     >

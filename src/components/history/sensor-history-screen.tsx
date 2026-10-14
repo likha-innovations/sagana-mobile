@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, ScrollView } from "react-native";
+import { View, ScrollView, useWindowDimensions } from "react-native";
 import { addDays, addWeeks, addMonths, format, parseISO } from "date-fns";
 import { Thermometer, Droplets, Wind, Cloud } from "lucide-react-native";
 import { useHistory } from "@/hooks/use-history";
@@ -14,9 +14,10 @@ import { DateFilterToggle } from "@/components/ui/date-filter-toggle";
 import { colors } from "@/constants";
 
 export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
+  const { width, fontScale } = useWindowDimensions();
   const query = useHistory(scope);
   const { readings } = query;
-  const { floatingBottom } = useDynamicLayout();
+  const { tabBarHeight } = useDynamicLayout();
   const [period, setPeriod] = useState<SensorPeriod>("Per day");
   const [custom, setCustom] = useState<DateRange>();
   const [anchor, setAnchor] = useState<Date>();
@@ -140,7 +141,7 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
             contentContainerStyle={{
               paddingHorizontal: 16,
               gap: 12,
-              paddingBottom: floatingBottom + toggleHeight + 16,
+              paddingBottom: tabBarHeight + toggleHeight + 16,
             }}
             showsVerticalScrollIndicator={false}
           >
@@ -177,24 +178,28 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
             }
             style={{
               position: "absolute",
-              bottom: floatingBottom,
+              bottom: tabBarHeight,
               left: 16,
               right: 16,
               alignItems: "center",
             }}
           >
-            <DateFilterToggle
-              prominent
-              label={label}
-              previousDisabled={
-                period === "Custom range" || previousRange.end < minDate
-              }
-              nextDisabled={
-                period === "Custom range" || nextRange.start > maxDate
-              }
-              onPrev={() => setAnchor(shift(-1))}
-              onNext={() => setAnchor(shift(1))}
-            />
+            <View
+              style={{ width: width < 360 || fontScale > 1.2 ? "100%" : 296 }}
+            >
+              <DateFilterToggle
+                prominent
+                label={label}
+                previousDisabled={
+                  period === "Custom range" || previousRange.end < minDate
+                }
+                nextDisabled={
+                  period === "Custom range" || nextRange.start > maxDate
+                }
+                onPrev={() => setAnchor(shift(-1))}
+                onNext={() => setAnchor(shift(1))}
+              />
+            </View>
           </View>
         </>
       )}
