@@ -1,6 +1,6 @@
 # UI & Feature Status
 
-As of 14 October 2026, the mobile data hooks no longer load `src/data/data.json`. Machine, feedstock, batch, overview, and history queries start empty; the file remains available as a reference while endpoints are connected. Local mock mutations still exist, and no new endpoint wiring is included in this change.
+Machine list and detail use authenticated NestJS endpoints backed by Neon development. The backend filters them by the account's saved barangay and excludes removed machines. Batch, feedstock, sensor-history, and automation reads remain local mock or empty states; machine settings and batch creation are not persisted to Neon.
 
 Source snapshot: `38b132d`, 13 October 2026. **Wired** means the code calls a service or native module; it does not mean this audit tested that service on a device.
 
@@ -14,9 +14,9 @@ Paths below omit `.tsx` and are relative to `app/`.
 | Sign-up · `(auth)/sign-up`                                     | Email → OTP → password → name → birthday/barangay; Google users complete missing profile details; policy and birthday sheets                         | Clerk and barangay lookup wired                                                            |
 | Reset password · `(auth)/forgot-password`                      | Email, OTP/resend, new password, no-email-access and completion states                                                                               | Clerk wired                                                                                |
 | Auth fallback · `(auth)/uh-oh`                                 | Recovery message and return to sign-in                                                                                                               | Navigation only                                                                            |
-| Home · `(app)/(tabs)/index`                                    | Greeting/location, five derived metrics, three recent completed batches, new batch and add-machine actions; non-removed machines sorted oldest first | Profile/location wired; metrics and machines mocked                                        |
-| Machines · `(app)/(tabs)/machines/index`                       | Machine cards, loading, pull-to-refresh; add-machine action when empty                                                                               | Mock list; refresh rereads local data                                                      |
-| Machine detail · `machines/[id]/index` under tabs              | Vacant/composting state, phase indicator, batch feedstocks, sensor cards, automation display, links to history/settings, Finish Batch confirmation   | Mock readings/batch; Finish Batch only closes the modal and navigates away                 |
+| Home · `(app)/(tabs)/index`                                    | Greeting/location, five derived metrics, three recent completed batches, new batch and add-machine actions; non-removed machines sorted oldest first | Profile and barangay-scoped machines wired; batch metrics local                           |
+| Machines · `(app)/(tabs)/machines/index`                       | Machine cards, loading, pull-to-refresh; add-machine action when empty                                                                               | Barangay-scoped machine list; no backend sensor values                                     |
+| Machine detail · `machines/[id]/index` under tabs              | Vacant/composting state, phase indicator, batch feedstocks, sensor cards, automation display, links to history/settings, Finish Batch confirmation   | Real machine identity; batch and sensor data remain local or empty                         |
 | Machine settings · `machines/[id]/settings` under tabs         | Rename, Wi-Fi form, disabled batch removal, machine removal; Android back returns to the menu                                                                   | In-memory mutations only; Wi-Fi save updates SSID, not the password or hardware            |
 | Automation logs · `machines/[id]/automation-logs` under tabs   | All time by default; Today, last 7/31 days and custom ranges; retry/empty states                                                                     | Shared screen and fixed-timestamp events across all batches for the machine                |
 | Sensor history · `machines/[id]/sensors-history` under tabs    | Latest recorded day; day/week/month/custom ranges and bounded navigation                                                                             | Shared screen; hourly/daily means with missing intervals preserved                         |
@@ -32,6 +32,8 @@ Paths below omit `.tsx` and are relative to `app/`.
 | Not found · `+not-found`                                       | Unknown-route fallback                                                                                                                               | Navigation only                                                                            |
 
 ## Shared UI
+
+Sensor history uses React Native Gifted Charts; no backend readings are connected in this phase.
 
 | Folder                   | Reuse                                                                                                     |
 | ------------------------ | --------------------------------------------------------------------------------------------------------- |
@@ -55,7 +57,7 @@ The route has six internal step values; steps 2 and 3 currently render the same 
 
 ## Known limits for demos and QA
 
-1. Machine and batch edits disappear after a JS runtime reload. Dashboard weight totals and completed counts derive from completed-batch fixtures; ongoing and owned-machine counts reflect the in-memory batch/machine state.
+1. Machine list and detail reload from Neon; machine settings and batch edits remain local mocks. Dashboard weight totals and completed counts derive from local completed-batch state.
 2. Finish Batch has no mutation. Machine and batch history share aggregation and preserve missing readings as gaps. Machine history spans batches; batch history requires explicit membership and lifetime bounds.
 3. Socket.IO and REST command helpers exist, but no current screen calls `useSocket()` or `deviceApi.sendCommand()`.
 4. Notifications have a dependency/plugin and Android permission, but no runtime notification flow was found in `app/` or `src/`. Camera configuration likewise does not establish a QR-scanning flow.

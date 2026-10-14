@@ -71,7 +71,7 @@ test("recent batches sort newest first, cap at three, and preserve input order",
   assert.equal(input.map((batch) => batch.batch_id).join(), originalIds);
 });
 
-test("real mock creation updates ongoing counts and invalidates dashboard dependencies", async () => {
+test("local mock creation updates ongoing counts and invalidates dashboard dependencies", async () => {
   const invalidations = [];
   const statusChanges = [];
   const hooks = loadSource("src/hooks/use-batches.ts", {
@@ -107,7 +107,7 @@ test("real mock creation updates ongoing counts and invalidates dashboard depend
   assert.equal(
     helpers.getDashboardMetrics(completed, batches, fixtures.machines)
       .ongoingBatches,
-    3,
+    1,
   );
   assert.equal(
     helpers.getDashboardMetrics(completed, batches, fixtures.machines)

@@ -148,12 +148,6 @@ export function useCreateCompostBatch() {
         queryKey: batchKeys.active(variables.machine_id),
       });
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
-      queryClient.invalidateQueries({
-        queryKey: machineKeys.detail(variables.machine_id),
-      });
-      queryClient.invalidateQueries({
-        queryKey: machineKeys.feedstocks(variables.machine_id),
-      });
     },
   });
 }

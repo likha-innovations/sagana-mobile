@@ -178,7 +178,7 @@ export default function MachineSettingsScreen() {
         {query.isError && (
           <HistoryState
             message={
-              query.error.message === "Machine not found"
+              query.error?.message === "Machine not found"
                 ? "This machine could not be found."
                 : "Could not load machine settings."
             }

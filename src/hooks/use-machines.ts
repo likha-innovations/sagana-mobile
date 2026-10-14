@@ -2,6 +2,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Machine } from "@/types/machine";
 import type { RegisterMachinePayload } from "@/types/device";
 import { deviceApi } from "@/api/device.api";
+import { machineApi } from "@/api/machine.api";
+import { useAuthContext } from "@/context/auth-context";
+import { useProfile } from "./use-profile";
 import {
   machineOverviewSchema,
   machineNameSchema,
@@ -19,32 +22,60 @@ export function setMockMachineStatus(id: string, status: Machine["status"]) {
 
 export const machineKeys = {
   all: ["machines"] as const,
-  detail: (id: string) => ["machines", id] as const,
-  feedstocks: (id: string) => ["machines", id, "feedstocks"] as const,
+  list: (userId: string | undefined, barangayId: string | null | undefined) =>
+    ["machines", userId, barangayId, "list"] as const,
+  detail: (
+    userId: string | undefined,
+    barangayId: string | null | undefined,
+    id: string,
+  ) => ["machines", userId, barangayId, "detail", id] as const,
 };
 
 export function useMachines(enabled = true) {
-  return useQuery({
-    queryKey: machineKeys.all,
-    enabled,
+  const { user, isLoaded, isSignedIn } = useAuthContext();
+  const profile = useProfile();
+  const ready = isLoaded && isSignedIn && !!user && profile.isSuccess;
+  const query = useQuery({
+    queryKey: machineKeys.list(user?.id, profile.data?.barangayId),
+    enabled: enabled && ready,
+    staleTime: 0,
     queryFn: async () => {
-      // Simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      return [...mockMachines]; // Return a copy
+      if (!ready) throw new Error("User profile is not ready");
+      return machineApi.getMachines();
     },
   });
+  return {
+    ...query,
+    data: ready && !query.isError ? query.data : undefined,
+    isError: profile.isError || query.isError,
+    isPending: !profile.isError && query.isPending,
+    error: profile.error ?? query.error,
+    refetch: profile.isError ? profile.refetch : query.refetch,
+  };
 }
 
 export function useMachine(id: string) {
-  return useQuery({
-    queryKey: machineKeys.detail(id),
+  const { user, isLoaded, isSignedIn } = useAuthContext();
+  const profile = useProfile();
+  const ready = isLoaded && isSignedIn && !!user && profile.isSuccess;
+  const query = useQuery({
+    queryKey: machineKeys.detail(user?.id, profile.data?.barangayId, id),
+    enabled: ready && !!id,
+    staleTime: 0,
+    retry: false,
     queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      const machine = mockMachines.find((m) => m.machine_id === id);
-      if (!machine) throw new Error("Machine not found");
-      return { ...machine };
+      if (!ready) throw new Error("User profile is not ready");
+      return machineApi.getMachine(id);
     },
   });
+  return {
+    ...query,
+    data: ready && !query.isError ? query.data : undefined,
+    isError: profile.isError || query.isError,
+    isPending: !profile.isError && query.isPending,
+    error: profile.error ?? query.error,
+    refetch: profile.isError ? profile.refetch : query.refetch,
+  };
 }
 
 export function useUpdateMachineName() {
@@ -59,11 +90,8 @@ export function useUpdateMachineName() {
         name: machineNameSchema.parse(name),
       };
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
-      queryClient.invalidateQueries({
-        queryKey: machineKeys.detail(variables.id),
-      });
     },
   });
 }
@@ -86,11 +114,8 @@ export function useUpdateMachineWifi() {
         wifi_ssid: machineSsidSchema.parse(wifi_ssid),
       };
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
-      queryClient.invalidateQueries({
-        queryKey: machineKeys.detail(variables.id),
-      });
     },
   });
 }
@@ -102,9 +127,8 @@ export function useRemoveMachine() {
       await new Promise((resolve) => setTimeout(resolve, 500));
       mockMachines = mockMachines.filter((m) => m.machine_id !== id);
     },
-    onSuccess: (_data, id) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
-      queryClient.invalidateQueries({ queryKey: machineKeys.detail(id) });
     },
   });
 }
