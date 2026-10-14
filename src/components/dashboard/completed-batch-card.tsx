@@ -1,17 +1,31 @@
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { Box, Calendar, Weight } from "lucide-react-native";
 import { differenceInCalendarDays, format } from "date-fns";
 import { CompostIcon } from "@/components/icons";
 import { colors } from "@/constants";
 import type { CompletedBatch } from "@/types/batch";
 
-export function CompletedBatchCard({ batch }: { batch: CompletedBatch }) {
+export function CompletedBatchCard({
+  batch,
+  onPress,
+}: {
+  batch: CompletedBatch;
+  onPress?: () => void;
+}) {
+  const Container = onPress ? Pressable : View;
   const days = differenceInCalendarDays(
     new Date(batch.completion_date),
     new Date(batch.start_date),
   );
   return (
-    <View className="flex-row items-center gap-6 rounded-[14px] border border-border bg-card px-6 py-4">
+    <Container
+      onPress={onPress}
+      accessibilityRole={onPress ? "button" : undefined}
+      accessibilityLabel={
+        onPress ? `View batch ${batch.batch_code}` : undefined
+      }
+      className="flex-row items-center gap-6 rounded-[14px] border border-border bg-card px-6 py-4"
+    >
       <CompostIcon size={24} color={colors.brand[500]} />
       <View className="flex-1 gap-2">
         <Text className="text-[14px] font-bold text-foreground">
@@ -32,6 +46,6 @@ export function CompletedBatchCard({ batch }: { batch: CompletedBatch }) {
           ))}
         </View>
       </View>
-    </View>
+    </Container>
   );
 }

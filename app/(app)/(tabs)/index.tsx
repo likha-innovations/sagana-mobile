@@ -77,12 +77,7 @@ export default function DashboardScreen() {
               </Pressable>
             </View>
           ) : dashboard.isPending || !metrics ? (
-            <Text
-              accessibilityRole="progressbar"
-              className="text-sm font-sans text-foreground"
-            >
-              Loading dashboard…
-            </Text>
+            <Text className="text-sm font-sans text-foreground">Loading dashboard…</Text>
           ) : (
             <View
               className={
@@ -148,21 +143,45 @@ export default function DashboardScreen() {
             </View>
           </View>
           <View className="gap-4">
-            <Text className="text-[16px] font-bold text-foreground">
-              Completed Batches
-            </Text>
+            <View className="flex-row items-center justify-between">
+              <Text className="text-[16px] font-bold text-foreground">
+                Completed Batches
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="View all completed batches"
+                className="min-h-12 min-w-12 items-end justify-center"
+                onPress={() =>
+                  router.navigate({
+                    pathname: "/(app)/(tabs)/history",
+                    params: { reset: Date.now().toString() },
+                  })
+                }
+              >
+                <Text className="text-[14px] font-bold text-primary">
+                  View All
+                </Text>
+              </Pressable>
+            </View>
             {dashboard.isError ? (
               <Text className="text-sm font-sans text-foreground">
                 Batch history unavailable. Use Retry above.
               </Text>
             ) : dashboard.isPending ? (
-              <Text className="text-sm font-sans text-foreground">
-                Loading completed batches…
-              </Text>
+              <Text className="text-sm font-sans text-foreground">Loading completed batches…</Text>
             ) : dashboard.recentCompleted.length ? (
               <View className="gap-3">
                 {dashboard.recentCompleted.map((batch) => (
-                  <CompletedBatchCard key={batch.batch_id} batch={batch} />
+                  <CompletedBatchCard
+                    key={batch.batch_id}
+                    batch={batch}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/(app)/(tabs)/history/[batchId]",
+                        params: { batchId: batch.batch_id },
+                      })
+                    }
+                  />
                 ))}
               </View>
             ) : (
@@ -192,9 +211,7 @@ export default function DashboardScreen() {
                 Machines unavailable. Use Retry above.
               </Text>
             ) : machines.isPending ? (
-              <Text className="text-sm font-sans text-foreground">
-                Loading machines…
-              </Text>
+              <Text className="text-sm font-sans text-foreground">Loading machines…</Text>
             ) : dashboardMachines.length ? (
               <View className="gap-3">
                 {dashboardMachines.map((machine) => (
