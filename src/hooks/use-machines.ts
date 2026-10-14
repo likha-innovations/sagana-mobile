@@ -1,5 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Machine } from "@/types/machine";
+import {
+  machineOverviewSchema,
+  machineNameSchema,
+  machineSsidSchema,
+} from "@/lib/machine-overview";
 import mockData from "@/data/data.json";
 
 // Initialize mutable state from the global JSON
@@ -59,9 +64,11 @@ export function useUpdateMachineName() {
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
       await new Promise((resolve) => setTimeout(resolve, 500));
       const idx = mockMachines.findIndex((m) => m.machine_id === id);
-      if (idx > -1) {
-        mockMachines[idx] = { ...mockMachines[idx], name };
-      }
+      if (idx < 0) throw new Error("Machine not found");
+      mockMachines[idx] = {
+        ...mockMachines[idx],
+        name: machineNameSchema.parse(name),
+      };
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
@@ -84,9 +91,11 @@ export function useUpdateMachineWifi() {
     }) => {
       await new Promise((resolve) => setTimeout(resolve, 500));
       const idx = mockMachines.findIndex((m) => m.machine_id === id);
-      if (idx > -1) {
-        mockMachines[idx] = { ...mockMachines[idx], wifi_ssid };
-      }
+      if (idx < 0) throw new Error("Machine not found");
+      mockMachines[idx] = {
+        ...mockMachines[idx],
+        wifi_ssid: machineSsidSchema.parse(wifi_ssid),
+      };
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
@@ -107,6 +116,18 @@ export function useRemoveMachine() {
     onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
       queryClient.invalidateQueries({ queryKey: machineKeys.detail(id) });
+    },
+  });
+}
+
+export function useMachineOverview(id: string) {
+  return useQuery({
+    queryKey: ["machine-overview", id],
+    queryFn: async () => {
+      const records = machineOverviewSchema
+        .array()
+        .parse(mockData.machine_overviews);
+      return records.find((record) => record.machine_id === id) ?? null;
     },
   });
 }
