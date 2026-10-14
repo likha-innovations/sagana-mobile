@@ -125,9 +125,13 @@ export function useRemoveMachine() {
 export function useRegisterMachine() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: RegisterMachinePayload) => deviceApi.registerMachine(payload),
+    mutationFn: (payload: RegisterMachinePayload) =>
+      deviceApi.registerMachine(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
+    },
+  });
+}
 
 export function useMachineOverview(id: string) {
   return useQuery({
