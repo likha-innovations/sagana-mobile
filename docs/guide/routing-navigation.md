@@ -28,6 +28,13 @@ app/
         ├── _layout.tsx
         ├── index.tsx            # Home
         ├── profile.tsx          # Account
+        ├── history/
+        │   ├── _layout.tsx
+        │   ├── index.tsx
+        │   └── [batchId]/
+        │       ├── index.tsx
+        │       ├── sensors-history.tsx
+        │       └── automation-logs.tsx
         └── machines/
             ├── _layout.tsx
             ├── index.tsx
@@ -58,10 +65,14 @@ The protected group also checks the session and birthday. The birthday check is 
 
 ## Navigation behavior
 
-The tabs display **Home**, **Machines**, and **Account**. `BottomTabBar` in `src/components/navigation/bottom-tab-bar.tsx` renders icons, labels, active colors, safe-area spacing and native haptics. It does not currently use `expo-blur`.
+The tabs display **Home**, **Machines**, **History**, and **Account**. `BottomTabBar` in `src/components/navigation/bottom-tab-bar.tsx` renders icons, labels, active colors, safe-area spacing and native haptics. It does not currently use `expo-blur`.
+
+History has a nested headerless stack keyed by `batchId`; its tab remains selected on batch details, sensors and logs. Dashboard completed rows open batch details, and completed View All opens History with search and filters cleared. All tabs use outline inactive icons and Figma solid selected icons.
 
 Machines has a nested headerless stack and `popToTopOnBlur: true`. Batch creation, machine registration, profile editing and password changes sit outside the tab group. Batch creation accepts an optional `machineId`; machine detail routes use `id`.
 
 Use `useDynamicLayout().scrollPaddingBottom` for tab content and `stackScrollPadding` for full-screen stack flows. Several existing calls still use `as any`; typed routes being enabled does not mean all navigation is statically checked.
 
 For what each screen does, read [UI & Feature Status](/guide/ui-status).
+
+Machine and completed-batch sensor/log routes render the same two shared history screens with an explicit machine or batch scope. Route wrappers retain focus logging and remain inside their original tab stacks. Machine history includes all recorded machine activity; batch history includes only explicitly assigned records within that batch’s lifetime.
