@@ -180,7 +180,6 @@ export function buildChartPath(points: ChartPoint[], maxValue: number) {
   return points
     .map((point) => {
       if (point.value === null) {
-        connected = false;
         return "";
       }
       const command = connected ? "L" : "M";

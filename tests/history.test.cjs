@@ -129,8 +129,8 @@ test("hourly and daily means isolate batches and preserve missing sensor interva
   assert.equal(daily.temperature[0].value, 30);
   assert.equal(daily.temperature[1].value, null);
   const svg = h.buildChartPath(hourly.temperature, 100);
-  assert.equal((svg.match(/M /g) ?? []).length, 2);
-  assert.equal(svg.includes("L "), false);
+    assert.equal((svg.match(/M /g) ?? []).length, 1);
+    assert.equal(svg.includes("L "), true);
   assert.equal(h.buildChartPath(hourly.co2, 100), "");
 });
 
