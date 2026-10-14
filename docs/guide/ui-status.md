@@ -1,5 +1,7 @@
 # UI & Feature Status
 
+As of 14 October 2026, the mobile data hooks no longer load `src/data/data.json`. Machine, feedstock, batch, overview, and history queries start empty; the file remains available as a reference while endpoints are connected. Local mock mutations still exist, and no new endpoint wiring is included in this change.
+
 Source snapshot: `38b132d`, 13 October 2026. **Wired** means the code calls a service or native module; it does not mean this audit tested that service on a device.
 
 ## Screen map

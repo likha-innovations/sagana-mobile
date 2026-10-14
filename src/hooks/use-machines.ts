@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Machine, AutomationLog, SensorHistory } from "@/types/machine";
+import type { Machine } from "@/types/machine";
 import type { RegisterMachinePayload } from "@/types/device";
 import { deviceApi } from "@/api/device.api";
 import {
@@ -7,26 +7,13 @@ import {
   machineNameSchema,
   machineSsidSchema,
 } from "@/lib/machine-overview";
-import mockData from "@/data/data.json";
-
-// Initialize mutable state from the global JSON
-let mockMachines: Machine[] = [...(mockData.machines as Machine[])];
+let mockMachines: Machine[] = [];
 
 // ponytail: direct in-memory mutation helper for mock state transition
 export function setMockMachineStatus(id: string, status: Machine["status"]) {
   const idx = mockMachines.findIndex((m) => m.machine_id === id);
   if (idx > -1) {
-    const updated = { ...mockMachines[idx], status };
-    if (status === "active" && !updated.latest_readings) {
-      updated.latest_readings = {
-        temperature: 32,
-        moisture: 45,
-        oxygen: 68,
-        co2: 0.03,
-        updated_at: new Date().toISOString(),
-      };
-    }
-    mockMachines[idx] = updated;
+    mockMachines[idx] = { ...mockMachines[idx], status };
   }
 }
 
@@ -137,9 +124,7 @@ export function useMachineOverview(id: string) {
   return useQuery({
     queryKey: ["machine-overview", id],
     queryFn: async () => {
-      const records = machineOverviewSchema
-        .array()
-        .parse(mockData.machine_overviews);
+      const records = machineOverviewSchema.array().parse([]);
       return records.find((record) => record.machine_id === id) ?? null;
     },
   });

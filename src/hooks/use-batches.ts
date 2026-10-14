@@ -17,15 +17,8 @@ import {
   getDashboardMetrics,
   getRecentCompletedBatches,
 } from "@/lib/dashboard";
-import mockData from "@/data/data.json";
-
-// In-memory mock store holding backend-aligned DTO objects
-let mockFeedstocks: Feedstock[] = [
-  ...((mockData.feedstocks ?? []) as Feedstock[]),
-];
-let mockActiveBatches: CompostBatch[] = [
-  ...((mockData.active_batches ?? []) as CompostBatch[]),
-];
+let mockFeedstocks: Feedstock[] = [];
+let mockActiveBatches: CompostBatch[] = [];
 
 export { type BatchFeedstock, type CompostBatch, type DashboardMetrics };
 
@@ -76,7 +69,7 @@ export function useCompletedBatches(enabled = true) {
     enabled,
     queryFn: async () => {
       await new Promise((resolve) => setTimeout(resolve, 150));
-      return completedBatchSchema.array().parse(mockData.completed_batches);
+      return completedBatchSchema.array().parse([]);
     },
   });
 }

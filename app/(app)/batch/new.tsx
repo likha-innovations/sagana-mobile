@@ -96,7 +96,6 @@ export default function NewBatchScreen() {
     [machines, selectedMachineId]
   );
 
-  // Group feedstocks by category dynamically from data.json
   const categorizedFeedstocks = useMemo(() => {
     const categories: Record<FeedstockCategory, typeof feedstocks> = {
       Greens: [],
@@ -335,6 +334,10 @@ export default function NewBatchScreen() {
 
                 {isFeedstocksLoading ? (
                   <ActivityIndicator color="#718619" className="my-8" />
+                ) : feedstocks.length === 0 ? (
+                  <Text className="text-sm font-sans text-foreground">
+                    No feedstocks available yet.
+                  </Text>
                 ) : (
                   (['Greens', 'Browns'] as FeedstockCategory[]).map((category) => {
                     const items = categorizedFeedstocks[category] ?? [];
@@ -522,6 +525,10 @@ export default function NewBatchScreen() {
             >
               {isMachinesLoading ? (
                 <ActivityIndicator color="#718619" className="my-6" />
+              ) : machines.length === 0 ? (
+                <Text className="text-sm font-sans text-foreground py-4">
+                  No machines available yet.
+                </Text>
               ) : (
                 machines.map((m) => {
                   const isAvailable = m.status === 'available';

@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import mockData from "@/data/data.json";
 import {
   historyReadingSchema,
   historyEventSchema,
@@ -28,8 +27,8 @@ export function useHistory(scope: HistoryScope) {
     enabled: !!entity,
     queryFn: async () =>
       selectHistory(
-        historyReadingSchema.array().parse(mockData.history_readings),
-        historyEventSchema.array().parse(mockData.history_events),
+        historyReadingSchema.array().parse([]),
+        historyEventSchema.array().parse([]),
         scope,
         batch,
       ),
