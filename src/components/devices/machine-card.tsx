@@ -10,28 +10,45 @@ import {
 } from "lucide-react-native";
 import { CompostIcon } from "@/components/icons";
 import { colors } from "@/constants";
+import type { CompostBatch } from "@/types/batch";
+import { getMachineState, getMachinePhase } from "@/lib/machine-overview";
 import type { Machine } from "@/types/machine";
 import { formatTimeAgo } from "@/lib/utils";
 
 interface MachineCardProps {
   machine: Machine;
+  activeBatch: CompostBatch | null;
   onPress: () => void;
 }
 
-export function MachineCard({ machine, onPress }: MachineCardProps) {
+export function MachineCard({
+  machine,
+  activeBatch,
+  onPress,
+}: MachineCardProps) {
   const { width, fontScale } = useWindowDimensions();
   const wrapSensors = width < 360 || fontScale > 1.2;
-  const isOffline = machine.status === "offline";
-  const isVacant =
-    machine.status === "maintenance" ||
-    machine.status === "available" ||
-    !machine.latest_readings;
-
+  const { vacant: isVacant, disconnected: isOffline } = getMachineState(
+    machine,
+    activeBatch,
+  );
   // Values
-  const temp = isVacant ? "--" : `${machine.latest_readings?.temperature}°C`;
-  const moisture = isVacant ? "--" : `${machine.latest_readings?.moisture}%`;
-  const o2 = isVacant ? "--" : `${machine.latest_readings?.oxygen}%`;
-  const co2 = isVacant ? "--" : `${machine.latest_readings?.co2}%`;
+  const temp =
+    isVacant || machine.latest_readings?.temperature == null
+      ? "--"
+      : `${machine.latest_readings.temperature}°C`;
+  const moisture =
+    isVacant || machine.latest_readings?.moisture == null
+      ? "--"
+      : `${machine.latest_readings.moisture}%`;
+  const o2 =
+    isVacant || machine.latest_readings?.oxygen == null
+      ? "--"
+      : `${machine.latest_readings.oxygen}%`;
+  const co2 =
+    isVacant || machine.latest_readings?.co2 == null
+      ? "--"
+      : `${machine.latest_readings.co2}%`;
 
   // Colors
   const tempColor = isVacant
@@ -46,7 +63,20 @@ export function MachineCard({ machine, onPress }: MachineCardProps) {
     : colors.sensors.carbonDioxide;
 
   // Footer
-  const phaseText = isVacant ? "Vacant" : "Thermophilic Phase";
+  const days = activeBatch
+    ? Math.max(
+        0,
+        Math.floor(
+          (Date.now() - Date.parse(activeBatch.start_date)) / 86400000,
+        ),
+      )
+    : 0;
+  const phase = getMachinePhase(machine.latest_readings?.temperature, days);
+  const phaseText = isVacant
+    ? "Vacant"
+    : phase === null
+      ? "Composting"
+      : ["Mesophilic Phase", "Thermophilic Phase", "Cooling Phase"][phase];
   const phaseColorClass = isVacant ? "text-muted-foreground" : "text-primary";
   const phaseIconColor = isVacant ? colors.gray.textIcon : colors.brand[500];
   const timeAgo = isVacant

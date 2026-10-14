@@ -1,7 +1,7 @@
+import { MachineSkeletons } from "@/components/devices/machine-skeletons";
 import {
   MetricSkeletons,
   CompletedBatchSkeletons,
-  MachineSkeletons,
 } from "@/components/dashboard/dashboard-skeletons";
 import {
   View,
@@ -15,7 +15,7 @@ import { MapPin, Box } from "lucide-react-native";
 import { useAuthContext } from "@/context/auth-context";
 import { useProfile, useBarangays, useDynamicLayout } from "@/hooks";
 import { useMachines } from "@/hooks/use-machines";
-import { useDashboardMetrics } from "@/hooks/use-batches";
+import { useCompostBatches, useDashboardMetrics } from "@/hooks/use-batches";
 import { CompostIcon } from "@/components/icons";
 import { GradientMetricCard, QuickActionButton } from "@/components/dashboard";
 import { CompletedBatchCard } from "@/components/dashboard/completed-batch-card";
@@ -32,6 +32,7 @@ export default function DashboardScreen() {
   const { data: profileData } = useProfile();
   const { data: barangays = [] } = useBarangays();
   const machines = useMachines();
+  const activeBatches = useCompostBatches();
   const dashboard = useDashboardMetrics();
   const user = profileData || authUser;
   const firstName = user?.fullName?.split(" ")[0] || "Operator";
@@ -211,11 +212,11 @@ export default function DashboardScreen() {
                 </Text>
               </Pressable>
             </View>
-            {machines.isError ? (
+            {machines.isError || activeBatches.isError ? (
               <Text className="text-sm font-sans text-foreground">
                 Machines unavailable. Use Retry above.
               </Text>
-            ) : machines.isPending ? (
+            ) : machines.isPending || activeBatches.isPending ? (
               <MachineSkeletons stacked={stackMetrics} />
             ) : dashboardMachines.length ? (
               <View className="gap-3">
@@ -223,6 +224,13 @@ export default function DashboardScreen() {
                   <MachineCard
                     key={machine.machine_id}
                     machine={machine}
+                    activeBatch={
+                      activeBatches.data?.find(
+                        (batch) =>
+                          batch.machine_id === machine.machine_id &&
+                          batch.status === "active",
+                      ) ?? null
+                    }
                     onPress={() =>
                       router.push({
                         pathname: "/(app)/(tabs)/machines/[id]",
