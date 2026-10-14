@@ -1,85 +1,35 @@
 # Authentication & Clerk
 
-Sagana Mobile uses **Clerk Core 3** (`@clerk/expo`) with hardware-level SecureStore token caching, Google SSO, and an application-level state machine (`AuthContext`).
+`src/context/auth-context.tsx` wraps `@clerk/expo` and exposes `useAuthContext()`. The root supplies `tokenCache` from `src/lib/token-cache.ts`, backed by `expo-secure-store`.
 
----
+## Current interface
 
-## 🔒 Security & Token Storage
+| State / method | Purpose |
+| --- | --- |
+| `isSignedIn`, `isLoaded` | Session presence and auth initialization |
+| `user`, `clerkUser` | Normalized client profile and Clerk user |
+| `getToken()` | Retrieve a session token |
+| `signIn(email, password)` | Email/password authentication |
+| `signInWithGoogle()` | Google SSO flow |
+| `signUp(email)`, `verifyEmail(code)` | Start email signup and verify the code |
+| `completeSignUp(...)` | Save names, birthday and barangay metadata, plus password where needed |
+| `requestPasswordReset(email)` | Request the reset code |
+| `verifyPasswordResetCode(code)`, `resetPassword(...)` | Verify the code and set the new password |
+| `updatePassword(currentPassword, newPassword)` | Change password for a signed-in user |
+| `signOut()` | Disconnect the socket, sign out of Clerk and return to sign-in |
 
-Tokens are never stored in unencrypted storage (`AsyncStorage`). Instead, session tokens are securely saved in device keychains using `expo-secure-store`.
+Use `isSignedIn` and `isLoaded`; old examples naming `isAuthenticated` and `isLoading` do not match the current context.
 
-### Hardware Cache Implementation (`src/lib/token-cache.ts`)
+## Onboarding and account flows
 
-```typescript
-import * as SecureStore from 'expo-secure-store';
+Email signup advances through email, OTP, password, name and birthday/barangay screens. Google users missing a birthday return to signup to complete their profile. The route guard currently uses birthday presence as the completion check; see [routing](/guide/routing-navigation#startup-and-guards).
 
-export const tokenCache = {
-  async getToken(key: string) {
-    try {
-      return await SecureStore.getItemAsync(key);
-    } catch {
-      return null;
-    }
-  },
-  async saveToken(key: string, value: string) {
-    try {
-      await SecureStore.setItemAsync(key, value);
-    } catch (error) {
-      console.error('Failed to save token to SecureStore', error);
-    }
-  },
-};
-```
+Account displays backend profile data with a Clerk fallback. Edit profile saves through `useUpdateProfile()` to `PATCH /me`; signup completion writes Clerk metadata. Keep those paths distinct when debugging profile synchronization.
 
----
+The Account screen shows a Google sign-in label instead of Change Password for Google accounts. The password-change screens pass the current password through `lib/password-flow-store.ts`, not route parameters. Preserve that boundary.
 
-## ⚙️ Auth Machine (`AuthContext`)
+## API authentication
 
-All authentication interactions are encapsulated inside `src/context/auth-context.tsx` and consumed via the `useAuthContext()` hook.
+`src/lib/auth-token.ts` supplies the token getter used by the API client. Authenticated requests attach a bearer token; the client retries once after an authenticated 401 with a refreshed token. Sign-out disconnects Socket.IO, and the root's signed-out redirect clears cached queries.
 
-### Exposed State & Methods
-
-| Property / Method | Type | Description |
-| :--- | :--- | :--- |
-| `user` | `User \| null` | Normalized user profile mirroring backend Prisma User schema |
-| `isAuthenticated` | `boolean` | True if an active session exists |
-| `isLoading` | `boolean` | True during initial session bootstrap or async transitions |
-| `signIn(email, password)` | `Promise<void>` | Email & password sign-in |
-| `signUp(data)` | `Promise<void>` | Initial sign-up registration |
-| `verifyEmail(code)` | `Promise<void>` | 6-digit OTP verification code submission |
-| `resendVerificationCode()` | `Promise<void>` | Resend OTP code to user's pending email |
-| `signInWithGoogle()` | `Promise<void>` | Native browser OAuth session for Google |
-| `requestPasswordReset(email)` | `Promise<void>` | Trigger password reset verification email |
-| `confirmPasswordReset(code, password)` | `Promise<void>` | Submit reset code and new password |
-| `signOut()` | `Promise<void>` | Terminate session and clear cache |
-
----
-
-## 🌐 Google Single Sign-On (SSO)
-
-Google OAuth uses `expo-web-browser` warm-up patterns and `expo-auth-session` deep link callbacks with the `sagana://` scheme.
-
-```typescript
-WebBrowser.maybeCompleteAuthSession();
-
-export const useWarmUpBrowser = () => {
-  useEffect(() => {
-    void WebBrowser.warmUpAsync();
-    return () => {
-      void WebBrowser.coolDownAsync();
-    };
-  }, []);
-};
-```
-
----
-
-## 🔑 Automatic JWT Bearer Token Injection
-
-To avoid passing authentication tokens manually to every API call, `src/lib/auth-token.ts` maintains a static token getter callback configured during Clerk provider initialization.
-
-`src/api/client.ts` automatically calls `getAuthToken()` and injects:
-
-```http
-Authorization: Bearer <clerk_jwt_token>
-```
+Never include session tokens, passwords or pairing credentials in logs, screenshots or handoff notes. This documentation audit did not exercise live Clerk or backend sessions.

@@ -1,6 +1,10 @@
 # Real-time WebSocket & Socket.IO
 
-Sagana Mobile uses `socket.io-client` in `src/lib/socket.ts` and `src/hooks/use-socket.ts` for bidirectional real-time communication with the backend telemetry gateway and HiveMQ Cloud.
+Sagana Mobile provides `socket.io-client` infrastructure in `src/lib/socket.ts` and `src/hooks/use-socket.ts` for communication with the backend telemetry gateway. MQTT stays on the backend/firmware side.
+
+::: warning Current screen integration
+At commit `38b132d`, no route in `app/` calls `useSocket()`. Machine dashboards read mock hooks, so their sensor values are not live telemetry. The example below demonstrates the available hook, not the current dashboard implementation. See [UI & Feature Status](/guide/ui-status).
+:::
 
 ---
 

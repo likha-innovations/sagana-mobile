@@ -1,88 +1,66 @@
-# Architecture & Layers
+# Architecture & Folder Structure
 
-Sagana Mobile follows a **role-based flat-layered architecture** designed for modularity, strict separation of concerns, and ease of testing.
+Audited against mobile commit `38b132d` on 13 October 2026. Paths are relative to `sagana-mobile`.
 
----
-
-## 🏛️ Layer Overview
-
-All application source code resides under `src/` and `app/`. The project is intentionally structured to prevent deep nesting and circular dependencies:
+## Where to work
 
 ```text
 sagana-mobile/
-├── app/                           # 🧭 Expo Router File-Based Pages & Layouts
+├── app/                       # Expo Router screens and layouts
+│   ├── (auth)/                # Sign-in, sign-up, reset, fallback
+│   ├── (app)/                 # Protected screens
+│   │   ├── (tabs)/            # Home, Machines stack, Account
+│   │   ├── batch/             # New compost batch wizard
+│   │   ├── machine-registration/ # BLE registration wizard
+│   │   ├── change-password/   # Current, new, success
+│   │   └── edit-profile.tsx
+│   ├── _layout.tsx            # Providers, fonts, auth routing
+│   └── +not-found.tsx
 ├── src/
-│   ├── api/                       # 🌐 Typed HTTP Client & REST Endpoints
-│   ├── components/                # 🎨 Visual UI Elements & Base Primitives
-│   ├── context/                   # 🔐 Global React State Machines
-│   ├── hooks/                     # 🎣 TanStack Query & React Hooks
-│   ├── lib/                       # 🔌 Native Drivers, Utilities & Logger
-│   └── types/                     # 📦 Zod Schemas & Inferred TypeScript Types
-└── global.css                     # 🎨 Tailwind CSS v4 / Uniwind Theme Tokens
+│   ├── api/                   # client, user, barangays, device commands
+│   ├── components/
+│   │   ├── auth/              # OTP, birthday/policy sheets, form helpers
+│   │   ├── dashboard/         # Metric cards and quick actions
+│   │   ├── devices/           # Machine cards, graphs, registration steps
+│   │   ├── icons/             # Custom SVG components
+│   │   ├── navigation/        # bottom-tab-bar.tsx
+│   │   └── ui/                # Buttons, inputs, modals, filters, toast
+│   ├── constants/             # colors.ts, layout.ts
+│   ├── context/               # auth-context.tsx
+│   ├── data/                  # data.json: demo fixtures
+│   ├── hooks/                 # Profile, machines, batches, BLE, Wi-Fi, socket
+│   ├── lib/                   # BLE/socket drivers, tokens, logger, utilities
+│   ├── types/                 # auth, api, barangay, device, machine, batch
+│   └── uniwind-types.d.ts     # Metro-generated Uniwind declarations
+├── assets/                    # Local fonts, logo and images
+├── docs/                      # This VitePress site
+├── .github/workflows/         # mobile-quality.yml
+├── .husky/                    # Pre-commit lint and typecheck
+├── app.json                   # App version, native plugins and permissions
+├── eas.json                   # Development, preview, production profiles
+├── global.css                 # Tailwind v4 / Uniwind theme and fonts
+├── metro.config.js            # Uniwind integration
+├── babel.config.js            # babel-preset-expo
+├── uniwind-env.d.ts           # Uniwind types and CSS module declaration
+├── tsconfig.json              # Strict TypeScript and aliases
+├── package.json               # Dependencies and commands
+├── pnpm-workspace.yaml        # Workspace, overrides, build policy
+└── pnpm-lock.yaml             # Saved dependency graph
 ```
 
----
+## Data boundaries
 
-## 🧱 Layer Responsibilities
+| Area | Current path | Contributor rule |
+| --- | --- | --- |
+| Profile | Screen → `use-profile.ts` → `user.api.ts` → `/me` | Keep REST calls in `src/api`; update the profile query after saving. |
+| Barangays | Screen → `use-barangays.ts` → `barangays.api.ts` | Reuse the shared query for location selectors. |
+| Machines and batches | Screen → hooks → `data.json` and module-level arrays | These are mock stores. Changes reset when the JS runtime reloads. |
+| Pairing | Registration → `use-bluetooth.ts` → `lib/bluetooth.ts` | Coordinate the protocol with firmware; backend registration is pending. |
+| Telemetry | `use-socket.ts` → `lib/socket.ts` | Infrastructure exists, but current screens do not call the hook. |
+| Authentication | `AuthProvider` → Clerk | Read session state through `useAuthContext()`. |
 
-### 1. `app/` (Routing & Views)
-- Contains all **Expo Router** file-based routes and nested layouts.
-- Organized by layout groups: `(auth)` for public entry flows and `(app)` for protected authenticated views.
-- **Rule**: Screens should be thin orchestrators that consume custom hooks from `src/hooks/` and render UI components from `src/components/`.
+`types/machine.ts` owns machine status, readings, logs and history. `types/batch.ts` owns batches and feedstocks. `types/device.ts` retains telemetry, command and registration contracts. These are client contracts; do not assume every field matches Prisma or every response is runtime-validated.
 
-### 2. `src/api/` (Network & REST)
-- Exclusively dedicated to HTTP communication.
-- Uses a typed native `apiFetch<T>` wrapper around `fetch` (Zero Axios).
-- Handles base URL resolution, JWT token injection, API envelope unwrapping, and throwing structured `ApiError` instances.
-- **Auto-Recovery Interceptor**: Automatically catches `401 Unauthorized` responses caused by Clerk's short-lived (1-minute) token lifecycles, forcefully skips the token cache to generate a brand new JWT, and seamlessly replays the request so mutations and background polls never fail unexpectedly.
+Use `@/*` for `src/*`, `@/assets/*` for assets, and `~/*` for root-relative imports. Keep reusable presentation in components and shared data operations in hooks/API modules.
 
-### 3. `src/hooks/` (Server State & Query Factories)
-- Contains all **TanStack Query v5** queries and mutations.
-- Encapsulates caching policies, background refetching, and cache invalidation.
-- Connects UI screens to `src/api/` endpoints without leaking fetch logic into components.
-
-### 4. `src/components/` (Presentation & UI)
-- Divided into reusable sub-layers:
-  - `ui/`: Core primitives built with `@rn-primitives` and `class-variance-authority` (Button, Input, Card). Also includes global layout primitives like `FilterBottomSheet`.
-  - `devices/`: Specialized IoT hardware UI components (`MachineCard`, `SensorStatCard`, `AutomationLogCard`) heavily optimized for 1:1 Figma adherence.
-  - `navigation/`: Custom application navigation bars (BottomTabBar).
-  - `icons/`: Custom vector SVGs (GoogleIcon) and brand iconography.
-- **Rule**: Components must be presentational and accept props/callbacks. Screen padding is centralized using `useDynamicLayout()` to enforce uniform Safe Area boundaries.
-
-### 5. `src/context/` (Global App State)
-- Houses global reactive state providers, such as `AuthProvider` (`AuthContext`).
-- Manages authentication state restoration, Clerk session lifecycles, and user normalization.
-
-### 6. `src/lib/` (Platform Drivers & Utilities)
-- Integrations with device hardware and native SDKs:
-  - `auth-token.ts`: Clerk JWT Bearer token resolution for API calls.
-  - `token-cache.ts`: Hardware-backed `expo-secure-store` session caching.
-  - `logger.ts`: Centralized scoped `Logger` (`createLogger`) formatted with Asia/Manila timestamps and ANSI colors.
-  - `utils.ts`: Tailwind classname merging helper (`cn`).
-
-### 7. `src/types/` (Zod Schemas & Contracts)
-- Single source of truth for all data models and forms.
-- Uses **Zod** runtime schemas (`userSchema`, `signInSchema`, `signUpSchema`, `updateProfileSchema`) to infer strict TypeScript types via `z.infer<typeof schema>`.
-- Mirrors backend Prisma schemas 1:1.
-
----
-
-## 📐 Data Flow Diagram
-
-The following diagram illustrates how user interactions flow through the layers:
-
-```
-[ UI Screen (app/(app)/(tabs)/profile.tsx) ]
-                     │
-                     ▼
-[ Custom Hook (src/hooks/use-profile.ts) ]
-                     │ (TanStack useQuery / useMutation)
-                     ▼
-[ API Endpoint (src/api/user.api.ts) ]
-                     │
-                     ▼
-[ Typed Client (src/api/client.ts) ] ◄── Token Provider (src/lib/auth-token.ts)
-                     │
-                     ▼
-[ Backend REST API (/api/users/profile) ]
-```
+See [all routes](/guide/routing-navigation), [screen status](/guide/ui-status), and [state ownership](/core/state-management).

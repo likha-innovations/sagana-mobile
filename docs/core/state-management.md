@@ -1,74 +1,28 @@
-# State Management (TanStack Query)
+# State Management
 
-Sagana Mobile uses **TanStack Query v5** (`@tanstack/react-query`) for all server state caching, background synchronization, and optimistic UI updates.
+TanStack Query v5 caches profile, barangay, machine and batch queries. A query hook does not necessarily fetch from the backend: machine and batch hooks currently use local fixtures.
 
----
+## State ownership
 
-## 🔑 Structured Query Key Factories
+| State | Owner / source |
+| --- | --- |
+| Session and normalized user | `src/context/auth-context.tsx`, backed by Clerk |
+| Profile | `useProfile()` / `useUpdateProfile()` → `GET/PATCH /me` |
+| Barangays | `useBarangays()` → public barangay API |
+| Machines, logs and sensor history | `use-machines.ts` → `src/data/data.json` and an in-memory machine array |
+| Feedstocks, batches and dashboard totals | `use-batches.ts` → fixtures and in-memory arrays |
+| Toast visibility/message | Zustand store in `components/ui/toast.tsx` |
+| Form/wizard steps | Screen-local React state; some forms use React Hook Form/Zod |
+| Password-change handoff | `lib/password-flow-store.ts`, temporary in-memory state |
+| BLE connection / socket events | Dedicated hooks and native/socket instances |
 
-To maintain type safety and avoid cache key collisions, query keys are structured into factory objects:
+## Cache behavior
 
-```typescript
-export const userKeys = {
-  all: ['user'] as const,
-  profile: () => [...userKeys.all, 'profile'] as const,
-};
-```
+The root creates one `QueryClient` with a five-minute default `staleTime` and two query retries. Query-key factories are `userKeys`, `machineKeys` and `batchKeys`.
 
----
+1. Profile save updates the cached profile and invalidates its query.
+2. Machine rename, SSID change and removal mutate the mock array, then invalidate relevant machine queries.
+3. Batch creation validates with `createBatchInputSchema`, appends a mock batch, marks the mock machine active and invalidates related batch/machine queries. Totals still come from the dashboard fixture.
+4. The signed-out route redirect clears the QueryClient. Module-level mock arrays have a separate lifetime and reset on JS runtime reload.
 
-## 📥 Queries: Fetching Server Data
-
-Query hooks encapsulate fetch operations, refetch interval logic, and error handlers:
-
-```typescript
-import { useQuery } from '@tanstack/react-query';
-import { userApi } from '@/api';
-
-export function useProfileQuery(enabled = true) {
-  return useQuery({
-    queryKey: userKeys.profile(),
-    queryFn: () => userApi.getProfile(),
-    enabled,
-    staleTime: 1000 * 60 * 5, // 5 minutes fresh
-  });
-}
-```
-
----
-
-## 📤 Mutations & Cache Invalidation
-
-Mutations handle write operations and automatically invalidate related caches upon success:
-
-```typescript
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { userApi } from '@/api';
-import * as Burnt from 'burnt';
-
-export function useUpdateProfileMutation() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: UpdateProfileInput) => userApi.updateProfile(data),
-    onSuccess: (updatedUser) => {
-      // Invalidate or update query cache directly
-      queryClient.setQueryData(userKeys.profile(), updatedUser);
-      queryClient.invalidateQueries({ queryKey: userKeys.profile() });
-
-      Burnt.toast({
-        title: 'Profile Updated',
-        message: 'Your account changes have been saved.',
-        preset: 'done',
-      });
-    },
-    onError: (error) => {
-      Burnt.toast({
-        title: 'Update Failed',
-        message: error.message,
-        preset: 'error',
-      });
-    },
-  });
-}
-```
+These mutations are not a persistent backend or offline store. When integrating real machine/batch APIs, preserve the query keys and replace mock operations with typed API calls. See [current UI limits](/guide/ui-status#known-limits-for-demos-and-qa).

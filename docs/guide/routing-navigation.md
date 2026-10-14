@@ -1,93 +1,67 @@
 # Routing & Navigation
 
-Sagana Mobile uses **Expo Router v4** (powered by `react-navigation`) with file-based routing and layout groups.
+The manifest declares `expo-router ~57.0.24`, with `expo-router/entry` as the entry point and typed routes enabled. Parenthesized route groups organize layouts without adding URL segments.
 
----
-
-## 🗂️ Route Hierarchy
-
-The directory structure inside `app/` defines the navigation hierarchy:
+## Route tree
 
 ```text
 app/
-├── (app)/                         # 🔒 Protected Group
-│   ├── (tabs)/                    # 📑 Tab Navigator
-│   │   ├── index.tsx              # Home / Dashboard tab
-│   │   ├── machines/              # ⚙️ Nested Machines Stack
-│   │   │   ├── index.tsx          # Machines List
-│   │   │   ├── _layout.tsx        # Stack Layout (Headerless)
-│   │   │   └── [id]/              # Individual Machine Dashboards
-│   │   │       ├── index.tsx      # Detailed Machine UI & Controls
-│   │   │       ├── automation-logs.tsx
-│   │   │       └── sensors-history.tsx
-│   │   ├── profile.tsx            # User Profile tab
-│   │   └── _layout.tsx            # Tabs Layout (Floating Bar)
-│   └── _layout.tsx                # Protected Stack Layout
-│
-├── (auth)/                        # 🔓 Public Auth Group
-│   ├── sign-in.tsx                # Sign In Screen
-│   ├── sign-up.tsx                # Sign Up + 6-digit OTP verification
-│   ├── forgot-password.tsx        # Password Reset Flow
-│   └── _layout.tsx                # Auth Stack Layout
-│
-├── +not-found.tsx                 # 🚫 404 Fallback Screen
-└── _layout.tsx                    # 🌐 Root Layout & Global Providers
+├── _layout.tsx
+├── +not-found.tsx
+├── (auth)/
+│   ├── _layout.tsx
+│   ├── sign-in.tsx
+│   ├── sign-up.tsx
+│   ├── forgot-password.tsx
+│   └── uh-oh.tsx
+└── (app)/
+    ├── _layout.tsx
+    ├── edit-profile.tsx
+    ├── batch/new.tsx
+    ├── machine-registration/new.tsx
+    ├── change-password/
+    │   ├── _layout.tsx
+    │   ├── current-password.tsx
+    │   ├── new-password.tsx
+    │   └── success.tsx
+    └── (tabs)/
+        ├── _layout.tsx
+        ├── index.tsx            # Home
+        ├── profile.tsx          # Account
+        └── machines/
+            ├── _layout.tsx
+            ├── index.tsx
+            └── [id]/
+                ├── index.tsx
+                ├── settings.tsx
+                ├── automation-logs.tsx
+                └── sensors-history.tsx
 ```
 
----
+## Startup and guards
 
-## 🛡️ Root Layout & Auth Guards
+`app/_layout.tsx` loads local fonts, then mounts this provider chain:
 
-The root layout at `app/_layout.tsx` coordinates provider hierarchy and automatic route guarding.
-
-### Provider Chain Order
-
-Providers are wrapped in strict dependency order:
-
-```tsx
-<GestureHandlerRootView style={{ flex: 1 }}>
-  <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-    <ClerkLoaded>
-      <AuthProvider>
-        <QueryClientProvider client={queryClient}>
-          <RootLayoutNav />
-        </QueryClientProvider>
-      </AuthProvider>
-    </ClerkLoaded>
-  </ClerkProvider>
-</GestureHandlerRootView>
+```text
+GestureHandlerRootView
+  ClerkProvider → ClerkLoaded → AuthProvider
+    QueryClientProvider → BottomSheetModalProvider
+      StatusBar + AuthProtectedNavigation + Toast
 ```
 
-### Reactive Route Guard
+1. Wait for `isLoaded`; if signed in, also wait for the normalized user.
+2. Signed-out users outside `(auth)` go to sign-in; that redirect also clears the query cache.
+3. Signed-in users without `user.birthday` go to sign-up to complete onboarding.
+4. Signed-in users with a birthday leave auth routes for the app tabs.
 
-A reactive `useEffect` watches the authentication state (`isAuthenticated` and `isLoading`) and automatically redirects users:
+The protected group also checks the session and birthday. The birthday check is the current completion gate, not comprehensive profile validation.
 
-- If **unauthenticated** and trying to access `(app)` ➔ redirects to `/(auth)/sign-in`.
-- If **authenticated** and currently on `(auth)` ➔ redirects to `/(app)/(tabs)`.
+## Navigation behavior
 
-```tsx
-useEffect(() => {
-  if (isLoading) return;
+The tabs display **Home**, **Machines**, and **Account**. `BottomTabBar` in `src/components/navigation/bottom-tab-bar.tsx` renders icons, labels, active colors, safe-area spacing and native haptics. It does not currently use `expo-blur`.
 
-  const inAuthGroup = segments[0] === '(auth)';
+Machines has a nested headerless stack and `popToTopOnBlur: true`. Batch creation, machine registration, profile editing and password changes sit outside the tab group. Batch creation accepts an optional `machineId`; machine detail routes use `id`.
 
-  if (!isAuthenticated && !inAuthGroup) {
-    router.replace('/(auth)/sign-in');
-  } else if (isAuthenticated && inAuthGroup) {
-    router.replace('/(app)/(tabs)');
-  }
-}, [isAuthenticated, isLoading, segments]);
-```
+Use `useDynamicLayout().scrollPaddingBottom` for tab content and `stackScrollPadding` for full-screen stack flows. Several existing calls still use `as any`; typed routes being enabled does not mean all navigation is statically checked.
 
----
-
-## 🚀 Floating Tab Bar Navigation
-
-The main app tab navigator uses the custom `BottomTabBar` component in `src/components/navigation/bottom-tab-bar.tsx`.
-
-### Key Capabilities
-
-1. **Glassmorphic Effect**: Uses `expo-blur` and backdrop filters for a modern, frosted appearance.
-2. **Safe Area Insets**: Computes bottom spacing dynamically via `useSafeAreaInsets()` so the floating bar stays elevated above home indicator bars across different device form factors.
-3. **Tactile Haptic Feedback**: Triggers `Haptics.impactAsync(ImpactFeedbackStyle.Light)` on tab selection.
-4. **Animated Active Indicators**: Highlights active tabs with emerald branding (`bg-primary`).
+For what each screen does, read [UI & Feature Status](/guide/ui-status).

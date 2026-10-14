@@ -17,6 +17,7 @@ export default defineConfig({
     logo: undefined,
 
     nav: [
+      { text: 'Team Overview', link: '/guide/collaborator-overview' },
       { text: 'Guide', link: '/guide/getting-started' },
       { text: 'Architecture', link: '/guide/architecture' },
       { text: 'Core Systems', link: '/core/authentication' },
@@ -27,9 +28,11 @@ export default defineConfig({
       {
         text: '📖 Overview & Setup',
         items: [
+          { text: 'Collaborator Overview', link: '/guide/collaborator-overview' },
+          { text: 'UI & Feature Status', link: '/guide/ui-status' },
           { text: 'Getting Started', link: '/guide/getting-started' },
           { text: 'Team Setup: pnpm & EAS', link: '/guide/team-setup' },
-          { text: 'Architecture & Layers', link: '/guide/architecture' },
+          { text: 'Architecture & Folder Structure', link: '/guide/architecture' },
           { text: 'Routing & Navigation', link: '/guide/routing-navigation' },
         ],
       },
@@ -47,6 +50,7 @@ export default defineConfig({
       {
         text: '📚 Reference',
         items: [
+          { text: 'Versions & Changes', link: '/reference/versions-and-changes' },
           { text: 'Environment Variables', link: '/reference/env-vars' },
           { text: 'Troubleshooting & FAQ', link: '/reference/troubleshooting' },
         ],
