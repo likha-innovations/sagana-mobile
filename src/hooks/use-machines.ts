@@ -31,9 +31,10 @@ export const machineKeys = {
   history: (id: string) => ['machines', id, 'history'] as const,
 };
 
-export function useMachines() {
+export function useMachines(enabled = true) {
   return useQuery({
     queryKey: machineKeys.all,
+    enabled,
     queryFn: async () => {
       // Simulate network delay
       await new Promise((resolve) => setTimeout(resolve, 300));

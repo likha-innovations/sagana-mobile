@@ -70,16 +70,21 @@ export function useActiveBatch(machineId: string) {
   });
 }
 
-export function useDashboardMetrics() {
-  const machines = useMachines();
-  const batches = useCompostBatches();
-  const completed = useQuery({
+export function useCompletedBatches(enabled = true) {
+  return useQuery({
     queryKey: ["batches", "completed"],
+    enabled,
     queryFn: async () => {
       await new Promise((resolve) => setTimeout(resolve, 150));
       return completedBatchSchema.array().parse(mockData.completed_batches);
     },
   });
+}
+
+export function useDashboardMetrics() {
+  const machines = useMachines();
+  const batches = useCompostBatches();
+  const completed = useCompletedBatches();
   return {
     data:
       completed.data && batches.data && machines.data
