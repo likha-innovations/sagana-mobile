@@ -1,4 +1,9 @@
 import {
+  MetricSkeletons,
+  CompletedBatchSkeletons,
+  MachineSkeletons,
+} from "@/components/dashboard/dashboard-skeletons";
+import {
   View,
   Text,
   ScrollView,
@@ -77,7 +82,7 @@ export default function DashboardScreen() {
               </Pressable>
             </View>
           ) : dashboard.isPending || !metrics ? (
-            <Text className="text-sm font-sans text-foreground">Loading dashboard…</Text>
+            <MetricSkeletons stacked={stackMetrics} />
           ) : (
             <View
               className={
@@ -168,7 +173,7 @@ export default function DashboardScreen() {
                 Batch history unavailable. Use Retry above.
               </Text>
             ) : dashboard.isPending ? (
-              <Text className="text-sm font-sans text-foreground">Loading completed batches…</Text>
+              <CompletedBatchSkeletons />
             ) : dashboard.recentCompleted.length ? (
               <View className="gap-3">
                 {dashboard.recentCompleted.map((batch) => (
@@ -211,7 +216,7 @@ export default function DashboardScreen() {
                 Machines unavailable. Use Retry above.
               </Text>
             ) : machines.isPending ? (
-              <Text className="text-sm font-sans text-foreground">Loading machines…</Text>
+              <MachineSkeletons stacked={stackMetrics} />
             ) : dashboardMachines.length ? (
               <View className="gap-3">
                 {dashboardMachines.map((machine) => (
