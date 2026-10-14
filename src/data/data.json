@@ -8,7 +8,7 @@
       "status": "active",
       "wifi_ssid": "SaganaNet",
       "last_seen": "2026-10-06T10:00:00.000Z",
-      "created_at": "2026-09-23T10:00:00.000Z",
+      "created_at": "2026-07-30T00:00:00.000Z",
       "removed_at": null,
       "latest_readings": {
         "temperature": 57,
@@ -37,7 +37,7 @@
       "status": "active",
       "wifi_ssid": "SaganaNet",
       "last_seen": "2026-10-07T09:00:00.000Z",
-      "created_at": "2026-09-12T10:00:00.000Z",
+      "created_at": "2026-08-11T00:00:00.000Z",
       "removed_at": null,
       "latest_readings": {
         "temperature": 34,
@@ -171,58 +171,2291 @@
       ]
     }
   ],
-  "dashboard_metrics": {
-    "totalCompost": {
-      "value": 110.0,
-      "unit": "kg"
+  "completed_batches": [
+    {
+      "batch_id": "completed-1",
+      "machine_id": "1",
+      "machine_name": "SAGANA-1",
+      "batch_code": "SAGANACB001",
+      "status": "completed",
+      "start_date": "2026-08-31T00:00:00.000Z",
+      "completion_date": "2026-09-21T00:00:00.000Z",
+      "total_weight": 64.2,
+      "final_weight": 56.2,
+      "feedstocks": [
+        {
+          "id": "completed-1-feed-0",
+          "feedstock_id": "history-feed-0",
+          "name": "Coffee Grounds",
+          "category": "Greens",
+          "weight_kg": 10.7
+        },
+        {
+          "id": "completed-1-feed-1",
+          "feedstock_id": "history-feed-1",
+          "name": "Cardboards",
+          "category": "Browns",
+          "weight_kg": 10.7
+        },
+        {
+          "id": "completed-1-feed-2",
+          "feedstock_id": "history-feed-2",
+          "name": "Grass Clippings",
+          "category": "Greens",
+          "weight_kg": 10.7
+        },
+        {
+          "id": "completed-1-feed-3",
+          "feedstock_id": "history-feed-3",
+          "name": "Dried Leaves",
+          "category": "Browns",
+          "weight_kg": 10.7
+        },
+        {
+          "id": "completed-1-feed-4",
+          "feedstock_id": "history-feed-4",
+          "name": "Woodchips",
+          "category": "Browns",
+          "weight_kg": 10.7
+        },
+        {
+          "id": "completed-1-feed-5",
+          "feedstock_id": "history-feed-5",
+          "name": "Vegetable Waste",
+          "category": "Greens",
+          "weight_kg": 10.7
+        }
+      ]
     },
-    "totalGreens": {
-      "value": 40.0,
-      "unit": "kg"
+    {
+      "batch_id": "completed-2",
+      "machine_id": "3",
+      "machine_name": "SAGANA-3",
+      "batch_code": "SAGANACB002",
+      "status": "completed",
+      "start_date": "2026-08-12T00:00:00.000Z",
+      "completion_date": "2026-09-02T00:00:00.000Z",
+      "total_weight": 36,
+      "final_weight": 30,
+      "feedstocks": [
+        {
+          "id": "completed-2-feed-0",
+          "feedstock_id": "history-feed-0",
+          "name": "Coffee Grounds",
+          "category": "Greens",
+          "weight_kg": 6
+        },
+        {
+          "id": "completed-2-feed-1",
+          "feedstock_id": "history-feed-1",
+          "name": "Cardboards",
+          "category": "Browns",
+          "weight_kg": 6
+        },
+        {
+          "id": "completed-2-feed-2",
+          "feedstock_id": "history-feed-2",
+          "name": "Grass Clippings",
+          "category": "Greens",
+          "weight_kg": 6
+        },
+        {
+          "id": "completed-2-feed-3",
+          "feedstock_id": "history-feed-3",
+          "name": "Dried Leaves",
+          "category": "Browns",
+          "weight_kg": 6
+        },
+        {
+          "id": "completed-2-feed-4",
+          "feedstock_id": "history-feed-4",
+          "name": "Woodchips",
+          "category": "Browns",
+          "weight_kg": 6
+        },
+        {
+          "id": "completed-2-feed-5",
+          "feedstock_id": "history-feed-5",
+          "name": "Vegetable Waste",
+          "category": "Greens",
+          "weight_kg": 6
+        }
+      ]
     },
-    "totalBrowns": {
-      "value": 70.0,
-      "unit": "kg"
+    {
+      "batch_id": "completed-3",
+      "machine_id": "1",
+      "machine_name": "SAGANA-1",
+      "batch_code": "SAGANACB003",
+      "status": "completed",
+      "start_date": "2026-07-31T00:00:00.000Z",
+      "completion_date": "2026-08-21T00:00:00.000Z",
+      "total_weight": 25,
+      "final_weight": 20,
+      "feedstocks": [
+        {
+          "id": "completed-3-feed-0",
+          "feedstock_id": "history-feed-0",
+          "name": "Coffee Grounds",
+          "category": "Greens",
+          "weight_kg": 4.16
+        },
+        {
+          "id": "completed-3-feed-1",
+          "feedstock_id": "history-feed-1",
+          "name": "Cardboards",
+          "category": "Browns",
+          "weight_kg": 4.16
+        },
+        {
+          "id": "completed-3-feed-2",
+          "feedstock_id": "history-feed-2",
+          "name": "Grass Clippings",
+          "category": "Greens",
+          "weight_kg": 4.16
+        },
+        {
+          "id": "completed-3-feed-3",
+          "feedstock_id": "history-feed-3",
+          "name": "Dried Leaves",
+          "category": "Browns",
+          "weight_kg": 4.16
+        },
+        {
+          "id": "completed-3-feed-4",
+          "feedstock_id": "history-feed-4",
+          "name": "Woodchips",
+          "category": "Browns",
+          "weight_kg": 4.16
+        },
+        {
+          "id": "completed-3-feed-5",
+          "feedstock_id": "history-feed-5",
+          "name": "Vegetable Waste",
+          "category": "Greens",
+          "weight_kg": 4.2
+        }
+      ]
     }
-  },
-  "automation_logs": [
+  ],
+  "history_readings": [
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T00:00:00.000Z",
+      "temperature": 32,
+      "moisture": 42,
+      "oxygen": 18,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T01:00:00.000Z",
+      "temperature": 32.1,
+      "moisture": 42,
+      "oxygen": 18.04,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T02:00:00.000Z",
+      "temperature": 32.2,
+      "moisture": 42.1,
+      "oxygen": 18.08,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T03:00:00.000Z",
+      "temperature": 32.3,
+      "moisture": 42.1,
+      "oxygen": 18.13,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T04:00:00.000Z",
+      "temperature": 32.4,
+      "moisture": 42.2,
+      "oxygen": 18.17,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T05:00:00.000Z",
+      "temperature": 32.5,
+      "moisture": 42.3,
+      "oxygen": 18.21,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T06:00:00.000Z",
+      "temperature": 32.6,
+      "moisture": 42.3,
+      "oxygen": 18.25,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T07:00:00.000Z",
+      "temperature": 32.7,
+      "moisture": 42.4,
+      "oxygen": 18.29,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T08:00:00.000Z",
+      "temperature": 32.8,
+      "moisture": 42.4,
+      "oxygen": 18.33,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T10:00:00.000Z",
+      "temperature": 33,
+      "moisture": 42.5,
+      "oxygen": 18.42,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T11:00:00.000Z",
+      "temperature": 33.1,
+      "moisture": 42.5,
+      "oxygen": 18.46,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T12:00:00.000Z",
+      "temperature": 33.2,
+      "moisture": 42.6,
+      "oxygen": 18.5,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T13:00:00.000Z",
+      "temperature": 33.3,
+      "moisture": 42.6,
+      "oxygen": 18.54,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T14:00:00.000Z",
+      "temperature": 33.4,
+      "moisture": 42.7,
+      "oxygen": 18.58,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T15:00:00.000Z",
+      "temperature": 33.5,
+      "moisture": 42.8,
+      "oxygen": 18.63,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T16:00:00.000Z",
+      "temperature": 33.6,
+      "moisture": 42.8,
+      "oxygen": 18.67,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T17:00:00.000Z",
+      "temperature": 33.7,
+      "moisture": 42.9,
+      "oxygen": 18.71,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T18:00:00.000Z",
+      "temperature": 33.8,
+      "moisture": 42.9,
+      "oxygen": 18.75,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T19:00:00.000Z",
+      "temperature": 33.9,
+      "moisture": 43,
+      "oxygen": 18.79,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T20:00:00.000Z",
+      "temperature": 34,
+      "moisture": 43,
+      "oxygen": 18.83,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T21:00:00.000Z",
+      "temperature": 34.1,
+      "moisture": 43,
+      "oxygen": 18.88,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T22:00:00.000Z",
+      "temperature": 34.2,
+      "moisture": 43.1,
+      "oxygen": 18.92,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-08-31T23:00:00.000Z",
+      "temperature": 34.3,
+      "moisture": 43.1,
+      "oxygen": 18.96,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T00:00:00.000Z",
+      "temperature": 49.9,
+      "moisture": 47,
+      "oxygen": 18,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T01:00:00.000Z",
+      "temperature": 50,
+      "moisture": 47,
+      "oxygen": 18.04,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T02:00:00.000Z",
+      "temperature": 50.1,
+      "moisture": 47.1,
+      "oxygen": 18.08,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T03:00:00.000Z",
+      "temperature": 50.2,
+      "moisture": 47.1,
+      "oxygen": 18.13,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T04:00:00.000Z",
+      "temperature": 50.3,
+      "moisture": 47.2,
+      "oxygen": 18.17,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T05:00:00.000Z",
+      "temperature": 50.4,
+      "moisture": 47.3,
+      "oxygen": 18.21,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T06:00:00.000Z",
+      "temperature": 50.5,
+      "moisture": 47.3,
+      "oxygen": 18.25,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T07:00:00.000Z",
+      "temperature": 50.6,
+      "moisture": 47.4,
+      "oxygen": 18.29,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T08:00:00.000Z",
+      "temperature": 50.7,
+      "moisture": 47.4,
+      "oxygen": 18.33,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T10:00:00.000Z",
+      "temperature": 50.9,
+      "moisture": 47.5,
+      "oxygen": 18.42,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T11:00:00.000Z",
+      "temperature": 51,
+      "moisture": 47.5,
+      "oxygen": 18.46,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T12:00:00.000Z",
+      "temperature": 51.1,
+      "moisture": 47.6,
+      "oxygen": 18.5,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T13:00:00.000Z",
+      "temperature": 51.2,
+      "moisture": 47.6,
+      "oxygen": 18.54,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T14:00:00.000Z",
+      "temperature": 51.3,
+      "moisture": 47.7,
+      "oxygen": 18.58,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T15:00:00.000Z",
+      "temperature": 51.4,
+      "moisture": 47.8,
+      "oxygen": 18.63,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T16:00:00.000Z",
+      "temperature": 51.5,
+      "moisture": 47.8,
+      "oxygen": 18.67,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T17:00:00.000Z",
+      "temperature": 51.6,
+      "moisture": 47.9,
+      "oxygen": 18.71,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T18:00:00.000Z",
+      "temperature": 51.7,
+      "moisture": 47.9,
+      "oxygen": 18.75,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T19:00:00.000Z",
+      "temperature": 51.8,
+      "moisture": 48,
+      "oxygen": 18.79,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T20:00:00.000Z",
+      "temperature": 51.9,
+      "moisture": 48,
+      "oxygen": 18.83,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T21:00:00.000Z",
+      "temperature": 52,
+      "moisture": 48,
+      "oxygen": 18.88,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T22:00:00.000Z",
+      "temperature": 52.1,
+      "moisture": 48.1,
+      "oxygen": 18.92,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-10T23:00:00.000Z",
+      "temperature": 52.2,
+      "moisture": 48.1,
+      "oxygen": 18.96,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T00:00:00.000Z",
+      "temperature": 34.7,
+      "moisture": 52,
+      "oxygen": 18,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T01:00:00.000Z",
+      "temperature": 34.8,
+      "moisture": 52,
+      "oxygen": 18.04,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T02:00:00.000Z",
+      "temperature": 34.9,
+      "moisture": 52.1,
+      "oxygen": 18.08,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T03:00:00.000Z",
+      "temperature": 35,
+      "moisture": 52.1,
+      "oxygen": 18.13,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T04:00:00.000Z",
+      "temperature": 35.1,
+      "moisture": 52.2,
+      "oxygen": 18.17,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T05:00:00.000Z",
+      "temperature": 35.2,
+      "moisture": 52.3,
+      "oxygen": 18.21,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T06:00:00.000Z",
+      "temperature": 35.3,
+      "moisture": 52.3,
+      "oxygen": 18.25,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T07:00:00.000Z",
+      "temperature": 35.4,
+      "moisture": 52.4,
+      "oxygen": 18.29,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T08:00:00.000Z",
+      "temperature": 35.5,
+      "moisture": 52.4,
+      "oxygen": 18.33,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T10:00:00.000Z",
+      "temperature": 35.7,
+      "moisture": 52.5,
+      "oxygen": 18.42,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T11:00:00.000Z",
+      "temperature": 35.8,
+      "moisture": 52.5,
+      "oxygen": 18.46,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T12:00:00.000Z",
+      "temperature": 35.9,
+      "moisture": 52.6,
+      "oxygen": 18.5,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T13:00:00.000Z",
+      "temperature": 36,
+      "moisture": 52.6,
+      "oxygen": 18.54,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T14:00:00.000Z",
+      "temperature": 36.1,
+      "moisture": 52.7,
+      "oxygen": 18.58,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T15:00:00.000Z",
+      "temperature": 36.2,
+      "moisture": 52.8,
+      "oxygen": 18.63,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T16:00:00.000Z",
+      "temperature": 36.3,
+      "moisture": 52.8,
+      "oxygen": 18.67,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T17:00:00.000Z",
+      "temperature": 36.4,
+      "moisture": 52.9,
+      "oxygen": 18.71,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T18:00:00.000Z",
+      "temperature": 36.5,
+      "moisture": 52.9,
+      "oxygen": 18.75,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T19:00:00.000Z",
+      "temperature": 36.6,
+      "moisture": 53,
+      "oxygen": 18.79,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T20:00:00.000Z",
+      "temperature": 36.7,
+      "moisture": 53,
+      "oxygen": 18.83,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T21:00:00.000Z",
+      "temperature": 36.8,
+      "moisture": 53,
+      "oxygen": 18.88,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T22:00:00.000Z",
+      "temperature": 36.9,
+      "moisture": 53.1,
+      "oxygen": 18.92,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-1",
+      "recorded_at": "2026-09-20T23:00:00.000Z",
+      "temperature": 37,
+      "moisture": 53.1,
+      "oxygen": 18.96,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T00:00:00.000Z",
+      "temperature": 33,
+      "moisture": 42,
+      "oxygen": 18,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T01:00:00.000Z",
+      "temperature": 33.1,
+      "moisture": 42,
+      "oxygen": 18.04,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T02:00:00.000Z",
+      "temperature": 33.2,
+      "moisture": 42.1,
+      "oxygen": 18.08,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T03:00:00.000Z",
+      "temperature": 33.3,
+      "moisture": 42.1,
+      "oxygen": 18.13,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T04:00:00.000Z",
+      "temperature": 33.4,
+      "moisture": 42.2,
+      "oxygen": 18.17,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T05:00:00.000Z",
+      "temperature": 33.5,
+      "moisture": 42.3,
+      "oxygen": 18.21,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T06:00:00.000Z",
+      "temperature": 33.6,
+      "moisture": 42.3,
+      "oxygen": 18.25,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T07:00:00.000Z",
+      "temperature": 33.7,
+      "moisture": 42.4,
+      "oxygen": 18.29,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T08:00:00.000Z",
+      "temperature": 33.8,
+      "moisture": 42.4,
+      "oxygen": 18.33,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T10:00:00.000Z",
+      "temperature": 34,
+      "moisture": 42.5,
+      "oxygen": 18.42,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T11:00:00.000Z",
+      "temperature": 34.1,
+      "moisture": 42.5,
+      "oxygen": 18.46,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T12:00:00.000Z",
+      "temperature": 34.2,
+      "moisture": 42.6,
+      "oxygen": 18.5,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T13:00:00.000Z",
+      "temperature": 34.3,
+      "moisture": 42.6,
+      "oxygen": 18.54,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T14:00:00.000Z",
+      "temperature": 34.4,
+      "moisture": 42.7,
+      "oxygen": 18.58,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T15:00:00.000Z",
+      "temperature": 34.5,
+      "moisture": 42.8,
+      "oxygen": 18.63,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T16:00:00.000Z",
+      "temperature": 34.6,
+      "moisture": 42.8,
+      "oxygen": 18.67,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T17:00:00.000Z",
+      "temperature": 34.7,
+      "moisture": 42.9,
+      "oxygen": 18.71,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T18:00:00.000Z",
+      "temperature": 34.8,
+      "moisture": 42.9,
+      "oxygen": 18.75,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T19:00:00.000Z",
+      "temperature": 34.9,
+      "moisture": 43,
+      "oxygen": 18.79,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T20:00:00.000Z",
+      "temperature": 35,
+      "moisture": 43,
+      "oxygen": 18.83,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T21:00:00.000Z",
+      "temperature": 35.1,
+      "moisture": 43,
+      "oxygen": 18.88,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T22:00:00.000Z",
+      "temperature": 35.2,
+      "moisture": 43.1,
+      "oxygen": 18.92,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-12T23:00:00.000Z",
+      "temperature": 35.3,
+      "moisture": 43.1,
+      "oxygen": 18.96,
+      "co2": 0.03,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T00:00:00.000Z",
+      "temperature": 50.9,
+      "moisture": 47,
+      "oxygen": 18,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T01:00:00.000Z",
+      "temperature": 51,
+      "moisture": 47,
+      "oxygen": 18.04,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T02:00:00.000Z",
+      "temperature": 51.1,
+      "moisture": 47.1,
+      "oxygen": 18.08,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T03:00:00.000Z",
+      "temperature": 51.2,
+      "moisture": 47.1,
+      "oxygen": 18.13,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T04:00:00.000Z",
+      "temperature": 51.3,
+      "moisture": 47.2,
+      "oxygen": 18.17,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T05:00:00.000Z",
+      "temperature": 51.4,
+      "moisture": 47.3,
+      "oxygen": 18.21,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T06:00:00.000Z",
+      "temperature": 51.5,
+      "moisture": 47.3,
+      "oxygen": 18.25,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T07:00:00.000Z",
+      "temperature": 51.6,
+      "moisture": 47.4,
+      "oxygen": 18.29,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T08:00:00.000Z",
+      "temperature": 51.7,
+      "moisture": 47.4,
+      "oxygen": 18.33,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T10:00:00.000Z",
+      "temperature": 51.9,
+      "moisture": 47.5,
+      "oxygen": 18.42,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T11:00:00.000Z",
+      "temperature": 52,
+      "moisture": 47.5,
+      "oxygen": 18.46,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T12:00:00.000Z",
+      "temperature": 52.1,
+      "moisture": 47.6,
+      "oxygen": 18.5,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T13:00:00.000Z",
+      "temperature": 52.2,
+      "moisture": 47.6,
+      "oxygen": 18.54,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T14:00:00.000Z",
+      "temperature": 52.3,
+      "moisture": 47.7,
+      "oxygen": 18.58,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T15:00:00.000Z",
+      "temperature": 52.4,
+      "moisture": 47.8,
+      "oxygen": 18.63,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T16:00:00.000Z",
+      "temperature": 52.5,
+      "moisture": 47.8,
+      "oxygen": 18.67,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T17:00:00.000Z",
+      "temperature": 52.6,
+      "moisture": 47.9,
+      "oxygen": 18.71,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T18:00:00.000Z",
+      "temperature": 52.7,
+      "moisture": 47.9,
+      "oxygen": 18.75,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T19:00:00.000Z",
+      "temperature": 52.8,
+      "moisture": 48,
+      "oxygen": 18.79,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T20:00:00.000Z",
+      "temperature": 52.9,
+      "moisture": 48,
+      "oxygen": 18.83,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T21:00:00.000Z",
+      "temperature": 53,
+      "moisture": 48,
+      "oxygen": 18.88,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T22:00:00.000Z",
+      "temperature": 53.1,
+      "moisture": 48.1,
+      "oxygen": 18.92,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-08-22T23:00:00.000Z",
+      "temperature": 53.2,
+      "moisture": 48.1,
+      "oxygen": 18.96,
+      "co2": 0.04,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T00:00:00.000Z",
+      "temperature": 35.7,
+      "moisture": 52,
+      "oxygen": 18,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T01:00:00.000Z",
+      "temperature": 35.8,
+      "moisture": 52,
+      "oxygen": 18.04,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T02:00:00.000Z",
+      "temperature": 35.9,
+      "moisture": 52.1,
+      "oxygen": 18.08,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T03:00:00.000Z",
+      "temperature": 36,
+      "moisture": 52.1,
+      "oxygen": 18.13,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T04:00:00.000Z",
+      "temperature": 36.1,
+      "moisture": 52.2,
+      "oxygen": 18.17,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T05:00:00.000Z",
+      "temperature": 36.2,
+      "moisture": 52.3,
+      "oxygen": 18.21,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T06:00:00.000Z",
+      "temperature": 36.3,
+      "moisture": 52.3,
+      "oxygen": 18.25,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T07:00:00.000Z",
+      "temperature": 36.4,
+      "moisture": 52.4,
+      "oxygen": 18.29,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T08:00:00.000Z",
+      "temperature": 36.5,
+      "moisture": 52.4,
+      "oxygen": 18.33,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T10:00:00.000Z",
+      "temperature": 36.7,
+      "moisture": 52.5,
+      "oxygen": 18.42,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T11:00:00.000Z",
+      "temperature": 36.8,
+      "moisture": 52.5,
+      "oxygen": 18.46,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T12:00:00.000Z",
+      "temperature": 36.9,
+      "moisture": 52.6,
+      "oxygen": 18.5,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T13:00:00.000Z",
+      "temperature": 37,
+      "moisture": 52.6,
+      "oxygen": 18.54,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T14:00:00.000Z",
+      "temperature": 37.1,
+      "moisture": 52.7,
+      "oxygen": 18.58,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T15:00:00.000Z",
+      "temperature": 37.2,
+      "moisture": 52.8,
+      "oxygen": 18.63,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T16:00:00.000Z",
+      "temperature": 37.3,
+      "moisture": 52.8,
+      "oxygen": 18.67,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T17:00:00.000Z",
+      "temperature": 37.4,
+      "moisture": 52.9,
+      "oxygen": 18.71,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T18:00:00.000Z",
+      "temperature": 37.5,
+      "moisture": 52.9,
+      "oxygen": 18.75,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T19:00:00.000Z",
+      "temperature": 37.6,
+      "moisture": 53,
+      "oxygen": 18.79,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T20:00:00.000Z",
+      "temperature": 37.7,
+      "moisture": 53,
+      "oxygen": 18.83,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T21:00:00.000Z",
+      "temperature": 37.8,
+      "moisture": 53,
+      "oxygen": 18.88,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T22:00:00.000Z",
+      "temperature": 37.9,
+      "moisture": 53.1,
+      "oxygen": 18.92,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-2",
+      "recorded_at": "2026-09-01T23:00:00.000Z",
+      "temperature": 38,
+      "moisture": 53.1,
+      "oxygen": 18.96,
+      "co2": 0.05,
+      "machine_id": "3"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T00:00:00.000Z",
+      "temperature": 34,
+      "moisture": 42,
+      "oxygen": 18,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T01:00:00.000Z",
+      "temperature": 34.1,
+      "moisture": 42,
+      "oxygen": 18.04,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T02:00:00.000Z",
+      "temperature": 34.2,
+      "moisture": 42.1,
+      "oxygen": 18.08,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T03:00:00.000Z",
+      "temperature": 34.3,
+      "moisture": 42.1,
+      "oxygen": 18.13,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T04:00:00.000Z",
+      "temperature": 34.4,
+      "moisture": 42.2,
+      "oxygen": 18.17,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T05:00:00.000Z",
+      "temperature": 34.5,
+      "moisture": 42.3,
+      "oxygen": 18.21,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T06:00:00.000Z",
+      "temperature": 34.6,
+      "moisture": 42.3,
+      "oxygen": 18.25,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T07:00:00.000Z",
+      "temperature": 34.7,
+      "moisture": 42.4,
+      "oxygen": 18.29,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T08:00:00.000Z",
+      "temperature": 34.8,
+      "moisture": 42.4,
+      "oxygen": 18.33,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T10:00:00.000Z",
+      "temperature": 35,
+      "moisture": 42.5,
+      "oxygen": 18.42,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T11:00:00.000Z",
+      "temperature": 35.1,
+      "moisture": 42.5,
+      "oxygen": 18.46,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T12:00:00.000Z",
+      "temperature": 35.2,
+      "moisture": 42.6,
+      "oxygen": 18.5,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T13:00:00.000Z",
+      "temperature": 35.3,
+      "moisture": 42.6,
+      "oxygen": 18.54,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T14:00:00.000Z",
+      "temperature": 35.4,
+      "moisture": 42.7,
+      "oxygen": 18.58,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T15:00:00.000Z",
+      "temperature": 35.5,
+      "moisture": 42.8,
+      "oxygen": 18.63,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T16:00:00.000Z",
+      "temperature": 35.6,
+      "moisture": 42.8,
+      "oxygen": 18.67,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T17:00:00.000Z",
+      "temperature": 35.7,
+      "moisture": 42.9,
+      "oxygen": 18.71,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T18:00:00.000Z",
+      "temperature": 35.8,
+      "moisture": 42.9,
+      "oxygen": 18.75,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T19:00:00.000Z",
+      "temperature": 35.9,
+      "moisture": 43,
+      "oxygen": 18.79,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T20:00:00.000Z",
+      "temperature": 36,
+      "moisture": 43,
+      "oxygen": 18.83,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T21:00:00.000Z",
+      "temperature": 36.1,
+      "moisture": 43,
+      "oxygen": 18.88,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T22:00:00.000Z",
+      "temperature": 36.2,
+      "moisture": 43.1,
+      "oxygen": 18.92,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-07-31T23:00:00.000Z",
+      "temperature": 36.3,
+      "moisture": 43.1,
+      "oxygen": 18.96,
+      "co2": 0.03,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T00:00:00.000Z",
+      "temperature": 51.9,
+      "moisture": 47,
+      "oxygen": 18,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T01:00:00.000Z",
+      "temperature": 52,
+      "moisture": 47,
+      "oxygen": 18.04,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T02:00:00.000Z",
+      "temperature": 52.1,
+      "moisture": 47.1,
+      "oxygen": 18.08,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T03:00:00.000Z",
+      "temperature": 52.2,
+      "moisture": 47.1,
+      "oxygen": 18.13,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T04:00:00.000Z",
+      "temperature": 52.3,
+      "moisture": 47.2,
+      "oxygen": 18.17,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T05:00:00.000Z",
+      "temperature": 52.4,
+      "moisture": 47.3,
+      "oxygen": 18.21,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T06:00:00.000Z",
+      "temperature": 52.5,
+      "moisture": 47.3,
+      "oxygen": 18.25,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T07:00:00.000Z",
+      "temperature": 52.6,
+      "moisture": 47.4,
+      "oxygen": 18.29,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T08:00:00.000Z",
+      "temperature": 52.7,
+      "moisture": 47.4,
+      "oxygen": 18.33,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T10:00:00.000Z",
+      "temperature": 52.9,
+      "moisture": 47.5,
+      "oxygen": 18.42,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T11:00:00.000Z",
+      "temperature": 53,
+      "moisture": 47.5,
+      "oxygen": 18.46,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T12:00:00.000Z",
+      "temperature": 53.1,
+      "moisture": 47.6,
+      "oxygen": 18.5,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T13:00:00.000Z",
+      "temperature": 53.2,
+      "moisture": 47.6,
+      "oxygen": 18.54,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T14:00:00.000Z",
+      "temperature": 53.3,
+      "moisture": 47.7,
+      "oxygen": 18.58,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T15:00:00.000Z",
+      "temperature": 53.4,
+      "moisture": 47.8,
+      "oxygen": 18.63,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T16:00:00.000Z",
+      "temperature": 53.5,
+      "moisture": 47.8,
+      "oxygen": 18.67,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T17:00:00.000Z",
+      "temperature": 53.6,
+      "moisture": 47.9,
+      "oxygen": 18.71,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T18:00:00.000Z",
+      "temperature": 53.7,
+      "moisture": 47.9,
+      "oxygen": 18.75,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T19:00:00.000Z",
+      "temperature": 53.8,
+      "moisture": 48,
+      "oxygen": 18.79,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T20:00:00.000Z",
+      "temperature": 53.9,
+      "moisture": 48,
+      "oxygen": 18.83,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T21:00:00.000Z",
+      "temperature": 54,
+      "moisture": 48,
+      "oxygen": 18.88,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T22:00:00.000Z",
+      "temperature": 54.1,
+      "moisture": 48.1,
+      "oxygen": 18.92,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-10T23:00:00.000Z",
+      "temperature": 54.2,
+      "moisture": 48.1,
+      "oxygen": 18.96,
+      "co2": 0.04,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T00:00:00.000Z",
+      "temperature": 36.7,
+      "moisture": 52,
+      "oxygen": 18,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T01:00:00.000Z",
+      "temperature": 36.8,
+      "moisture": 52,
+      "oxygen": 18.04,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T02:00:00.000Z",
+      "temperature": 36.9,
+      "moisture": 52.1,
+      "oxygen": 18.08,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T03:00:00.000Z",
+      "temperature": 37,
+      "moisture": 52.1,
+      "oxygen": 18.13,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T04:00:00.000Z",
+      "temperature": 37.1,
+      "moisture": 52.2,
+      "oxygen": 18.17,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T05:00:00.000Z",
+      "temperature": 37.2,
+      "moisture": 52.3,
+      "oxygen": 18.21,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T06:00:00.000Z",
+      "temperature": 37.3,
+      "moisture": 52.3,
+      "oxygen": 18.25,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T07:00:00.000Z",
+      "temperature": 37.4,
+      "moisture": 52.4,
+      "oxygen": 18.29,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T08:00:00.000Z",
+      "temperature": 37.5,
+      "moisture": 52.4,
+      "oxygen": 18.33,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T10:00:00.000Z",
+      "temperature": 37.7,
+      "moisture": 52.5,
+      "oxygen": 18.42,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T11:00:00.000Z",
+      "temperature": 37.8,
+      "moisture": 52.5,
+      "oxygen": 18.46,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T12:00:00.000Z",
+      "temperature": 37.9,
+      "moisture": 52.6,
+      "oxygen": 18.5,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T13:00:00.000Z",
+      "temperature": 38,
+      "moisture": 52.6,
+      "oxygen": 18.54,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T14:00:00.000Z",
+      "temperature": 38.1,
+      "moisture": 52.7,
+      "oxygen": 18.58,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T15:00:00.000Z",
+      "temperature": 38.2,
+      "moisture": 52.8,
+      "oxygen": 18.63,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T16:00:00.000Z",
+      "temperature": 38.3,
+      "moisture": 52.8,
+      "oxygen": 18.67,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T17:00:00.000Z",
+      "temperature": 38.4,
+      "moisture": 52.9,
+      "oxygen": 18.71,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T18:00:00.000Z",
+      "temperature": 38.5,
+      "moisture": 52.9,
+      "oxygen": 18.75,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T19:00:00.000Z",
+      "temperature": 38.6,
+      "moisture": 53,
+      "oxygen": 18.79,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T20:00:00.000Z",
+      "temperature": 38.7,
+      "moisture": 53,
+      "oxygen": 18.83,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T21:00:00.000Z",
+      "temperature": 38.8,
+      "moisture": 53,
+      "oxygen": 18.88,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T22:00:00.000Z",
+      "temperature": 38.9,
+      "moisture": 53.1,
+      "oxygen": 18.92,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "batch_id": "completed-3",
+      "recorded_at": "2026-08-20T23:00:00.000Z",
+      "temperature": 39,
+      "moisture": 53.1,
+      "oxygen": 18.96,
+      "co2": 0.05,
+      "machine_id": "1"
+    },
+    {
+      "machine_id": "1",
+      "batch_id": null,
+      "recorded_at": "2026-09-29T16:00:00.000Z",
+      "temperature": 20,
+      "moisture": 30,
+      "oxygen": 20,
+      "co2": 10
+    },
+    {
+      "machine_id": "1",
+      "batch_id": null,
+      "recorded_at": "2026-09-29T20:00:00.000Z",
+      "temperature": 30,
+      "moisture": 40,
+      "oxygen": 30,
+      "co2": 20
+    },
+    {
+      "machine_id": "1",
+      "batch_id": null,
+      "recorded_at": "2026-09-30T00:00:00.000Z",
+      "temperature": 45,
+      "moisture": 50,
+      "oxygen": 45,
+      "co2": 35
+    },
+    {
+      "machine_id": "1",
+      "batch_id": null,
+      "recorded_at": "2026-09-30T04:00:00.000Z",
+      "temperature": 55,
+      "moisture": 60,
+      "oxygen": 60,
+      "co2": 45
+    },
+    {
+      "machine_id": "1",
+      "batch_id": null,
+      "recorded_at": "2026-09-30T08:00:00.000Z",
+      "temperature": 60,
+      "moisture": 55,
+      "oxygen": 65,
+      "co2": 50
+    },
+    {
+      "machine_id": "1",
+      "batch_id": null,
+      "recorded_at": "2026-09-30T12:00:00.000Z",
+      "temperature": 45,
+      "moisture": 45,
+      "oxygen": 50,
+      "co2": 40
+    },
+    {
+      "machine_id": "1",
+      "batch_id": null,
+      "recorded_at": "2026-09-30T16:00:00.000Z",
+      "temperature": 40,
+      "moisture": 50,
+      "oxygen": 55,
+      "co2": 45
+    }
+  ],
+  "history_events": [
+    {
+      "id": "completed-1-log-0",
+      "batch_id": "completed-1",
+      "type": "blower_on",
+      "message": "The air blower has been turned on and will be running for 5 minutes.",
+      "created_at": "2026-09-20T23:00:00.000Z",
+      "machine_id": "1"
+    },
+    {
+      "id": "completed-1-log-1",
+      "batch_id": "completed-1",
+      "type": "blower_off",
+      "message": "The air blower has been turned off and will be turned off for 15 minutes.",
+      "created_at": "2026-09-20T22:00:00.000Z",
+      "machine_id": "1"
+    },
+    {
+      "id": "completed-1-log-2",
+      "batch_id": "completed-1",
+      "type": "sprinkler_on",
+      "message": "The sprinkler has been turned on and will be running until moisture hits 60%.",
+      "created_at": "2026-09-20T21:00:00.000Z",
+      "machine_id": "1"
+    },
+    {
+      "id": "completed-1-log-3",
+      "batch_id": "completed-1",
+      "type": "sprinkler_off",
+      "message": "The sprinkler has been turned off as it already reached 60%.",
+      "created_at": "2026-09-20T20:00:00.000Z",
+      "machine_id": "1"
+    },
+    {
+      "id": "completed-1-log-4",
+      "batch_id": "completed-1",
+      "type": "emergency_stop",
+      "message": "The air blower has been stopped due to an emergency.",
+      "created_at": "2026-09-20T19:00:00.000Z",
+      "machine_id": "1"
+    },
+    {
+      "id": "completed-2-log-0",
+      "batch_id": "completed-2",
+      "type": "blower_on",
+      "message": "The air blower has been turned on and will be running for 5 minutes.",
+      "created_at": "2026-09-01T23:00:00.000Z",
+      "machine_id": "3"
+    },
+    {
+      "id": "completed-2-log-1",
+      "batch_id": "completed-2",
+      "type": "blower_off",
+      "message": "The air blower has been turned off and will be turned off for 15 minutes.",
+      "created_at": "2026-09-01T22:00:00.000Z",
+      "machine_id": "3"
+    },
+    {
+      "id": "completed-2-log-2",
+      "batch_id": "completed-2",
+      "type": "sprinkler_on",
+      "message": "The sprinkler has been turned on and will be running until moisture hits 60%.",
+      "created_at": "2026-09-01T21:00:00.000Z",
+      "machine_id": "3"
+    },
+    {
+      "id": "completed-2-log-3",
+      "batch_id": "completed-2",
+      "type": "sprinkler_off",
+      "message": "The sprinkler has been turned off as it already reached 60%.",
+      "created_at": "2026-09-01T20:00:00.000Z",
+      "machine_id": "3"
+    },
+    {
+      "id": "completed-2-log-4",
+      "batch_id": "completed-2",
+      "type": "emergency_stop",
+      "message": "The air blower has been stopped due to an emergency.",
+      "created_at": "2026-09-01T19:00:00.000Z",
+      "machine_id": "3"
+    },
+    {
+      "id": "completed-3-log-0",
+      "batch_id": "completed-3",
+      "type": "blower_on",
+      "message": "The air blower has been turned on and will be running for 5 minutes.",
+      "created_at": "2026-08-20T23:00:00.000Z",
+      "machine_id": "1"
+    },
+    {
+      "id": "completed-3-log-1",
+      "batch_id": "completed-3",
+      "type": "blower_off",
+      "message": "The air blower has been turned off and will be turned off for 15 minutes.",
+      "created_at": "2026-08-20T22:00:00.000Z",
+      "machine_id": "1"
+    },
+    {
+      "id": "completed-3-log-2",
+      "batch_id": "completed-3",
+      "type": "sprinkler_on",
+      "message": "The sprinkler has been turned on and will be running until moisture hits 60%.",
+      "created_at": "2026-08-20T21:00:00.000Z",
+      "machine_id": "1"
+    },
+    {
+      "id": "completed-3-log-3",
+      "batch_id": "completed-3",
+      "type": "sprinkler_off",
+      "message": "The sprinkler has been turned off as it already reached 60%.",
+      "created_at": "2026-08-20T20:00:00.000Z",
+      "machine_id": "1"
+    },
+    {
+      "id": "completed-3-log-4",
+      "batch_id": "completed-3",
+      "type": "emergency_stop",
+      "message": "The air blower has been stopped due to an emergency.",
+      "created_at": "2026-08-20T19:00:00.000Z",
+      "machine_id": "1"
+    },
     {
       "id": "1",
       "machine_id": "1",
       "type": "blower_on",
       "message": "The air blower has been turned on to maintain temperature.",
-      "created_at": "2026-10-06T19:19:00.000Z"
+      "created_at": "2026-10-06T19:19:00.000Z",
+      "batch_id": null
     },
     {
       "id": "2",
       "machine_id": "1",
       "type": "sprinkler_on",
       "message": "The sprinkler has been turned on to increase moisture.",
-      "created_at": "2026-10-06T19:06:00.000Z"
+      "created_at": "2026-10-06T19:06:00.000Z",
+      "batch_id": null
     },
     {
       "id": "3",
       "machine_id": "1",
       "type": "emergency_stop",
       "message": "The air blower has been stopped due to an emergency.",
-      "created_at": "2026-10-06T18:21:00.000Z"
+      "created_at": "2026-10-06T18:21:00.000Z",
+      "batch_id": null
     },
     {
       "id": "4",
       "machine_id": "1",
       "type": "ventilation_adjust",
       "message": "Ventilation system adjusted for optimal oxygen levels.",
-      "created_at": "2026-10-06T16:21:00.000Z"
+      "created_at": "2026-10-06T16:21:00.000Z",
+      "batch_id": null
     }
   ],
-  "sensor_history": [
+  "machine_overviews": [
     {
       "machine_id": "1",
-      "date": "2026-09-30",
-      "temperature": [20, 30, 45, 55, 60, 45, 40],
-      "moisture": [30, 40, 50, 60, 55, 45, 50],
-      "oxygen": [20, 30, 45, 60, 65, 50, 55],
-      "co2": [10, 20, 35, 45, 50, 40, 45]
+      "batch_id": "b-1",
+      "current_weight": 47.8,
+      "recorded_at": "2026-10-06T19:30:00.000Z",
+      "automations": [
+        {
+          "kind": "aeration",
+          "enabled": true,
+          "until": "6:07"
+        },
+        {
+          "kind": "sprinkler",
+          "enabled": false,
+          "until": "45%"
+        }
+      ]
+    },
+    {
+      "machine_id": "3",
+      "batch_id": "b-2",
+      "current_weight": 39.4,
+      "recorded_at": "2026-10-07T09:00:00.000Z",
+      "automations": [
+        {
+          "kind": "aeration",
+          "enabled": true,
+          "until": "6:07"
+        },
+        {
+          "kind": "sprinkler",
+          "enabled": false,
+          "until": "45%"
+        }
+      ]
     }
   ]
 }

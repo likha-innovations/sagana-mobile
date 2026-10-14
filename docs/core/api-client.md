@@ -1,77 +1,27 @@
 # API Client & Contracts
 
-Sagana Mobile uses a typed native `fetch` wrapper in `src/api/client.ts`. Axios and other heavy HTTP libraries are strictly avoided.
+`src/api/client.ts` wraps native `fetch` with typed helpers: `api.get`, `post`, `patch`, `put` and `delete`.
 
----
+## Current endpoints
 
-## 📦 Unified API Response Envelope
+Paths are relative to the configured API base URL.
 
-All backend endpoints wrap responses in a standard envelope contract:
+| Wrapper | Endpoint | Screen integration |
+| --- | --- | --- |
+| `userApi.getProfile` | `GET /me` | Home, Account and Edit Profile |
+| `userApi.updateProfile` | `PATCH /me` | Edit Profile |
+| `barangayApi.getBarangays` | `GET /barangays` with `withAuth: false` | Location labels/selectors and signup |
+| `deviceApi.sendCommand` | `POST /telemetry/devices/:deviceId/command` | Helper exists; no current screen calls it |
 
-```typescript
-export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  timestamp: string;
-}
+Machine and batch screens use mock hooks. The registration route's proposed `/api/machines/register` is a TODO, not an implemented client endpoint.
 
-export interface ApiErrorResponse {
-  success: false;
-  statusCode: number;
-  message: string;
-  timestamp: string;
-}
-```
+## Request behavior
 
----
+1. Authenticated requests obtain a Clerk token through `src/lib/auth-token.ts`.
+2. An authenticated 401 triggers one retry with a refreshed token. A second failure still reaches the caller.
+3. Successful JSON containing `data` is unwrapped; other successful JSON is returned directly.
+4. HTTP failures throw `ApiError` with `statusCode` and a message. Timeouts default to 10 seconds and use status `408`; network errors use `0`.
 
-## ⚡ Automatic Envelope Unwrapping
+Generic TypeScript return types do not validate payloads at runtime. Keep Zod form/domain schemas in `src/types/`, and check actual backend contracts when replacing the mock hooks.
 
-When calling `apiFetch<T>(endpoint, options)`, the client automatically unwraps `response.data` so calling hooks receive `T` directly:
-
-```typescript
-// Inside src/api/user.api.ts
-export const getProfile = async (): Promise<User> => {
-  return apiFetch<User>('/users/profile');
-};
-```
-
----
-
-## 🛑 Structured Error Handling (`ApiError`)
-
-When the backend returns an error response (or HTTP status $\ge 400$), `apiFetch` parses the response and throws an `ApiError` containing the HTTP status code and server message:
-
-```typescript
-export class ApiError extends Error {
-  constructor(
-    public readonly statusCode: number,
-    message: string
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
-}
-```
-
----
-
-## 🌐 Dynamic Base URL Resolution
-
-`apiFetch` intelligently determines the active backend URL based on execution context:
-
-1. **Production / Remote URL**: Uses `EXPO_PUBLIC_API_BASE_URL` if set.
-2. **Local Development (Physical Device / Emulator)**: Uses `EXPO_PUBLIC_IP_ADDRESS` (e.g. `http://192.168.1.100:3000/api`).
-3. **Local Fallback**: Defaults to `http://localhost:3000/api`.
-
-```typescript
-const resolveBaseUrl = (): string => {
-  const prodUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
-  if (prodUrl) return prodUrl;
-
-  const customIp = process.env.EXPO_PUBLIC_IP_ADDRESS?.trim();
-  if (customIp) return `http://${customIp}:3000/api`;
-
-  return 'http://localhost:3000/api';
-};
-```
+For public variable names and local setup, see [Environment Variables](/reference/env-vars). Use `/me`, not the old `/users/profile` example.

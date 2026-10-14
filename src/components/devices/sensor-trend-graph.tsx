@@ -1,6 +1,7 @@
-import { View, Text } from 'react-native';
-import { type LucideIcon } from 'lucide-react-native';
-import Svg, { Path } from 'react-native-svg';
+import { buildChartPath, type ChartPoint } from "@/lib/history";
+import { View, Text } from "react-native";
+import { type LucideIcon } from "lucide-react-native";
+import Svg, { Path, Circle } from "react-native-svg";
 
 interface SensorTrendGraphProps {
   title: string;
@@ -9,20 +10,9 @@ interface SensorTrendGraphProps {
   yLabels: string[];
   xLabels: string[];
   data?: number[];
+  points?: ChartPoint[];
   maxVal?: number;
   mockPath?: string;
-}
-
-// Converts a series of numbers into an SVG path string
-function buildSvgPath(data?: number[], maxVal = 100): string {
-  if (!data || data.length === 0) return 'M 0 50 L 348 50';
-  const xStep = 348 / Math.max(1, data.length - 1);
-  const points = data.map((val, i) => {
-    const x = i * xStep;
-    const y = 100 - ((val / maxVal) * 100);
-    return `${x} ${y}`;
-  });
-  return `M ${points[0]} ` + points.slice(1).map((p) => `L ${p}`).join(' ');
 }
 
 export function SensorTrendGraph({
@@ -32,13 +22,20 @@ export function SensorTrendGraph({
   yLabels,
   xLabels,
   data,
+  points,
   maxVal = 100,
   mockPath,
 }: SensorTrendGraphProps) {
-  const pathD = mockPath ?? buildSvgPath(data, maxVal);
+  const chartPoints =
+    points ??
+    (data ?? []).map((value, index, values) => ({
+      x: index / Math.max(1, values.length - 1),
+      value,
+    }));
+  const pathD = mockPath ?? buildChartPath(chartPoints, maxVal);
 
   return (
-    <View className="bg-card rounded-2xl border border-border p-5 gap-4">
+    <View className="bg-card rounded-[14px] border border-border px-4 py-5 gap-5">
       {/* Header */}
       <View className="flex-row items-center gap-2">
         <Icon size={24} color={iconColor} strokeWidth={1.5} />
@@ -47,6 +44,11 @@ export function SensorTrendGraph({
         </View>
       </View>
 
+      {!pathD && (
+        <Text className="text-sm font-sans text-foreground">
+          No readings recorded for this sensor.
+        </Text>
+      )}
       {/* Graph Area */}
       <View className="flex-row gap-3">
         {/* Y Axis */}
@@ -67,13 +69,28 @@ export function SensorTrendGraph({
 
           {/* SVG Line */}
           <View className="absolute inset-0">
-            <Svg width="100%" height="100%" viewBox="0 0 348 100" preserveAspectRatio="none">
-              <Path
-                d={pathD}
-                stroke={iconColor}
-                strokeWidth="2"
-                fill="none"
-              />
+            <Svg
+              width="100%"
+              height="100%"
+              viewBox="0 0 348 100"
+              preserveAspectRatio="none"
+            >
+              {chartPoints
+                .filter((point) => point.value !== null)
+                .map((point, index) => (
+                  <Circle
+                    key={index}
+                    cx={point.x * 348}
+                    cy={
+                      100 -
+                      Math.max(0, Math.min(1, (point.value ?? 0) / maxVal)) *
+                        100
+                    }
+                    r={1.5}
+                    fill={iconColor}
+                  />
+                ))}
+              <Path d={pathD} stroke={iconColor} strokeWidth="2" fill="none" />
             </Svg>
           </View>
         </View>

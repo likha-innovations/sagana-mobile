@@ -11,7 +11,7 @@ Use this guide to set up an Android development client and keep local developmen
 | Expo SDK | Keep the existing SDK 57 dependencies |
 
 ::: warning Configuration migration is pending
-This page documents the agreed target, not a completed toolchain migration. At the time of writing, package.json has no packageManager pin, EAS profiles have no Node/pnpm overrides, while CI now uses Node 24.13.0 and pnpm 12.11.2 only. The supplied EAS log reports Node 22.23.1 and pnpm 11.9.0. Follow section 6 to complete the migration before assuming all environments match.
+Verified at mobile commit `38b132d` on 13 October 2026: package.json has no packageManager pin, EAS profiles have no Node/pnpm overrides, and CI selects Node 24.13.0 and pnpm 12.11.2. Remote EAS tool versions were not checked in this audit. Follow section 6 to complete the migration before assuming all environments match. See [Versions & Changes](/reference/versions-and-changes) for app versions and build profiles.
 :::
 
 ## 2. Install the local tools

@@ -1,34 +1,69 @@
-import React, { useCallback, useMemo, forwardRef, useState } from 'react';
-import { View, Text } from 'react-native';
-import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
-import { Calendar } from 'react-native-calendars';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button } from './button';
-import { format } from 'date-fns';
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { BackHandler, Text, View, useWindowDimensions } from "react-native";
+import {
+  BottomSheetModal,
+  BottomSheetBackdrop,
+  BottomSheetScrollView,
+  type BottomSheetBackdropProps,
+} from "@gorhom/bottom-sheet";
+import { Calendar, type DateData } from "react-native-calendars";
+import { addDays, format, parseISO } from "date-fns";
+import { useDynamicLayout } from "@/hooks/use-layout";
+import { colors } from "@/constants";
+import { nextRangeSelection } from "@/lib/history";
+import type { DateRange } from "@/types/history";
+import { Button } from "./button";
 
 interface DateRangePickerProps {
-  onApply: (range: { startDate: string; endDate: string }) => void;
+  onApply: (range: DateRange) => void;
   initialStartDate?: string;
   initialEndDate?: string;
   minDate?: string;
   maxDate?: string;
 }
-
-export const DateRangePicker = forwardRef<BottomSheetModal, DateRangePickerProps>(({
-  onApply,
-  initialStartDate,
-  initialEndDate,
-  minDate,
-  maxDate
-}, ref) => {
-  const insets = useSafeAreaInsets();
-  const snapPoints = useMemo(() => ['70%'], []);
-  
-  const [startDate, setStartDate] = useState<string | null>(initialStartDate || null);
-  const [endDate, setEndDate] = useState<string | null>(initialEndDate || null);
-
-  const renderBackdrop = useCallback(
-    (props: any) => (
+export const DateRangePicker = forwardRef<
+  BottomSheetModal,
+  DateRangePickerProps
+>(({ onApply, initialStartDate, initialEndDate, minDate, maxDate }, ref) => {
+  const modal = useRef<BottomSheetModal>(null);
+  const applied = useRef({
+    startDate: initialStartDate ?? null,
+    endDate: initialEndDate ?? null,
+  });
+  const [selection, setSelection] = useState(applied.current);
+  const [open, setOpen] = useState(false);
+  const { startDate, endDate } = selection;
+  const { stackScrollPadding, headerPaddingTop } = useDynamicLayout();
+  const { height } = useWindowDimensions();
+  const lower = minDate ? format(parseISO(minDate), "yyyy-MM-dd") : undefined;
+  const upper = maxDate
+    ? format(parseISO(maxDate), "yyyy-MM-dd")
+    : format(new Date(), "yyyy-MM-dd");
+  const valid =
+    !!startDate &&
+    !!endDate &&
+    (!lower || startDate >= lower) &&
+    endDate <= upper;
+  useEffect(() => {
+    if (!open) return;
+    const subscription = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        modal.current?.dismiss();
+        return true;
+      },
+    );
+    return () => subscription.remove();
+  }, [open]);
+  const backdrop = useCallback(
+    (props: BottomSheetBackdropProps) => (
       <BottomSheetBackdrop
         {...props}
         disappearsOnIndex={-1}
@@ -37,120 +72,127 @@ export const DateRangePicker = forwardRef<BottomSheetModal, DateRangePickerProps
         opacity={0.4}
       />
     ),
-    []
+    [],
   );
-
-  const onDayPress = (day: any) => {
-    if (!startDate || (startDate && endDate)) {
-      setStartDate(day.dateString);
-      setEndDate(null);
-    } else {
-      const d1 = new Date(startDate);
-      const d2 = new Date(day.dateString);
-      if (d2 < d1) {
-        // Swap if end date is before start date
-        setEndDate(startDate);
-        setStartDate(day.dateString);
-      } else {
-        setEndDate(day.dateString);
-      }
-    }
-  };
-
   const markedDates = useMemo(() => {
-    const marks: any = {};
-    if (startDate) {
-      marks[startDate] = { startingDay: true, color: '#718619', textColor: 'white' };
-    }
-    if (endDate) {
-      marks[endDate] = { endingDay: true, color: '#718619', textColor: 'white' };
-      
-      // fill days between
-      const d1 = new Date(startDate!);
-      const d2 = new Date(endDate);
-      const current = new Date(d1);
-      current.setDate(current.getDate() + 1);
-      while (current < d2) {
-        marks[format(current, 'yyyy-MM-dd')] = { color: '#E5ECC4', textColor: '#414141' };
-        current.setDate(current.getDate() + 1);
+    const marks: Record<
+      string,
+      {
+        startingDay?: boolean;
+        endingDay?: boolean;
+        color: string;
+        textColor: string;
       }
-    } else if (startDate) {
-      marks[startDate] = { startingDay: true, endingDay: true, color: '#718619', textColor: 'white' };
+    > = {};
+    if (!startDate) return marks;
+    const last = endDate ?? startDate;
+    for (
+      let cursor = parseISO(startDate);
+      format(cursor, "yyyy-MM-dd") <= last;
+      cursor = addDays(cursor, 1)
+    ) {
+      const date = format(cursor, "yyyy-MM-dd");
+      const edge = date === startDate || date === last;
+      marks[date] = {
+        startingDay: date === startDate,
+        endingDay: date === last,
+        color: edge ? colors.brand[500] : colors.brand[100],
+        textColor: edge
+          ? colors.semantic.primaryForeground
+          : colors.semantic.foreground,
+      };
     }
     return marks;
   }, [startDate, endDate]);
-
-  const handleApply = () => {
-    if (startDate && endDate) {
-      onApply({ startDate, endDate });
-      (ref as any)?.current?.dismiss();
-    }
+  const selectDay = (day: DateData) => {
+    if ((lower && day.dateString < lower) || day.dateString > upper) return;
+    setSelection((current) => nextRangeSelection(current, day.dateString));
   };
-
   return (
     <BottomSheetModal
-      ref={ref}
-      snapPoints={snapPoints}
-      backdropComponent={renderBackdrop}
-      backgroundStyle={{ backgroundColor: '#FAF9EE', borderRadius: 32 }}
-      handleIndicatorStyle={{ backgroundColor: '#E5E5E1', width: 48 }}
+      ref={(value) => {
+        modal.current = value;
+        if (typeof ref === "function") ref(value);
+        else if (ref) ref.current = value;
+      }}
+      enableDynamicSizing
+      maxDynamicContentSize={height - headerPaddingTop}
+      onChange={(index) => {
+        setOpen(index >= 0);
+        if (index >= 0)
+          setSelection({
+            startDate: initialStartDate ?? applied.current.startDate,
+            endDate: initialEndDate ?? applied.current.endDate,
+          });
+      }}
+      onDismiss={() => setOpen(false)}
+      backdropComponent={backdrop}
       enablePanDownToClose
+      backgroundStyle={{
+        backgroundColor: colors.semantic.background,
+        borderRadius: 32,
+      }}
+      handleIndicatorStyle={{ backgroundColor: colors.gray.border, width: 40 }}
     >
-      <BottomSheetView 
-        style={{ paddingBottom: Math.max(insets.bottom + 24, 32), flex: 1, paddingHorizontal: 24, paddingTop: 12 }}
+      <BottomSheetScrollView
+        contentContainerStyle={{
+          padding: 16,
+          paddingBottom: stackScrollPadding,
+        }}
       >
-        <Text 
-          className="text-lg font-bold text-foreground mb-4"
-          style={{ fontFamily: 'SpotifyMix-Bold' }}
-        >
+        <Text className="mb-4 text-lg font-bold text-foreground">
           Select Date Range
         </Text>
-
-        <View className="flex-1">
-          <Calendar
-            markingType="period"
-            markedDates={markedDates}
-            onDayPress={onDayPress}
-            minDate={minDate ? format(new Date(minDate), 'yyyy-MM-dd') : undefined}
-            maxDate={maxDate ? format(new Date(maxDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')}
-            theme={{
-              calendarBackground: '#FAF9EE',
-              textSectionTitleColor: '#AFAEA7',
-              selectedDayBackgroundColor: '#718619',
-              selectedDayTextColor: '#ffffff',
-              todayTextColor: '#718619',
-              dayTextColor: '#414141',
-              textDisabledColor: '#E2E1DC',
-              dotColor: '#718619',
-              selectedDotColor: '#ffffff',
-              arrowColor: '#414141',
-              disabledArrowColor: '#E2E1DC',
-              monthTextColor: '#414141',
-              indicatorColor: '#718619',
-              textDayFontFamily: 'SpotifyMix-Medium',
-              textMonthFontFamily: 'SpotifyMix-Bold',
-              textDayHeaderFontFamily: 'SpotifyMix-Medium',
-              textDayFontSize: 14,
-              textMonthFontSize: 16,
-              textDayHeaderFontSize: 13
+        <Calendar
+          key={open ? "open" : "closed"}
+          current={initialStartDate ?? applied.current.startDate ?? lower}
+          markingType="period"
+          markedDates={markedDates}
+          onDayPress={selectDay}
+          minDate={lower}
+          maxDate={upper}
+          theme={{
+            calendarBackground: colors.semantic.background,
+            textSectionTitleColor: colors.gray.textIcon,
+            selectedDayBackgroundColor: colors.brand[500],
+            selectedDayTextColor: colors.semantic.primaryForeground,
+            todayTextColor: colors.brand[500],
+            dayTextColor: colors.semantic.foreground,
+            textDisabledColor: colors.gray.textIcon,
+            arrowColor: colors.semantic.foreground,
+            monthTextColor: colors.semantic.foreground,
+            textDayFontFamily: "SpotifyMix-Regular",
+            textMonthFontFamily: "SpotifyMix-Bold",
+            textDayHeaderFontFamily: "SpotifyMix-Regular",
+            textDayFontSize: 14,
+            textMonthFontSize: 16,
+            textDayHeaderFontSize: 13,
+          }}
+        />
+        <View className="mt-4">
+          <Button
+            disabled={!valid}
+            size="lg"
+            onPress={() => {
+              if (!valid || !startDate || !endDate) return;
+              applied.current = { startDate, endDate };
+              onApply({ startDate, endDate });
+              modal.current?.dismiss();
             }}
-          />
-        </View>
-
-        <Button 
-          onPress={handleApply} 
-          className="w-full mt-4"
-          size="lg"
-          disabled={!startDate || !endDate}
-        >
-          <Text 
-            className={`text-base font-bold ${(!startDate || !endDate) ? 'text-muted-foreground' : 'text-white'}`}
-            style={{ fontFamily: 'SpotifyMix-Bold' }}
           >
-            Apply range
-          </Text>
-        </Button>
-      </BottomSheetView>
+            <Text
+              className={
+                valid
+                  ? "text-[14px] font-bold text-primary-foreground"
+                  : "text-[14px] font-bold text-muted-foreground"
+              }
+            >
+              Apply range
+            </Text>
+          </Button>
+        </View>
+      </BottomSheetScrollView>
     </BottomSheetModal>
   );
 });
+DateRangePicker.displayName = "DateRangePicker";

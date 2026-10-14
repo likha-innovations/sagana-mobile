@@ -2,14 +2,14 @@
 @import "uniwind";
 
 @theme {
-  --color-background: #FAF9EE;
+  --color-background: #F7F6F1;
   --color-foreground: #414141;
-  --color-card: #FAF9EE;
+  --color-card: #F7F6F1;
   --color-card-foreground: #414141;
-  --color-popover: #FAF9EE;
+  --color-popover: #F7F6F1;
   --color-popover-foreground: #414141;
   --color-primary: #718619;
-  --color-primary-foreground: #FAF9EE;
+  --color-primary-foreground: #F7F6F1;
   --color-secondary: #E2E1DC;
   --color-secondary-foreground: #414141;
   --color-muted: #E2E1DC;
@@ -17,7 +17,7 @@
   --color-accent: #E2E1DC;
   --color-accent-foreground: #414141;
   --color-destructive: #E84C4C;
-  --color-destructive-foreground: #FAF9EE;
+  --color-destructive-foreground: #F7F6F1;
   --color-border: #DCDBD5;
   --color-input: #C8C7BE;
   --color-ring: #718619;
@@ -42,7 +42,7 @@
   --color-neutral-900: #171717;
 
   /* WHITES */
-  --color-white-bg: #FAF9EE;
+  --color-white-bg: #F7F6F1;
   --color-white-skeleton: #E9E8D9;
 
   /* GRAYS */
@@ -116,12 +116,12 @@
 
 @layer base {
   :root {
-    --background: #FAF9EE;
+    --background: #F7F6F1;
     --foreground: #414141;
-    --card: #FAF9EE;
+    --card: #F7F6F1;
     --card-foreground: #414141;
     --primary: #718619;
-    --primary-foreground: #FAF9EE;
+    --primary-foreground: #F7F6F1;
     --secondary: #E2E1DC;
     --secondary-foreground: #414141;
     --muted: #E2E1DC;

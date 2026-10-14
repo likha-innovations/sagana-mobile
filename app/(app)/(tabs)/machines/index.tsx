@@ -1,48 +1,99 @@
-import { View, Text, ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Box } from 'lucide-react-native';
-import { useDynamicLayout } from '@/hooks';
-import { useMachines } from '@/hooks/use-machines';
-import { MachineCard } from '@/components/devices/machine-card';
-import { QuickActionButton } from '@/components/dashboard';
+import { useCallback } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  RefreshControl,
+  useWindowDimensions,
+} from "react-native";
+import { useFocusEffect, useRouter } from "expo-router";
+import { Box } from "lucide-react-native";
+import { colors } from "@/constants";
+import { useDynamicLayout } from "@/hooks";
+import { useMachines } from "@/hooks/use-machines";
+import { useCompostBatches } from "@/hooks/use-batches";
+import { MachineCard } from "@/components/devices/machine-card";
+import { MachineSkeletons } from "@/components/devices/machine-skeletons";
+import { QuickActionButton } from "@/components/dashboard";
+import { HistoryState } from "@/components/history/history-state";
+import { createLogger } from "@/lib/logger";
 
+const logger = createLogger("MachinesScreen");
 export default function MachinesListScreen() {
-  const { insets, scrollPaddingBottom } = useDynamicLayout();
+  const { headerPaddingTop, scrollPaddingBottom } = useDynamicLayout();
+  const { width, fontScale } = useWindowDimensions();
   const router = useRouter();
-  const { data: machines, refetch, isRefetching, isLoading } = useMachines();
-
+  const machines = useMachines();
+  const batches = useCompostBatches();
+  useFocusEffect(
+    useCallback(() => {
+      logger.screen("Machines");
+    }, []),
+  );
+  const refreshing = machines.isRefetching || batches.isRefetching;
+  const refetch = () => {
+    void Promise.all([machines.refetch(), batches.refetch()]);
+  };
+  const failed = machines.isError || batches.isError;
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+    <View className="flex-1 bg-background">
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 24, paddingBottom: scrollPaddingBottom, flexGrow: 1 }}
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingTop: Math.max(headerPaddingTop, 48),
+          paddingBottom: scrollPaddingBottom,
+          gap: 32,
+        }}
         refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refetch}
+            tintColor={colors.brand[500]}
+          />
         }
       >
-        <Text className="text-[20px] font-bold text-foreground mb-4">
-          Machines
-        </Text>
-
-        {isLoading ? (
-          <View className="flex-1 items-center justify-center py-10">
-            <ActivityIndicator size="small" color="#718619" />
-          </View>
-        ) : (!machines || machines.length === 0) ? (
-          <View className="mt-2">
+        <Text className="text-[32px] font-bold text-foreground">Machines</Text>
+        {failed && (
+          <HistoryState
+            message="Could not load machines."
+            onRetry={refetch}
+            retrying={refreshing}
+          />
+        )}
+        {machines.isPending || batches.isPending ? (
+          <MachineSkeletons stacked={width < 360 || fontScale > 1.2} />
+        ) : (
+          machines.data &&
+          batches.data &&
+          (machines.data.length === 0 ? (
             <QuickActionButton
               label="Add new SAGANA Machine"
-              icon={<Box size={20} color="#FAF9EE" />}
-              onPress={() => router.push('/(app)/machine-registration/new')}
+              icon={<Box size={20} color={colors.semantic.primaryForeground} />}
+              onPress={() => router.push("/(app)/machine-registration/new")}
             />
-          </View>
-        ) : (
-          machines.map((machine) => (
-            <MachineCard
-              key={machine.machine_id}
-              machine={machine}
-              onPress={() => router.push(`/(app)/(tabs)/machines/${machine.machine_id}` as any)}
-            />
+          ) : (
+            <View className="gap-3">
+              {machines.data.map((machine) => (
+                <MachineCard
+                  key={machine.machine_id}
+                  machine={machine}
+                  activeBatch={
+                    batches.data.find(
+                      (batch) =>
+                        batch.machine_id === machine.machine_id &&
+                        batch.status === "active",
+                    ) ?? null
+                  }
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(app)/(tabs)/machines/[id]",
+                      params: { id: machine.machine_id },
+                    })
+                  }
+                />
+              ))}
+            </View>
           ))
         )}
       </ScrollView>

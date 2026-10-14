@@ -50,4 +50,5 @@ Common development questions, issues, and resolution steps for Sagana Mobile.
 ### Problem: Uniwind classes are not applying or fonts look default
 - **Solution**:
   1. Ensure `global.css` is imported at the top of `app/_layout.tsx`.
-  2. Ensure fonts have loaded before rendering UI (`useFonts({ 'Montserrat-Regular': ... })`).
+  2. Ensure the local Spotify Mix fonts have loaded in `app/_layout.tsx`. The `Montserrat-*` names there are compatibility aliases.
+  3. Check `withUniwindConfig` in `metro.config.js` and the Uniwind/CSS declarations. See [Design System & Uniwind](/core/design-system).

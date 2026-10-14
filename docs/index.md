@@ -3,33 +3,24 @@ layout: home
 
 hero:
   name: "Sagana Mobile"
-  text: "Technical Documentation"
-  tagline: "Architecture, engineering standards, state machines, and API integration for the Sagana Mobile client."
+  text: "Collaborator Documentation"
+  tagline: "App 1.3.0: screens, source structure, recent changes, and what is still unfinished."
   actions:
     - theme: brand
-      text: Get Started →
-      link: /guide/getting-started
+      text: Read Team Overview
+      link: /guide/collaborator-overview
     - theme: alt
-      text: Architecture Overview
-      link: /guide/architecture
+      text: Browse UI Status
+      link: /guide/ui-status
 
 features:
-  - icon: 📱
-    title: Modern React Native & Expo SDK 57
-    details: Managed Expo workflow running React Native 0.86, React 19, and Expo Router v4 layout groups.
-  - icon: 🔐
-    title: Clerk & Hardware SecureStore
-    details: Native Clerk Core 3 session management backed by hardware-encrypted SecureStore persistence and Google SSO.
-  - icon: 🎨
-    title: Uniwind & @rn-primitives
-    details: Tailwind CSS v4 styling with semantic theme variables, Montserrat typography, and accessible primitives.
-  - icon: 🌐
-    title: Typed Fetch & TanStack Query v5
-    details: Zero-Axios API client with automatic envelope unwrapping, JWT bearer injection, and reactive query key factories.
-  - icon: 🛡️
-    title: Zod-First Validation
-    details: Runtime schemas matching backend Prisma contracts 1:1, integrated seamlessly with React Hook Form.
-  - icon: 📊
-    title: Asia/Manila Scoped Logger
-    details: Centralized scoped Logger (createLogger) capturing screen navigation, network metrics, and diagnostics in real time.
+  - title: Screens and feature status
+    details: All routes, shared UI, BLE registration, and the boundary between wired services and mock data.
+    link: /guide/ui-status
+  - title: Source structure
+    details: Find screens, hooks, API wrappers, domain types, shared components, and build configuration.
+    link: /guide/architecture
+  - title: Versions and repository changes
+    details: Current manifest versions, recent commits, EAS profiles, and release handoff checks.
+    link: /reference/versions-and-changes
 ---
