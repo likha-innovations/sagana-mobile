@@ -97,9 +97,19 @@ export async function apiFetch<T>(
 
     if (!response.ok) {
       const errorData = json as ApiErrorResponse | null;
-      const message =
-        errorData?.message ||
-        `Request failed with status code ${response.status}`;
+      let message = `Request failed with status code ${response.status}`;
+
+      if (errorData?.message) {
+        if (Array.isArray(errorData.message)) {
+          message = (errorData.message as any[])
+            .map((m) => (typeof m === 'object' && m !== null ? m.message || JSON.stringify(m) : String(m)))
+            .join(', ');
+        } else if (typeof errorData.message === 'object') {
+          message = (errorData.message as any).message || JSON.stringify(errorData.message);
+        } else {
+          message = String(errorData.message);
+        }
+      }
 
       logger.error(`${response.status} -> ${url}`, json);
       throw new ApiError(response.status, message);

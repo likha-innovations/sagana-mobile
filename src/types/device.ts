@@ -31,3 +31,19 @@ export const machineRegistrationSchema = z.object({
   machineName: z.string().min(1, 'Please enter required field'),
 });
 export type MachineRegistrationInput = z.infer<typeof machineRegistrationSchema>;
+
+export const registerMachinePayloadSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  mac_address: z.string().min(1, 'Device identifier is required'),
+  wifi_ssid: z.string().min(1, 'WiFi SSID is required'),
+});
+export type RegisterMachinePayload = z.infer<typeof registerMachinePayloadSchema>;
+
+export interface RegisteredMachine {
+  id: string;
+  barangayId: string;
+  macAddress: string;
+  name: string;
+  wifiSsid: string;
+  status: string;
+}

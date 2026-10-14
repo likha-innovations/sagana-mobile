@@ -4,9 +4,13 @@ import { Platform, PermissionsAndroid } from 'react-native';
 // Singleton BLE manager shared across the app lifetime
 export const bleManager = new BleManager();
 
-// UUIDs for the SAGANA AIVSP ESP32 firmware
+// UUIDs for the SAGANA AIVSP ESP32 firmware provisioning system
 export const BLE_SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
-export const BLE_CHARACTERISTIC_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8';
+export const BLE_WRITE_CHARACTERISTIC_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8';
+export const BLE_NOTIFY_CHARACTERISTIC_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a9';
+
+// Backward compatibility alias for the write characteristic
+export const BLE_CHARACTERISTIC_UUID = BLE_WRITE_CHARACTERISTIC_UUID;
 
 export async function requestBluetoothPermissions(): Promise<boolean> {
   if (Platform.OS !== 'android') return true;

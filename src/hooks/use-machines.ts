@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Machine } from "@/types/machine";
+import type { Machine, AutomationLog, SensorHistory } from "@/types/machine";
+import type { RegisterMachinePayload } from "@/types/device";
+import { deviceApi } from "@/api/device.api";
 import {
   machineOverviewSchema,
   machineNameSchema,
@@ -116,6 +118,17 @@ export function useRemoveMachine() {
     onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
       queryClient.invalidateQueries({ queryKey: machineKeys.detail(id) });
+    },
+  });
+}
+
+export function useRegisterMachine() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: RegisterMachinePayload) =>
+      deviceApi.registerMachine(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: machineKeys.all });
     },
   });
 }
