@@ -134,6 +134,7 @@ export function sensorRange(
 export interface ChartPoint {
   x: number;
   value: number | null;
+  label: string;
 }
 export function aggregateReadings(
   readings: HistoryReading[],
@@ -163,6 +164,7 @@ export function aggregateReadings(
         .map((reading) => reading[sensor])
         .filter((value): value is number => value !== null);
       return {
+        label: format(slot, hourly ? "HH:mm" : "MMM d"),
         x:
           (slot.getTime() - start.getTime()) /
           (endExclusive.getTime() - start.getTime()),
@@ -173,21 +175,6 @@ export function aggregateReadings(
     });
   }
   return series;
-}
-
-export function buildChartPath(points: ChartPoint[], maxValue: number) {
-  let connected = false;
-  return points
-    .map((point) => {
-      if (point.value === null) {
-        return "";
-      }
-      const command = connected ? "L" : "M";
-      connected = true;
-      return `${command} ${point.x * 348} ${100 - Math.max(0, Math.min(1, point.value / maxValue)) * 100}`;
-    })
-    .filter(Boolean)
-    .join(" ");
 }
 
 export function selectHistory(

@@ -52,13 +52,6 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
     period === "Per day"
       ? format(date, "MMMM d, yyyy")
       : `${format(bounds.start, "MMM d")} – ${format(bounds.end, "MMM d, yyyy")}`;
-  const xLabels =
-    period === "Per day"
-      ? ["00:00", "06:00", "12:00", "18:00", "24:00"]
-      : [
-          format(bounds.start, "MMM d"),
-          format(addDays(bounds.end, 1), "MMM d"),
-        ];
   const sensors = [
     {
       key: "temperature" as const,
@@ -72,7 +65,7 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
       key: "moisture" as const,
       title: "Moisture Trend",
       icon: Droplets,
-      color: colors.sensors.moisture,
+      color: colors.teal[700],
       unit: "%",
       minimumMax: 100,
     },
@@ -80,7 +73,7 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
       key: "oxygen" as const,
       title: "Oxygen Trend",
       icon: Wind,
-      color: colors.sensors.oxygen,
+      color: colors.yellow[700],
       unit: "%",
       minimumMax: 25,
     },
@@ -154,8 +147,6 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
                   sensor.minimumMax,
                   ...points.map((point) => point.value ?? 0),
                 );
-                const tick = (value: number) =>
-                  `${Number(value.toFixed(3))}${sensor.unit}`;
                 return (
                   <SensorTrendGraph
                     key={sensor.key}
@@ -164,8 +155,7 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
                     iconColor={sensor.color}
                     points={points}
                     maxVal={max}
-                    yLabels={[tick(max), tick(max / 2), tick(0)]}
-                    xLabels={xLabels}
+                    unit={sensor.unit}
                   />
                 );
               })
