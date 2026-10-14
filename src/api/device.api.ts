@@ -1,7 +1,7 @@
 import { api } from './client';
-import { PublishCommandInput } from '@/types';
+import { PublishCommandInput, RegisterMachinePayload, RegisteredMachine } from '@/types';
 
-// Telemetry & IoT REST API Endpoints (sagana-backend TelemetryController)
+// Telemetry & IoT REST API Endpoints (sagana-backend TelemetryController & MachinesController)
 export const deviceApi = {
   // POST /telemetry/devices/:deviceId/command — Dispatches command to MQTT broker
   sendCommand: (deviceId: string, data: PublishCommandInput) =>
@@ -9,4 +9,8 @@ export const deviceApi = {
       `/telemetry/devices/${deviceId}/command`,
       data
     ),
+
+  // POST /machines/register — Registers new AIVSP machine to operator barangay
+  registerMachine: (payload: RegisterMachinePayload) =>
+    api.post<RegisteredMachine>('/machines/register', payload),
 };

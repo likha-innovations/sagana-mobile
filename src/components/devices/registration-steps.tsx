@@ -1,5 +1,6 @@
-import { View, Text, ActivityIndicator, Pressable, ScrollView } from 'react-native';
+import { View, Text, ActivityIndicator, Pressable, ScrollView, Platform, Linking } from 'react-native';
 import { Info, AlertCircle, Bluetooth, BluetoothOff, Wifi, Cpu } from 'lucide-react-native';
+import * as IntentLauncher from 'expo-intent-launcher';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Controller, type Control, UseFormSetValue } from 'react-hook-form';
@@ -21,7 +22,15 @@ export function TurnOnStep() {
 }
 
 // Render individual device card
-function DeviceCard({ device, isConnecting, onConnect }: { device: Device, isConnecting: boolean, onConnect: () => void }) {
+function DeviceCard({ 
+  device, 
+  isConnecting, 
+  onConnect 
+}: { 
+  device: Device; 
+  isConnecting: boolean; 
+  onConnect: () => void; 
+}) {
   return (
     <Pressable 
       onPress={onConnect}
@@ -51,6 +60,7 @@ function ScanStatusIndicator({
   status, 
   devices,
   connectedDevice,
+  connectingDeviceId,
   errorMessage,
   onConnect,
   onRetry 
@@ -58,6 +68,7 @@ function ScanStatusIndicator({
   status: BleStatus;
   devices: Device[];
   connectedDevice: Device | null;
+  connectingDeviceId?: string | null;
   errorMessage: string | null;
   onConnect: (d: Device) => void;
   onRetry: () => void;
@@ -77,6 +88,18 @@ function ScanStatusIndicator({
   }
 
   if (status === 'error') {
+    const handleEnableBluetooth = async () => {
+      try {
+        if (Platform.OS === 'android') {
+          await IntentLauncher.startActivityAsync('android.bluetooth.adapter.action.REQUEST_ENABLE');
+        } else {
+          await Linking.openURL('App-Prefs:root=Bluetooth');
+        }
+      } catch {
+        // user dismissed or settings unavailable — no-op
+      }
+    };
+
     return (
       <View className="items-center gap-4 mt-8">
         <View className="w-20 h-20 rounded-full bg-red-50 items-center justify-center">
@@ -84,6 +107,7 @@ function ScanStatusIndicator({
         </View>
         <Text className="text-base font-semibold text-foreground">Connection Failed</Text>
         <Text className="text-sm text-destructive text-center">{errorMessage}</Text>
+        <Button title="Enable Bluetooth" onPress={handleEnableBluetooth} variant="outline" haptic />
         <Button title="Try Again" onPress={onRetry} variant="outline" haptic />
       </View>
     );
@@ -94,7 +118,7 @@ function ScanStatusIndicator({
       <View className="flex-row items-center gap-3 mb-6">
         <ActivityIndicator size="small" color="#718619" />
         <Text className="text-sm font-medium text-muted-foreground">
-          {status === 'scanning' ? 'Scanning for nearby machines...' : 'Connecting...'}
+          {status === 'connecting' ? 'Connecting to machine...' : 'Scanning for nearby machines...'}
         </Text>
       </View>
 
@@ -110,7 +134,7 @@ function ScanStatusIndicator({
             <DeviceCard 
               key={d.id} 
               device={d} 
-              isConnecting={status === 'connecting'} 
+              isConnecting={status === 'connecting' && connectingDeviceId === d.id} 
               onConnect={() => onConnect(d)} 
             />
           ))}
@@ -124,6 +148,7 @@ export function ConnectStep({
   status, 
   devices,
   connectedDevice,
+  connectingDeviceId,
   errorMessage,
   onConnect,
   onRetry 
@@ -131,6 +156,7 @@ export function ConnectStep({
   status: BleStatus;
   devices: Device[];
   connectedDevice: Device | null;
+  connectingDeviceId?: string | null;
   errorMessage: string | null;
   onConnect: (d: Device) => void;
   onRetry: () => void;
@@ -145,6 +171,7 @@ export function ConnectStep({
         status={status} 
         devices={devices} 
         connectedDevice={connectedDevice}
+        connectingDeviceId={connectingDeviceId}
         errorMessage={errorMessage}
         onConnect={onConnect}
         onRetry={onRetry} 
@@ -153,12 +180,17 @@ export function ConnectStep({
   );
 }
 
+
 export function WifiCredentialsStep({ 
   control, 
-  setValue 
+  setValue,
+  isConnecting = false,
+  errorMessage = null,
 }: { 
   control: Control<MachineRegistrationInput>;
   setValue: UseFormSetValue<MachineRegistrationInput>;
+  isConnecting?: boolean;
+  errorMessage?: string | null;
 }) {
   const { fetchWifi, isFetching } = useCurrentWifi();
 
@@ -181,6 +213,34 @@ export function WifiCredentialsStep({
         To connect your AIVSP Machine to your network, you must enter your Wi-Fi credentials.
       </Text>
 
+      {isConnecting && (
+        <View className="p-4 mb-4 bg-brand-50 border border-brand-200 rounded-2xl flex-row items-center gap-3">
+          <ActivityIndicator size="small" color="#718619" />
+          <View className="flex-1">
+            <Text className="text-sm font-semibold text-foreground">
+              Connecting device to WiFi...
+            </Text>
+            <Text className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+              Testing Wi-Fi connection with your machine. This may take 10–20 seconds.
+            </Text>
+          </View>
+        </View>
+      )}
+
+      {errorMessage && !isConnecting && (
+        <View className="p-4 mb-4 bg-red-50 border border-destructive/20 rounded-2xl flex-row items-center gap-3">
+          <AlertCircle size={20} color="#E84C4C" style={{ flexShrink: 0 }} />
+          <View className="flex-1">
+            <Text className="text-sm font-semibold text-destructive">
+              Connection Failed
+            </Text>
+            <Text className="text-xs text-destructive mt-0.5 leading-relaxed">
+              {errorMessage}
+            </Text>
+          </View>
+        </View>
+      )}
+
       <View className="mb-4 flex-row justify-end">
         <Button 
           title="Use Current Wi-Fi SSID" 
@@ -188,6 +248,7 @@ export function WifiCredentialsStep({
           size="sm" 
           onPress={handleAutoFill}
           loading={isFetching}
+          disabled={isConnecting || isFetching}
           haptic 
         />
       </View>
@@ -199,6 +260,7 @@ export function WifiCredentialsStep({
           <Input
             placeholder="SSID"
             value={value}
+            editable={!isConnecting}
             onChangeText={onChange}
             onBlur={onBlur}
             error={error?.message}
@@ -215,6 +277,7 @@ export function WifiCredentialsStep({
             placeholder="Wi-Fi Password"
             isPassword
             value={value}
+            editable={!isConnecting}
             onChangeText={onChange}
             onBlur={onBlur}
             error={error?.message}
