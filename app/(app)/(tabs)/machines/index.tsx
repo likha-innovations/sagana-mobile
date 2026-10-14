@@ -1,10 +1,17 @@
-import { View, Text, ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Box } from 'lucide-react-native';
-import { useDynamicLayout } from '@/hooks';
-import { useMachines } from '@/hooks/use-machines';
-import { MachineCard } from '@/components/devices/machine-card';
-import { QuickActionButton } from '@/components/dashboard';
+import {
+  View,
+  Text,
+  ScrollView,
+  RefreshControl,
+  ActivityIndicator,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { Box } from "lucide-react-native";
+import { colors } from "@/constants";
+import { useDynamicLayout } from "@/hooks";
+import { useMachines } from "@/hooks/use-machines";
+import { MachineCard } from "@/components/devices/machine-card";
+import { QuickActionButton } from "@/components/dashboard";
 
 export default function MachinesListScreen() {
   const { insets, scrollPaddingBottom } = useDynamicLayout();
@@ -15,7 +22,11 @@ export default function MachinesListScreen() {
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 24, paddingBottom: scrollPaddingBottom, flexGrow: 1 }}
+        contentContainerStyle={{
+          padding: 24,
+          paddingBottom: scrollPaddingBottom,
+          flexGrow: 1,
+        }}
         refreshControl={
           <RefreshControl refreshing={isRefetching} onRefresh={refetch} />
         }
@@ -26,24 +37,30 @@ export default function MachinesListScreen() {
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center py-10">
-            <ActivityIndicator size="small" color="#718619" />
+            <ActivityIndicator size="small" color={colors.brand[500]} />
           </View>
-        ) : (!machines || machines.length === 0) ? (
+        ) : !machines || machines.length === 0 ? (
           <View className="mt-2">
             <QuickActionButton
               label="Add new SAGANA Machine"
-              icon={<Box size={20} color="#FAF9EE" />}
-              onPress={() => router.push('/(app)/machine-registration/new')}
+              icon={<Box size={20} color={colors.semantic.primaryForeground} />}
+              onPress={() => router.push("/(app)/machine-registration/new")}
             />
           </View>
         ) : (
-          machines.map((machine) => (
-            <MachineCard
-              key={machine.machine_id}
-              machine={machine}
-              onPress={() => router.push(`/(app)/(tabs)/machines/${machine.machine_id}` as any)}
-            />
-          ))
+          <View className="gap-3">
+            {machines.map((machine) => (
+              <MachineCard
+                key={machine.machine_id}
+                machine={machine}
+                onPress={() =>
+                  router.push(
+                    `/(app)/(tabs)/machines/${machine.machine_id}` as any,
+                  )
+                }
+              />
+            ))}
+          </View>
         )}
       </ScrollView>
     </View>

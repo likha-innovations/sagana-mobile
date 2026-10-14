@@ -171,20 +171,44 @@
       ]
     }
   ],
-  "dashboard_metrics": {
-    "totalCompost": {
-      "value": 110.0,
-      "unit": "kg"
+  "completed_batches": [
+    {
+      "batch_id": "completed-1",
+      "machine_id": "1",
+      "machine_name": "SAGANA-1",
+      "batch_code": "SAGANACB001",
+      "status": "completed",
+      "start_date": "2026-08-31T00:00:00.000Z",
+      "completion_date": "2026-09-21T00:00:00.000Z",
+      "total_weight": 64.2,
+      "final_weight": 56.2,
+      "feedstocks": []
     },
-    "totalGreens": {
-      "value": 40.0,
-      "unit": "kg"
+    {
+      "batch_id": "completed-2",
+      "machine_id": "3",
+      "machine_name": "SAGANA-3",
+      "batch_code": "SAGANACB002",
+      "status": "completed",
+      "start_date": "2026-08-12T00:00:00.000Z",
+      "completion_date": "2026-09-02T00:00:00.000Z",
+      "total_weight": 36,
+      "final_weight": 30,
+      "feedstocks": []
     },
-    "totalBrowns": {
-      "value": 70.0,
-      "unit": "kg"
+    {
+      "batch_id": "completed-3",
+      "machine_id": "1",
+      "machine_name": "SAGANA-1",
+      "batch_code": "SAGANACB003",
+      "status": "completed",
+      "start_date": "2026-07-31T00:00:00.000Z",
+      "completion_date": "2026-08-21T00:00:00.000Z",
+      "total_weight": 25,
+      "final_weight": 20,
+      "feedstocks": []
     }
-  },
+  ],
   "automation_logs": [
     {
       "id": "1",
