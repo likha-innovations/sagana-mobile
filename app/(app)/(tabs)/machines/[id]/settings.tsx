@@ -1,485 +1,345 @@
-import { useState, useEffect } from 'react';
+import * as Haptics from "expo-haptics";
+import { useCallback, useState } from "react";
 import {
   View,
   Text,
   Pressable,
-  TextInput,
-  ActivityIndicator,
-  Modal,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Keyboard,
-  TouchableWithoutFeedback,
-  TouchableOpacity,
   BackHandler,
-} from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChevronLeft, PencilLine, Wifi, Trash2, CircleAlert } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+  ActivityIndicator,
+} from "react-native";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import {
+  ChevronLeft,
+  PencilLine,
+  Wifi,
+  WifiOff,
+  Trash2,
+} from "lucide-react-native";
 import {
   useMachine,
   useUpdateMachineName,
   useUpdateMachineWifi,
   useRemoveMachine,
-} from '@/hooks/use-machines';
-import { useDynamicLayout } from '@/hooks';
-import { useToast } from '@/components/ui/toast';
+} from "@/hooks/use-machines";
+import { useDynamicLayout } from "@/hooks";
+import { useToast } from "@/components/ui/toast";
+import { Input } from "@/components/ui/input";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { Skeleton } from "@/components/ui/skeleton";
+import { HistoryState } from "@/components/history/history-state";
+import { CompostIcon } from "@/components/icons";
+import { colors } from "@/constants";
+import { createLogger } from "@/lib/logger";
+import { machineNameSchema, machineSsidSchema } from "@/lib/machine-overview";
 
-type SettingsView = 'menu' | 'rename' | 'wifi';
-
+const logger = createLogger("MachineSettingsScreen");
+type SettingsView = "menu" | "rename" | "wifi";
 export default function MachineSettingsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { insets, stackScrollPadding } = useDynamicLayout();
+  const { headerPaddingTop, scrollPaddingBottom } = useDynamicLayout();
   const { showToast } = useToast();
-
-  const { data: machine, isLoading } = useMachine(id);
-  const { mutate: updateName, isPending: isUpdatingName } = useUpdateMachineName();
-  const { mutate: updateWifi, isPending: isUpdatingWifi } = useUpdateMachineWifi();
-  const { mutate: removeMachine, isPending: isRemoving } = useRemoveMachine();
-
-  const [activeView, setActiveView] = useState<SettingsView>('menu');
-  const [isRemoveModalVisible, setIsRemoveModalVisible] = useState(false);
-
-  // Form states
-  const [name, setName] = useState('');
-  const [nameError, setNameError] = useState(false);
-
-  const [ssid, setSsid] = useState('');
-  const [ssidError, setSsidError] = useState(false);
-  const [password, setPassword] = useState('');
-
-  // Sync initial machine values
-  useEffect(() => {
-    if (machine) {
-      setName(machine.name);
-      setSsid(machine.wifi_ssid || '');
+  const query = useMachine(id);
+  const machine = query.data;
+  const rename = useUpdateMachineName();
+  const wifi = useUpdateMachineWifi();
+  const remove = useRemoveMachine();
+  const pending = rename.isPending || wifi.isPending || remove.isPending;
+  const [view, setView] = useState<SettingsView>("menu");
+  const [name, setName] = useState("");
+  const [ssid, setSsid] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [removeVisible, setRemoveVisible] = useState(false);
+  const back = useCallback(() => {
+    if (pending) return;
+    if (view === "menu") router.back();
+    else {
+      setView("menu");
+      setPassword("");
+      setError("");
     }
-  }, [machine]);
-
-  // Handle hardware back on Android to return to menu first
-  useEffect(() => {
-    const handleBackPress = () => {
-      if (activeView !== 'menu') {
-        setActiveView('menu');
-        setNameError(false);
-        setSsidError(false);
-        return true;
-      }
-      return false;
-    };
-
-    const sub = BackHandler.addEventListener('hardwareBackPress', handleBackPress);
-    return () => sub.remove();
-  }, [activeView]);
-
-  const handleHeaderBack = () => {
-    if (activeView !== 'menu') {
-      setActiveView('menu');
-      setNameError(false);
-      setSsidError(false);
-    } else {
-      router.back();
-    }
+  }, [pending, view, router]);
+  useFocusEffect(
+    useCallback(() => {
+      logger.screen("Machine Settings", { id, view });
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        () => {
+          if (pending) return true;
+          if (view !== "menu") {
+            back();
+            return true;
+          }
+          return false;
+        },
+      );
+      return () => subscription.remove();
+    }, [id, view, pending, back]),
+  );
+  const open = (next: SettingsView) => {
+    setName(machine?.name ?? "");
+    setSsid(machine?.wifi_ssid ?? "");
+    setPassword("");
+    setError("");
+    setView(next);
   };
-
-  const handleSaveName = () => {
-    const trimmed = name.trim();
-    if (!trimmed) {
-      setNameError(true);
-      if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      }
+  const save = () => {
+    if (pending) return;
+    const result = (
+      view === "rename" ? machineNameSchema : machineSsidSchema
+    ).safeParse(view === "rename" ? name : ssid);
+    if (!result.success) {
+      setError(result.error.issues[0].message);
+      if (Platform.OS !== "web")
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
-
-    setNameError(false);
-    updateName(
-      { id, name: trimmed },
-      {
-        onSuccess: () => {
-          if (Platform.OS !== 'web') {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          }
-          showToast('Machine name updated successfully.', 'success');
-          setActiveView('menu');
-        },
-        onError: () => {
-          showToast('Failed to update machine name.', 'error');
-        },
-      }
-    );
-  };
-
-  const handleSaveWifi = () => {
-    const trimmedSsid = ssid.trim();
-    if (!trimmedSsid) {
-      setSsidError(true);
-      if (Platform.OS !== 'web') {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      }
-      return;
-    }
-
-    setSsidError(false);
-    updateWifi(
-      { id, wifi_ssid: trimmedSsid },
-      {
-        onSuccess: () => {
-          if (Platform.OS !== 'web') {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          }
-          showToast('Wi-Fi credentials updated successfully.', 'success');
-          setActiveView('menu');
-        },
-        onError: () => {
-          showToast('Cannot change Wi’FI. Please check the details being entered or try again later.', 'error');
-        },
-      }
-    );
-  };
-
-  const handleConfirmRemove = () => {
-    removeMachine(id, {
+    setError("");
+    const callbacks = {
       onSuccess: () => {
-        setIsRemoveModalVisible(false);
-        if (Platform.OS !== 'web') {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }
-        router.dismissAll();
-        router.push('/(app)/(tabs)/machines' as any);
+        if (Platform.OS !== "web")
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        showToast(
+          view === "rename"
+            ? "Machine name updated successfully."
+            : "Mock Wi-Fi name saved. Hardware credentials unchanged.",
+          "success",
+        );
+        setPassword("");
+        setView("menu");
       },
       onError: () => {
-        showToast('Failed to remove machine.', 'error');
+        showToast("Could not save changes. Please try again.", "error");
       },
-    });
+    };
+    if (view === "rename") rename.mutate({ id, name: result.data }, callbacks);
+    else wifi.mutate({ id, wifi_ssid: result.data }, callbacks);
   };
-
-  if (isLoading) {
-    return (
-      <View className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator size="small" color="#718619" />
-      </View>
-    );
-  }
-
-  // Header Title & Action resolver
-  // Save button condition (Figma shows Save only when modified or on error)
-  const isNameDirty = name.trim() !== (machine?.name || '');
-  const showSaveName = isNameDirty || nameError;
-
-  const isWifiDirty = ssid.trim() !== (machine?.wifi_ssid || '') || password.length > 0;
-  const showSaveWifi = isWifiDirty || ssidError;
-
-  // Header Title & Action resolver
-  let headerTitle = 'Machine Settings';
-  if (activeView === 'rename') headerTitle = 'Rename Machine';
-  if (activeView === 'wifi') headerTitle = 'Change Wi-Fi Credentials';
-
+  const dirty =
+    view === "rename"
+      ? name.trim() !== machine?.name
+      : ssid.trim() !== (machine?.wifi_ssid ?? "") || password.length > 0;
+  const disconnected = machine?.status === "offline";
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       className="flex-1 bg-background"
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View className="flex-1" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
-          
-          {/* Header (No bottom border in Figma) */}
-          <View className="flex-row items-center justify-between px-4 py-4 min-h-[56px]">
-            <View className="flex-row items-center">
-              <Pressable
-                onPress={handleHeaderBack}
-                hitSlop={12}
-                className="w-[30px] h-[30px] items-center justify-center -ml-1 active:opacity-70"
-                accessibilityRole="button"
-                accessibilityLabel="Back"
-              >
-                <ChevronLeft size={24} color="#414141" />
-              </Pressable>
-              <Text className="text-base font-bold text-foreground ml-2">
-                {headerTitle}
-              </Text>
-            </View>
-
-            {activeView === 'rename' && showSaveName && (
-              <Pressable
-                onPress={handleSaveName}
-                disabled={isUpdatingName}
-                hitSlop={12}
-                className="active:opacity-70"
-              >
-                {isUpdatingName ? (
-                  <ActivityIndicator size="small" color="#718619" />
-                ) : (
-                  <Text className="text-base font-bold text-primary">Save</Text>
-                )}
-              </Pressable>
+      <View
+        className="flex-row items-center gap-2 px-4 pb-8"
+        style={{ paddingTop: Math.max(headerPaddingTop, 48) }}
+      >
+        <Pressable
+          onPress={back}
+          disabled={pending}
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          accessibilityState={{ disabled: pending }}
+          className="min-h-12 min-w-12 items-center justify-center -ml-3"
+        >
+          <ChevronLeft size={24} color={colors.semantic.foreground} />
+        </Pressable>
+        <Text className="flex-1 text-base font-bold text-foreground">
+          {view === "menu"
+            ? "Machine Settings"
+            : view === "rename"
+              ? "Rename Machine"
+              : "Change Wi-Fi Credentials"}
+        </Text>
+        {view !== "menu" && (dirty || error) && (
+          <Pressable
+            onPress={save}
+            disabled={pending}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: pending, busy: pending }}
+            className="min-h-12 min-w-12 items-center justify-center"
+          >
+            {pending ? (
+              <ActivityIndicator color={colors.brand[500]} />
+            ) : (
+              <Text className="text-sm font-bold text-primary">Save</Text>
             )}
-
-            {activeView === 'wifi' && showSaveWifi && (
-              <Pressable
-                onPress={handleSaveWifi}
-                disabled={isUpdatingWifi}
-                hitSlop={12}
-                className="active:opacity-70"
-              >
-                {isUpdatingWifi ? (
-                  <ActivityIndicator size="small" color="#718619" />
-                ) : (
-                  <Text className="text-base font-bold text-primary">Save</Text>
-                )}
-              </Pressable>
-            )}
+          </Pressable>
+        )}
+      </View>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        contentContainerStyle={{
+          paddingHorizontal: 16,
+          paddingBottom: scrollPaddingBottom,
+          gap: 12,
+        }}
+      >
+        {query.isError && (
+          <HistoryState
+            message={
+              query.error.message === "Machine not found"
+                ? "This machine could not be found."
+                : "Could not load machine settings."
+            }
+            onRetry={() => void query.refetch()}
+            retrying={query.isFetching}
+          />
+        )}
+        {query.isPending ? (
+          <View
+            accessible
+            accessibilityRole="progressbar"
+            accessibilityLabel="Loading machine settings"
+            accessibilityState={{ busy: true }}
+            className="gap-3"
+          >
+            {[0, 1, 2, 3].map((item) => (
+              <Skeleton key={item} className="h-[60px] rounded-lg" />
+            ))}
           </View>
-
-          {/* Body Content */}
-          <ScrollView
-            className="flex-1 px-4 pt-4"
-            contentContainerStyle={{ paddingBottom: stackScrollPadding }}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            {/* View 1: Settings Menu */}
-            {activeView === 'menu' && (
-              <View className="gap-3">
-                {/* Rename Machine */}
-                <Pressable
-                  onPress={() => {
-                    setName(machine?.name || '');
-                    setNameError(false);
-                    setActiveView('rename');
-                  }}
-                  className="flex-row items-center h-[60px] px-[18px] py-[10px] bg-card border border-input rounded-lg gap-4 active:opacity-80"
-                >
-                  <PencilLine size={18} color="#414141" strokeWidth={1.5} />
-                  <Text className="text-sm font-sans text-foreground flex-1">
-                    Rename Machine
-                  </Text>
-                </Pressable>
-
-                {/* Change Wi-Fi Credentials */}
-                <Pressable
-                  onPress={() => {
-                    setSsid(machine?.wifi_ssid || '');
-                    setPassword('');
-                    setSsidError(false);
-                    setActiveView('wifi');
-                  }}
-                  className="flex-row items-center h-[60px] px-[18px] py-[10px] bg-card border border-input rounded-lg gap-4 active:opacity-80"
-                >
-                  <Wifi size={18} color="#414141" strokeWidth={1.5} />
-                  <Text className="text-sm font-sans text-foreground flex-1">
-                    Change Wi-Fi Credentials
-                  </Text>
-                </Pressable>
-
-                {/* Remove Machine (Destructive) */}
-                <Pressable
-                  onPress={() => setIsRemoveModalVisible(true)}
-                  className="flex-row items-center h-[60px] px-[18px] py-[10px] bg-card border border-input rounded-lg gap-4 active:opacity-80"
-                >
-                  <Trash2 size={18} color="#E84C4C" strokeWidth={1.5} />
-                  <Text className="text-sm font-sans text-destructive flex-1">
-                    Remove Machine
-                  </Text>
-                </Pressable>
-              </View>
-            )}
-
-            {/* View 2: Rename Machine View */}
-            {activeView === 'rename' && (
-              <View>
-                <View
-                  className={`h-[58px] bg-card rounded-[14px] px-[15px] py-[10px] justify-center border-[1.5px] ${
-                    nameError ? 'border-destructive' : 'border-border'
-                  }`}
-                >
-                  {nameError ? (
-                    <View className="flex-row items-center justify-between flex-1">
-                      <TextInput
-                        value={name}
-                        onChangeText={(val) => {
-                          setName(val);
-                          if (nameError) setNameError(false);
-                        }}
-                        placeholder="Machine Name"
-                        placeholderTextColor="#E84C4C"
-                        className="text-sm font-sans text-destructive p-0 flex-1"
-                        autoFocus
-                      />
-                      <CircleAlert size={20} color="#E84C4C" strokeWidth={1.5} />
-                    </View>
+        ) : (
+          machine &&
+          (view === "menu" ? (
+            <>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => open("rename")}
+                className="min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4"
+              >
+                <PencilLine size={24} color={colors.semantic.foreground} />
+                <Text className="flex-1 text-sm font-sans text-foreground">
+                  Rename machine
+                </Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => open("wifi")}
+                className="min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4"
+              >
+                <Wifi size={24} color={colors.semantic.foreground} />
+                <Text className="flex-1 text-sm font-sans text-foreground">
+                  Change Wi-Fi credentials
+                </Text>
+              </Pressable>
+              <Pressable
+                disabled
+                accessibilityRole="button"
+                accessibilityState={{ disabled: true }}
+                accessibilityLabel="Remove current batch. Batch cancellation is not available yet."
+                className="min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 opacity-50"
+              >
+                <CompostIcon size={24} color={colors.red[500]} />
+                <Text className="flex-1 text-sm font-sans text-destructive">
+                  Remove current batch
+                </Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => setRemoveVisible(true)}
+                className="min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4"
+              >
+                <Trash2 size={24} color={colors.red[500]} />
+                <Text className="flex-1 text-sm font-sans text-destructive">
+                  Remove machine
+                </Text>
+              </Pressable>
+            </>
+          ) : view === "rename" ? (
+            <Input
+              label="Machine Name"
+              accessibilityLabel="Machine Name"
+              value={name}
+              onChangeText={(value) => {
+                setName(value);
+                setError("");
+              }}
+              error={error}
+              editable={!pending}
+              controlClassName="rounded-[14px]"
+              autoCapitalize="words"
+              returnKeyType="done"
+              onSubmitEditing={save}
+            />
+          ) : (
+            <>
+              <View className="rounded-[14px] border border-border p-6 gap-2 mb-5">
+                <Text className="text-sm font-bold text-foreground">
+                  {machine.wifi_ssid || "No Wi-Fi configured"}
+                </Text>
+                <View className="flex-row items-center gap-2">
+                  {disconnected ? (
+                    <WifiOff size={18} color={colors.red[500]} />
                   ) : (
-                    <>
-                      <Text className="text-[13px] font-sans text-muted-foreground">
-                        Machine Name
-                      </Text>
-                      <TextInput
-                        value={name}
-                        onChangeText={(val) => {
-                          setName(val);
-                          if (nameError) setNameError(false);
-                        }}
-                        placeholder="Machine Name"
-                        placeholderTextColor="#AFAEA7"
-                        className="text-sm font-sans text-foreground p-0 mt-0.5"
-                        autoFocus
-                      />
-                    </>
+                    <Wifi size={18} color={colors.brand[500]} />
                   )}
-                </View>
-                {nameError && (
-                  <Text className="text-sm font-sans text-destructive mt-2 px-1">
-                    Please enter required field
-                  </Text>
-                )}
-              </View>
-            )}
-
-            {/* View 3: Change Wi-Fi Credentials View */}
-            {activeView === 'wifi' && (
-              <View className="gap-6">
-                {/* Active Connection Badge Card */}
-                <View className="flex-row items-center p-[16px] bg-card border border-input rounded-[14px] gap-4">
-                  <Wifi size={24} color="#414141" strokeWidth={1.5} />
-                  <View className="flex-1 gap-1">
-                    <Text className="text-sm font-bold text-foreground">
-                      {machine?.wifi_ssid || 'Home Wifi'}
-                    </Text>
-                    <Text className="text-sm font-sans text-primary">
-                      Connected
-                    </Text>
-                  </View>
-                </View>
-
-                {/* Form Inputs */}
-                <View className="gap-3">
-                  {/* SSID Input */}
-                  <View>
-                    <View
-                      className={`h-[58px] bg-card rounded-[14px] px-[15px] py-[10px] justify-center border-[1.5px] ${
-                        ssidError ? 'border-destructive' : 'border-border'
-                      }`}
-                    >
-                      {ssidError ? (
-                        <View className="flex-row items-center justify-between flex-1">
-                          <TextInput
-                            value={ssid}
-                            onChangeText={(val) => {
-                              setSsid(val);
-                              if (ssidError) setSsidError(false);
-                            }}
-                            placeholder="SSID"
-                            placeholderTextColor="#E84C4C"
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                            className="text-sm font-sans text-destructive p-0 flex-1"
-                            autoFocus
-                          />
-                          <CircleAlert size={20} color="#E84C4C" strokeWidth={1.5} />
-                        </View>
-                      ) : (
-                        <>
-                          <Text className="text-[13px] font-sans text-muted-foreground">
-                            SSID
-                          </Text>
-                          <TextInput
-                            value={ssid}
-                            onChangeText={(val) => {
-                              setSsid(val);
-                              if (ssidError) setSsidError(false);
-                            }}
-                            placeholder="SSID"
-                            placeholderTextColor="#AFAEA7"
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                            className="text-sm font-sans text-foreground p-0 mt-0.5"
-                          />
-                        </>
-                      )}
-                    </View>
-                    {ssidError && (
-                      <Text className="text-sm font-sans text-destructive mt-2 px-1">
-                        Please enter required field
-                      </Text>
-                    )}
-                  </View>
-
-                  {/* Password Input */}
-                  <View
-                    className="h-[58px] bg-card rounded-[14px] px-[15px] py-[10px] justify-center border-[1.5px] border-border"
+                  <Text
+                    className={`text-sm font-sans ${disconnected ? "text-destructive" : "text-primary"}`}
                   >
-                    <Text className="text-[13px] font-sans text-muted-foreground">
-                      Wi-Fi Password
-                    </Text>
-                    <TextInput
-                      value={password}
-                      onChangeText={setPassword}
-                      placeholder="••••••••••"
-                      placeholderTextColor="#AFAEA7"
-                      secureTextEntry
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      className="text-sm font-sans text-foreground p-0 mt-0.5"
-                    />
-                  </View>
-                </View>
-              </View>
-            )}
-          </ScrollView>
-
-          {/* Remove Machine Confirmation Modal */}
-          <Modal
-            visible={isRemoveModalVisible}
-            transparent
-            animationType="fade"
-            onRequestClose={() => setIsRemoveModalVisible(false)}
-          >
-            <View className="flex-1 bg-black/50 items-center justify-center px-4">
-              <View className="w-full max-w-[356px] bg-card border border-input rounded-[14px] p-6 gap-6 items-center shadow-md">
-                <View className="gap-2.5 items-center">
-                  <Text className="text-sm font-bold text-foreground text-center">
-                    Remove machine?
-                  </Text>
-                  <Text className="text-sm font-sans text-foreground text-center leading-5">
-                    Ongoing compost process on this machine will be halted, and you will need to re-add the machine.
+                    {disconnected
+                      ? "Disconnected"
+                      : machine.wifi_ssid
+                        ? "Connected"
+                        : "Not configured"}
                   </Text>
                 </View>
-
-                <View className="flex-row w-full gap-2">
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => setIsRemoveModalVisible(false)}
-                    disabled={isRemoving}
-                    className="flex-1 h-[45px] bg-secondary rounded-full items-center justify-center active:opacity-70"
-                  >
-                    <Text className="text-sm font-bold text-foreground">
-                      Cancel
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={handleConfirmRemove}
-                    disabled={isRemoving}
-                    className="flex-1 h-[45px] bg-destructive rounded-full items-center justify-center active:opacity-70"
-                  >
-                    {isRemoving ? (
-                      <ActivityIndicator size="small" color="#FAF9EE" />
-                    ) : (
-                      <Text className="text-sm font-bold text-primary-foreground">
-                        Yes, remove it
-                      </Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
               </View>
-            </View>
-          </Modal>
-
-        </View>
-      </TouchableWithoutFeedback>
+              <Input
+                label="SSID"
+                accessibilityLabel="SSID"
+                value={ssid}
+                onChangeText={(value) => {
+                  setSsid(value);
+                  setError("");
+                }}
+                error={error}
+                editable={!pending}
+                autoCapitalize="none"
+                autoCorrect={false}
+                controlClassName="rounded-[14px]"
+              />
+              <Input
+                label="Wi-Fi Password"
+                accessibilityLabel="Wi-Fi Password"
+                value={password}
+                onChangeText={setPassword}
+                isPassword
+                editable={!pending}
+                autoCapitalize="none"
+                autoCorrect={false}
+                controlClassName="rounded-[14px]"
+              />
+              <Text className="text-xs font-sans text-foreground">
+                Mock mode: only the Wi-Fi name is saved. Passwords are not
+                stored or sent to the machine.
+              </Text>
+            </>
+          ))
+        )}
+      </ScrollView>
+      <ConfirmModal
+        visible={removeVisible}
+        title="Remove machine?"
+        description="Remove this machine from the app's mock list? This does not stop hardware or remove recorded batch history."
+        confirmText="Yes, remove it"
+        isDestructive
+        pending={remove.isPending}
+        onCancel={() => {
+          if (!remove.isPending) setRemoveVisible(false);
+        }}
+        onConfirm={() => {
+          if (remove.isPending) return;
+          remove.mutate(id, {
+            onSuccess: () => {
+              setRemoveVisible(false);
+              router.dismissAll();
+              router.replace("/(app)/(tabs)/machines");
+            },
+            onError: () =>
+              showToast("Failed to remove machine. Please try again.", "error"),
+          });
+        }}
+      />
     </KeyboardAvoidingView>
   );
 }
