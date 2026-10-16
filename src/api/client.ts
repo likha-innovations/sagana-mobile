@@ -116,9 +116,12 @@ export async function apiFetch<T>(
     }
 
     if (json && typeof json === 'object' && 'data' in json) {
-      return (json as ApiResponse<T>).data;
+      const unwrapped = (json as ApiResponse<T>).data;
+      logger.debug(`${options.method || 'GET'} <- ${url} [${response.status}]`, unwrapped);
+      return unwrapped;
     }
 
+    logger.debug(`${options.method || 'GET'} <- ${url} [${response.status}]`, json);
     return json as T;
   } catch (error: any) {
     if (error.name === 'AbortError') {

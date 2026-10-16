@@ -39,7 +39,7 @@ export async function getAuthToken(forceRefresh = false): Promise<string | null>
   }
 
   if (token) {
-    logger.info(`Resolved active JWT token: ${token}`);
+    logger.debug('Resolved active JWT token');
   } else {
     logger.warn('No active JWT token found in session or storage');
   }

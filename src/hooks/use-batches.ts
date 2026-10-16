@@ -17,7 +17,8 @@ import {
   getDashboardMetrics,
   getRecentCompletedBatches,
 } from "@/lib/dashboard";
-let mockFeedstocks: Feedstock[] = [];
+import { feedstockApi } from "@/api/feedstock.api";
+
 let mockActiveBatches: CompostBatch[] = [];
 
 export { type BatchFeedstock, type CompostBatch, type DashboardMetrics };
@@ -32,10 +33,8 @@ export const batchKeys = {
 export function useFeedstocks() {
   return useQuery({
     queryKey: batchKeys.feedstocks,
-    queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 150));
-      return [...mockFeedstocks];
-    },
+    queryFn: feedstockApi.getFeedstocks,
+    staleTime: 1000 * 60 * 60,
   });
 }
 
@@ -112,15 +111,17 @@ export function useCreateCompostBatch() {
       const codeRand = Math.floor(100 + Math.random() * 900);
       const batchCode = `BATCH-${codeDate}-${codeRand}`;
 
+      const cachedFeedstocks =
+        queryClient.getQueryData<Feedstock[]>(batchKeys.feedstocks) ?? [];
+
       const feedstocks: BatchFeedstock[] = input.feedstocks.map((item, idx) => {
-        const master = mockFeedstocks.find(
-          (f) => f.feedstock_id === item.feedstock_id,
-        );
+        const itemId = item.id;
+        const master = cachedFeedstocks.find((f) => f.id === itemId);
         return {
           id: `bf-${Date.now()}-${idx}`,
-          feedstock_id: item.feedstock_id,
+          feedstockId: itemId,
           name: master?.name ?? "Feedstock",
-          category: master?.category ?? "Greens",
+          category: master?.category ?? "green",
           weight_kg: item.weight,
         };
       });

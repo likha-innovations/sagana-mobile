@@ -1,10 +1,18 @@
 import { z } from "zod";
 
-export const feedstockCategorySchema = z.enum(["Greens", "Browns"]);
+export const feedstockCategorySchema = z.preprocess((val) => {
+  if (typeof val === 'string') {
+    const lower = val.toLowerCase();
+    if (lower.startsWith('green')) return 'green';
+    if (lower.startsWith('brown')) return 'brown';
+  }
+  return val;
+}, z.enum(["green", "brown"]));
 export type FeedstockCategory = z.infer<typeof feedstockCategorySchema>;
 
+
 export const feedstockSchema = z.object({
-  feedstock_id: z.string(),
+  id: z.string(),
   name: z.string(),
   category: feedstockCategorySchema,
   description: z.string().nullable().optional(),
@@ -15,7 +23,7 @@ export type Feedstock = z.infer<typeof feedstockSchema>;
 // Embedded feedstock item within compost batch
 export const batchFeedstockSchema = z.object({
   id: z.string(),
-  feedstock_id: z.string(),
+  feedstockId: z.string().optional(),
   name: z.string(),
   category: feedstockCategorySchema,
   weight_kg: z.number().positive(),
@@ -48,7 +56,7 @@ export type CompletedBatch = z.infer<typeof completedBatchSchema>;
 
 // Form validation schemas for batch creation wizard
 export const createBatchItemInputSchema = z.object({
-  feedstock_id: z.string(),
+  id: z.string(),
   weight: z.number().positive("Weight must be greater than 0"),
 });
 export type CreateBatchItemInput = z.infer<typeof createBatchItemInputSchema>;

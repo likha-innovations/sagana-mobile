@@ -15,7 +15,7 @@ interface MachineResponse {
 
 function toMachine(record: MachineResponse): Machine {
   return machineSchema.parse({
-    machine_id: record.id,
+    id: record.id,
     barangay_id: record.barangayId,
     mac_address: record.macAddress,
     name: record.name,

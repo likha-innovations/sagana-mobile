@@ -14,7 +14,7 @@ let mockMachines: Machine[] = [];
 
 // ponytail: direct in-memory mutation helper for mock state transition
 export function setMockMachineStatus(id: string, status: Machine["status"]) {
-  const idx = mockMachines.findIndex((m) => m.machine_id === id);
+  const idx = mockMachines.findIndex((m) => m.id === id);
   if (idx > -1) {
     mockMachines[idx] = { ...mockMachines[idx], status };
   }
@@ -83,7 +83,7 @@ export function useUpdateMachineName() {
   return useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      const idx = mockMachines.findIndex((m) => m.machine_id === id);
+      const idx = mockMachines.findIndex((m) => m.id === id);
       if (idx < 0) throw new Error("Machine not found");
       mockMachines[idx] = {
         ...mockMachines[idx],
@@ -107,7 +107,7 @@ export function useUpdateMachineWifi() {
       wifi_ssid: string;
     }) => {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      const idx = mockMachines.findIndex((m) => m.machine_id === id);
+      const idx = mockMachines.findIndex((m) => m.id === id);
       if (idx < 0) throw new Error("Machine not found");
       mockMachines[idx] = {
         ...mockMachines[idx],
@@ -125,7 +125,7 @@ export function useRemoveMachine() {
   return useMutation({
     mutationFn: async (id: string) => {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      mockMachines = mockMachines.filter((m) => m.machine_id !== id);
+      mockMachines = mockMachines.filter((m) => m.id !== id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
