@@ -65,6 +65,9 @@ export function useBluetooth(): BluetoothState {
     reject: (err: Error) => void;
   } | null>(null);
   const isRegistrationCompleteRef = useRef(false);
+  // Tracks the last time (ms) each scanned device sent an advertisement packet
+  const devicesSeenAtRef = useRef<Map<string, number>>(new Map());
+  const scanPruneIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const clearProvisioningTimeout = useCallback(() => {
     if (timeoutTimerRef.current) {
@@ -80,6 +83,13 @@ export function useBluetooth(): BluetoothState {
     }
   }, []);
 
+  const stopScanPruneInterval = useCallback(() => {
+    if (scanPruneIntervalRef.current) {
+      clearInterval(scanPruneIntervalRef.current);
+      scanPruneIntervalRef.current = null;
+    }
+  }, []);
+
   const startScan = useCallback(async () => {
     setStatus('requesting-permission');
     setErrorMessage(null);
@@ -87,6 +97,8 @@ export function useBluetooth(): BluetoothState {
     setConnectedDevice(null);
     setHardwareMac(null);
     deviceRef.current = null;
+    devicesSeenAtRef.current.clear();
+    stopScanPruneInterval();
 
     const hasPermission = await requestBluetoothPermissions();
     if (!hasPermission) {
@@ -105,22 +117,35 @@ export function useBluetooth(): BluetoothState {
     logger.info('Starting BLE scan for AIVSP machines');
     setStatus('scanning');
 
+    // Prune devices that haven't advertised in the last 8 seconds
+    scanPruneIntervalRef.current = setInterval(() => {
+      const staleThreshold = Date.now() - 8000;
+      devicesSeenAtRef.current.forEach((seenAt, id) => {
+        if (seenAt < staleThreshold) {
+          devicesSeenAtRef.current.delete(id);
+          setDevices((prev) => prev.filter((d) => d.id !== id));
+        }
+      });
+    }, 3000);
+
     bleManager.startDeviceScan([BLE_SERVICE_UUID], null, (error, scannedDevice) => {
       if (error) {
         logger.error('BLE scan error', error);
         setErrorMessage('Failed to scan for devices. Please try again.');
         setStatus('error');
+        stopScanPruneInterval();
         return;
       }
 
       if (scannedDevice) {
+        devicesSeenAtRef.current.set(scannedDevice.id, Date.now());
         setDevices((prev) => {
           if (prev.find((d) => d.id === scannedDevice.id)) return prev;
           return [...prev, scannedDevice];
         });
       }
     });
-  }, []);
+  }, [stopScanPruneInterval]);
 
   const handleNotificationPayload = useCallback((payload: string) => {
     const parts = payload.split(',');
@@ -338,6 +363,7 @@ export function useBluetooth(): BluetoothState {
     isRegistrationCompleteRef.current = true;
     clearProvisioningTimeout();
     cleanupNotificationSubscription();
+    stopScanPruneInterval();
     pendingProvisionRef.current = null;
     setProvisioningStatus('idle');
     setProvisioningError(null);
@@ -351,16 +377,17 @@ export function useBluetooth(): BluetoothState {
     setDevices([]);
     setStatus('idle');
     setErrorMessage(null);
-  }, [clearProvisioningTimeout, cleanupNotificationSubscription]);
+  }, [clearProvisioningTimeout, cleanupNotificationSubscription, stopScanPruneInterval]);
 
   useEffect(() => {
     return () => {
       clearProvisioningTimeout();
       cleanupNotificationSubscription();
+      stopScanPruneInterval();
       bleManager.stopDeviceScan();
       deviceRef.current?.cancelConnection().catch(() => {});
     };
-  }, [clearProvisioningTimeout, cleanupNotificationSubscription]);
+  }, [clearProvisioningTimeout, cleanupNotificationSubscription, stopScanPruneInterval]);
 
   return {
     status,

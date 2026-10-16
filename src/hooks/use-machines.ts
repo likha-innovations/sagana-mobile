@@ -82,16 +82,17 @@ export function useUpdateMachineName() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const idx = mockMachines.findIndex((m) => m.machine_id === id);
-      if (idx < 0) throw new Error("Machine not found");
-      mockMachines[idx] = {
-        ...mockMachines[idx],
-        name: machineNameSchema.parse(name),
-      };
+      const validName = machineNameSchema.parse(name);
+      return machineApi.updateMachine(id, { name: validName });
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          Array.isArray(query.queryKey) &&
+          query.queryKey[0] === "machines" &&
+          query.queryKey.includes(variables.id),
+      });
     },
   });
 }
@@ -106,16 +107,17 @@ export function useUpdateMachineWifi() {
       id: string;
       wifi_ssid: string;
     }) => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const idx = mockMachines.findIndex((m) => m.machine_id === id);
-      if (idx < 0) throw new Error("Machine not found");
-      mockMachines[idx] = {
-        ...mockMachines[idx],
-        wifi_ssid: machineSsidSchema.parse(wifi_ssid),
-      };
+      const validSsid = machineSsidSchema.parse(wifi_ssid);
+      return machineApi.updateMachine(id, { wifi_ssid: validSsid });
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          Array.isArray(query.queryKey) &&
+          query.queryKey[0] === "machines" &&
+          query.queryKey.includes(variables.id),
+      });
     },
   });
 }
@@ -123,12 +125,15 @@ export function useUpdateMachineWifi() {
 export function useRemoveMachine() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      mockMachines = mockMachines.filter((m) => m.machine_id !== id);
-    },
-    onSuccess: () => {
+    mutationFn: async (id: string) => machineApi.removeMachine(id),
+    onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          Array.isArray(query.queryKey) &&
+          query.queryKey[0] === "machines" &&
+          query.queryKey.includes(id),
+      });
     },
   });
 }
