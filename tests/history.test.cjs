@@ -152,9 +152,7 @@ test("fixtures validate, stay inside their batches and preserve initial feedstoc
     assert.ok(logs.some((r) => r.batch_id === batch.batch_id));
   }
   for (const event of [...readings, ...logs]) {
-    const machine = fixtures.machines.find(
-      (m) => m.id === event.machine_id,
-    );
+    const machine = fixtures.machines.find((m) => m.id === event.machine_id);
     assert.ok(machine);
     assert.ok(
       Date.parse(event.recorded_at ?? event.created_at) >=
