@@ -50,7 +50,7 @@ test("API maps list/detail fields, preserves nulls, and rejects invalid records"
     "@/types/machine": load("src/types/machine.ts"),
   });
   const [machine] = await machineApi.getMachines();
-  assert.equal(machine.machine_id, record.id);
+  assert.equal(machine.id, record.id);
   assert.equal(machine.barangay_id, record.barangayId);
   assert.equal(machine.mac_address, record.macAddress);
   assert.equal(machine.name, record.name);

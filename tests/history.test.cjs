@@ -153,7 +153,7 @@ test("fixtures validate, stay inside their batches and preserve initial feedstoc
   }
   for (const event of [...readings, ...logs]) {
     const machine = fixtures.machines.find(
-      (m) => m.machine_id === event.machine_id,
+      (m) => m.id === event.machine_id,
     );
     assert.ok(machine);
     assert.ok(

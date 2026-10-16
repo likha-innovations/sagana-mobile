@@ -94,7 +94,7 @@ export default function NewBatchScreen() {
   }, [step, router]);
 
   const selectedMachine = useMemo(
-    () => machines.find((m) => m.machine_id === selectedMachineId),
+    () => machines.find((m) => m.id === selectedMachineId),
     [machines, selectedMachineId]
   );
 
@@ -552,10 +552,10 @@ export default function NewBatchScreen() {
 
                   return (
                     <TouchableOpacity
-                      key={m.machine_id}
+                      key={m.id}
                       disabled={!isAvailable}
                       onPress={() => {
-                        setSelectedMachineId(m.machine_id);
+                        setSelectedMachineId(m.id);
                         setMachineError(null);
                         machineModalRef.current?.dismiss();
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

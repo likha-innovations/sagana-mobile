@@ -1,7 +1,7 @@
 {
   "machines": [
     {
-      "machine_id": "1",
+      "id": "1",
       "barangay_id": "b-1",
       "mac_address": "00:11:22:33:44:55",
       "name": "SAGANA-1",
@@ -19,7 +19,7 @@
       }
     },
     {
-      "machine_id": "2",
+      "id": "2",
       "barangay_id": "b-1",
       "mac_address": "00:11:22:33:44:66",
       "name": "SAGANA-2",
@@ -30,7 +30,7 @@
       "removed_at": null
     },
     {
-      "machine_id": "3",
+      "id": "3",
       "barangay_id": "b-1",
       "mac_address": "00:11:22:33:44:77",
       "name": "SAGANA-3",
@@ -48,7 +48,7 @@
       }
     },
     {
-      "machine_id": "4",
+      "id": "4",
       "barangay_id": "b-1",
       "mac_address": "00:11:22:33:44:88",
       "name": "SAGANA-4",

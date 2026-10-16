@@ -17,7 +17,7 @@ export function useHistory(scope: HistoryScope) {
       : undefined;
   const machine =
     scope.kind === "machine"
-      ? machines.data?.find((item) => item.machine_id === scope.machineId)
+      ? machines.data?.find((item) => item.id === scope.machineId)
       : undefined;
   const entity = scope.kind === "batch" ? batch : machine;
   const metadata = scope.kind === "batch" ? batches : machines;
