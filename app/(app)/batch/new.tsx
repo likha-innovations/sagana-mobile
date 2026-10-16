@@ -20,13 +20,15 @@ import {
   type BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, ChevronDown } from 'lucide-react-native';
+import { ChevronLeft, ChevronDown, Sprout } from 'lucide-react-native';
+import { Image } from 'expo-image';
 import * as Haptics from 'expo-haptics';
 import { toast } from 'burnt';
 
 import { useDynamicLayout } from '@/hooks/use-layout';
 import { useMachines } from '@/hooks/use-machines';
 import { useFeedstocks, useCreateCompostBatch } from '@/hooks/use-batches';
+import { getFeedstockImage } from '@/constants/feedstocks';
 import type { FeedstockCategory } from '@/types/batch';
 
 type WizardStep = 1 | 2 | 3 | 4 | 5;
@@ -98,8 +100,8 @@ export default function NewBatchScreen() {
 
   const categorizedFeedstocks = useMemo(() => {
     const categories: Record<FeedstockCategory, typeof feedstocks> = {
-      Greens: [],
-      Browns: [],
+      green: [],
+      brown: [],
     };
     feedstocks.forEach((f) => {
       if (categories[f.category]) {
@@ -339,13 +341,13 @@ export default function NewBatchScreen() {
                     No feedstocks available yet.
                   </Text>
                 ) : (
-                  (['Greens', 'Browns'] as FeedstockCategory[]).map((category) => {
+                  (['green', 'brown'] as FeedstockCategory[]).map((category) => {
                     const items = categorizedFeedstocks[category] ?? [];
                     if (items.length === 0) return null;
 
                     return (
                       <View key={category} className="mb-4">
-                        <Text className="text-sm font-bold text-foreground mb-3">
+                        <Text className="text-sm font-bold text-foreground mb-3 capitalize">
                           {category}
                         </Text>
 
@@ -358,14 +360,29 @@ export default function NewBatchScreen() {
                               key={feedstock.feedstock_id}
                               className="bg-card rounded-2xl border border-border p-4 mb-3"
                             >
-                              {/* Top Row: Placeholder, Name, Toggle */}
+                              {/* Top Row: Image, Name, Toggle */}
                               <Pressable
                                 onPress={() => handleToggleFeedstock(feedstock.feedstock_id)}
                                 className="flex-row items-center justify-between"
                               >
                                 <View className="flex-row items-center flex-1 pr-3">
-                                  {/* Plain Gray Box Placeholder for image */}
-                                  <View className="w-12 h-12 rounded-xl bg-skeleton mr-3" />
+                                  {(() => {
+                                    const img = getFeedstockImage(feedstock.name);
+                                    return img ? (
+                                      <View className="w-12 h-12 rounded-xl bg-card items-center justify-center mr-3 overflow-hidden">
+                                        <Image
+                                          source={img}
+                                          style={{ width: 44, height: 44 }}
+                                          contentFit="contain"
+                                          accessible={false}
+                                        />
+                                      </View>
+                                    ) : (
+                                      <View className="w-12 h-12 rounded-xl bg-muted/40 items-center justify-center mr-3">
+                                        <Sprout size={24} color="#718619" />
+                                      </View>
+                                    );
+                                  })()}
                                   <Text className="text-sm font-medium text-foreground flex-1">
                                     {feedstock.name}
                                   </Text>

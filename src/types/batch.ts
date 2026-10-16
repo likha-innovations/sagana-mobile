@@ -1,7 +1,15 @@
 import { z } from "zod";
 
-export const feedstockCategorySchema = z.enum(["Greens", "Browns"]);
+export const feedstockCategorySchema = z.preprocess((val) => {
+  if (typeof val === 'string') {
+    const lower = val.toLowerCase();
+    if (lower.startsWith('green')) return 'green';
+    if (lower.startsWith('brown')) return 'brown';
+  }
+  return val;
+}, z.enum(["green", "brown"]));
 export type FeedstockCategory = z.infer<typeof feedstockCategorySchema>;
+
 
 export const feedstockSchema = z.object({
   feedstock_id: z.string(),

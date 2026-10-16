@@ -81,9 +81,15 @@ test("local mock creation updates ongoing counts and invalidates dashboard depen
       useQueryClient: () => ({
         invalidateQueries: ({ queryKey }) =>
           invalidations.push(queryKey.join("/")),
+        getQueryData: () => [],
       }),
     },
     "@/types/batch": types,
+    "@/api/feedstock.api": {
+      feedstockApi: {
+        getFeedstocks: async () => [],
+      },
+    },
     "@/lib/dashboard": helpers,
     "@/data/data.json": fixtures,
     "@/hooks/use-machines": {
