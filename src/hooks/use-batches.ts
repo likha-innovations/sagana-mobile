@@ -115,12 +115,11 @@ export function useCreateCompostBatch() {
         queryClient.getQueryData<Feedstock[]>(batchKeys.feedstocks) ?? [];
 
       const feedstocks: BatchFeedstock[] = input.feedstocks.map((item, idx) => {
-        const master = cachedFeedstocks.find(
-          (f) => f.feedstock_id === item.feedstock_id,
-        );
+        const itemId = item.id;
+        const master = cachedFeedstocks.find((f) => f.id === itemId);
         return {
           id: `bf-${Date.now()}-${idx}`,
-          feedstock_id: item.feedstock_id,
+          feedstockId: itemId,
           name: master?.name ?? "Feedstock",
           category: master?.category ?? "green",
           weight_kg: item.weight,

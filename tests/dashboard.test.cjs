@@ -105,7 +105,7 @@ test("local mock creation updates ongoing counts and invalidates dashboard depen
   const mutation = hooks.useCreateCompostBatch();
   const input = {
     machine_id: "2",
-    feedstocks: [{ feedstock_id: "fs-1", weight: 10 }],
+    feedstocks: [{ id: "fs-1", weight: 10 }],
   };
   const created = await mutation.mutationFn(input);
   mutation.onSuccess(created, input);

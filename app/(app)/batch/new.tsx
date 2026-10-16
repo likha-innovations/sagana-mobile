@@ -177,8 +177,8 @@ export default function NewBatchScreen() {
   const handleStep4Submit = async () => {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      const items = Object.entries(selectedFeedstocks).map(([feedstock_id, weightStr]) => ({
-        feedstock_id,
+      const items = Object.entries(selectedFeedstocks).map(([id, weightStr]) => ({
+        id,
         weight: parseFloat(weightStr) || 0,
       }));
 
@@ -352,17 +352,17 @@ export default function NewBatchScreen() {
                         </Text>
 
                         {items.map((feedstock) => {
-                          const isSelected = feedstock.feedstock_id in selectedFeedstocks;
-                          const weightValue = selectedFeedstocks[feedstock.feedstock_id] ?? '0';
+                          const isSelected = feedstock.id in selectedFeedstocks;
+                          const weightValue = selectedFeedstocks[feedstock.id] ?? '0';
 
                           return (
                             <View
-                              key={feedstock.feedstock_id}
+                              key={feedstock.id}
                               className="bg-card rounded-2xl border border-border p-4 mb-3"
                             >
                               {/* Top Row: Image, Name, Toggle */}
                               <Pressable
-                                onPress={() => handleToggleFeedstock(feedstock.feedstock_id)}
+                                onPress={() => handleToggleFeedstock(feedstock.id)}
                                 className="flex-row items-center justify-between"
                               >
                                 <View className="flex-row items-center flex-1 pr-3">
@@ -413,7 +413,7 @@ export default function NewBatchScreen() {
                                       keyboardType="decimal-pad"
                                       value={weightValue}
                                       onChangeText={(t) =>
-                                        handleWeightChange(feedstock.feedstock_id, t)
+                                        handleWeightChange(feedstock.id, t)
                                       }
                                       className="text-sm font-sans text-foreground text-right p-0 mr-1 min-w-[40px]"
                                       placeholder="0"
