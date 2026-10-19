@@ -2,7 +2,7 @@ name: Mobile quality
 
 on:
   pull_request:
-    branches: [main, development]
+    branches: [main, dev]
 
 concurrency:
   group: mobile-quality-${{ github.event.pull_request.number }}
