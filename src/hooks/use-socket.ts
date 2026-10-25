@@ -242,6 +242,53 @@ export function useSocket() {
       });
     };
 
+    const onMachineAdded = (data: unknown) => {
+      const payload = data as {
+        machineId?: string;
+        name?: string;
+        macAddress?: string;
+        barangayId?: string;
+        wifiSsid?: string | null;
+        status?: string;
+        createdAt?: string;
+      };
+      if (!payload?.machineId || !payload?.macAddress || !payload?.name) return;
+
+      const normalizedStatus: Machine['status'] =
+        payload.status === 'active' || payload.status === 'offline' || payload.status === 'maintenance' || payload.status === 'available'
+          ? payload.status
+          : 'active';
+
+      const newMachine: Machine = {
+        id: payload.machineId,
+        barangay_id: payload.barangayId ?? '',
+        mac_address: payload.macAddress,
+        name: payload.name,
+        status: normalizedStatus,
+        wifi_ssid: payload.wifiSsid ?? null,
+        last_seen: null,
+        created_at: payload.createdAt ?? new Date().toISOString(),
+        removed_at: null,
+      };
+
+      // Instantly prepend or append new machine to list cache
+      queryClient.setQueriesData<Machine[]>({ queryKey: ['machines'] }, (old) => {
+        if (!old || !Array.isArray(old)) return old;
+        if (old.some((m) => m.id === payload.machineId)) return old;
+        return [...old, newMachine];
+      });
+
+      // Invalidate to synchronize full server state and related queries
+      void queryClient.invalidateQueries({ queryKey: ['machines'] });
+
+      addLog({
+        type: 'connection',
+        title: `Machine added: ${payload.name}`,
+        payload,
+        timestamp: new Date().toISOString(),
+      });
+    };
+
     const onMachineRemoved = (data: unknown) => {
       const payload = data as { machineId?: string };
       if (!payload?.machineId) return;
