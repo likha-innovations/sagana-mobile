@@ -33,7 +33,6 @@ export function MachineCard({
     machine,
     activeBatch,
   );
-  // Values
   const temp =
     machine.latest_readings?.temperature == null
       ? "--"
@@ -51,7 +50,6 @@ export function MachineCard({
       ? "--"
       : `${machine.latest_readings.co2}%`;
 
-  // Colors
   const tempColor = temp === "--"
     ? colors.gray.textIcon
     : colors.sensors.temperature;
@@ -63,7 +61,6 @@ export function MachineCard({
     ? colors.gray.textIcon
     : colors.sensors.carbonDioxide;
 
-  // Footer
   const days = activeBatch
     ? Math.max(
         0,
