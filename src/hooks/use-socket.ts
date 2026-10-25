@@ -211,11 +211,65 @@ export function useSocket() {
       });
     };
 
+    const onMachineUpdated = (data: unknown) => {
+      const payload = data as { machineId?: string; name?: string };
+      if (!payload?.machineId) return;
+
+      // Patch the machine name in the list cache without waiting for a network round-trip
+      queryClient.setQueriesData<Machine[]>({ queryKey: ['machines'] }, (old) => {
+        if (!old || !Array.isArray(old)) return old;
+        return old.map((m) =>
+          m.id === payload.machineId && payload.name !== undefined
+            ? { ...m, name: payload.name! }
+            : m,
+        );
+      });
+
+      // Patch the detail cache if the renamed machine is currently open
+      queryClient.setQueriesData<Machine>({ queryKey: ['machines'] }, (old) => {
+        if (!old || Array.isArray(old)) return old;
+        if (old.id === payload.machineId && payload.name !== undefined) {
+          return { ...old, name: payload.name! };
+        }
+        return old;
+      });
+
+      addLog({
+        type: 'connection',
+        title: `Machine renamed: ${payload.name ?? payload.machineId}`,
+        payload,
+        timestamp: new Date().toISOString(),
+      });
+    };
+
+    const onMachineRemoved = (data: unknown) => {
+      const payload = data as { machineId?: string };
+      if (!payload?.machineId) return;
+
+      // Drop the deleted machine from the list cache instantly
+      queryClient.setQueriesData<Machine[]>({ queryKey: ['machines'] }, (old) => {
+        if (!old || !Array.isArray(old)) return old;
+        return old.filter((m) => m.id !== payload.machineId);
+      });
+
+      // Invalidate so the next background fetch confirms the deletion
+      void queryClient.invalidateQueries({ queryKey: ['machines'] });
+
+      addLog({
+        type: 'connection',
+        title: 'Machine removed from list',
+        payload,
+        timestamp: new Date().toISOString(),
+      });
+    };
+
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('connect_error', onConnectError);
     socket.on('telemetry', onTelemetry);
     socket.on('status', onStatus);
+    socket.on('machine_updated', onMachineUpdated);
+    socket.on('machine_removed', onMachineRemoved);
 
     return () => {
       socket.off('connect', onConnect);
@@ -223,6 +277,8 @@ export function useSocket() {
       socket.off('connect_error', onConnectError);
       socket.off('telemetry', onTelemetry);
       socket.off('status', onStatus);
+      socket.off('machine_updated', onMachineUpdated);
+      socket.off('machine_removed', onMachineRemoved);
     };
   }, [isSignedIn, addLog, queryClient]);
 
