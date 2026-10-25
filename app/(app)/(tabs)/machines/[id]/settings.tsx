@@ -17,6 +17,8 @@ import {
   Wifi,
   WifiOff,
   Trash2,
+  AlertCircle,
+  Info,
 } from "lucide-react-native";
 import {
   useMachine,
@@ -24,45 +26,85 @@ import {
   useUpdateMachineWifi,
   useRemoveMachine,
 } from "@/hooks/use-machines";
-import { useDynamicLayout } from "@/hooks";
+import { useDynamicLayout, useCurrentWifi } from "@/hooks";
+import { useBluetooth } from "@/hooks/use-bluetooth";
 import { useToast } from "@/components/ui/toast";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { HistoryState } from "@/components/history/history-state";
 import { CompostIcon } from "@/components/icons";
+import { ConnectStep } from "@/components/devices/registration-steps";
 import { colors } from "@/constants";
 import { createLogger } from "@/lib/logger";
 import { machineNameSchema, machineSsidSchema } from "@/lib/machine-overview";
 
 const logger = createLogger("MachineSettingsScreen");
-type SettingsView = "menu" | "rename" | "wifi";
+
+type SettingsView = "menu" | "rename" | "wifi-scan" | "wifi-form";
+
 export default function MachineSettingsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { headerPaddingTop, scrollPaddingBottom } = useDynamicLayout();
   const { showToast } = useToast();
+  const { fetchWifi, isFetching: isFetchingWifi } = useCurrentWifi();
+
   const query = useMachine(id);
   const machine = query.data;
+
   const rename = useUpdateMachineName();
   const wifi = useUpdateMachineWifi();
   const remove = useRemoveMachine();
-  const pending = rename.isPending || wifi.isPending || remove.isPending;
+
+  const {
+    status: bleStatus,
+    devices: bleDevices,
+    connectedDevice,
+    connectingDeviceId,
+    errorMessage: bleErrorMessage,
+    provisioningStatus,
+    provisioningError,
+    startScan,
+    connectToDevice,
+    provisionWifi,
+    clearProvisioningError,
+    reset: resetBle,
+  } = useBluetooth();
+
   const [view, setView] = useState<SettingsView>("menu");
   const [name, setName] = useState("");
   const [ssid, setSsid] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [removeVisible, setRemoveVisible] = useState(false);
+  const [isProvisioning, setIsProvisioning] = useState(false);
+
+  const pending =
+    rename.isPending ||
+    wifi.isPending ||
+    remove.isPending ||
+    isProvisioning ||
+    provisioningStatus === "testing-wifi";
+
   const back = useCallback(() => {
     if (pending) return;
-    if (view === "menu") router.back();
-    else {
+    if (view === "menu") {
+      resetBle();
+      router.back();
+    } else if (view === "wifi-form") {
+      setView("wifi-scan");
+      setPassword("");
+      setError("");
+    } else {
+      resetBle();
       setView("menu");
       setPassword("");
       setError("");
     }
-  }, [pending, view, router]);
+  }, [pending, view, router, resetBle]);
+
   useFocusEffect(
     useCallback(() => {
       logger.screen("Machine Settings", { id, view });
@@ -80,57 +122,127 @@ export default function MachineSettingsScreen() {
       return () => subscription.remove();
     }, [id, view, pending, back]),
   );
-  const open = (next: SettingsView) => {
+
+  const openRename = () => {
     setName(machine?.name ?? "");
+    setError("");
+    setView("rename");
+  };
+
+  const openWifiScan = () => {
     setSsid(machine?.wifi_ssid ?? "");
     setPassword("");
     setError("");
-    setView(next);
+    setView("wifi-scan");
+    startScan();
   };
-  const save = () => {
+
+  const handleDeviceConnect = async (device: any) => {
+    const success = await connectToDevice(device);
+    if (success) {
+      if (Platform.OS !== "web") {
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      setView("wifi-form");
+    }
+  };
+
+  const handleAutoFillWifi = async () => {
+    const currentSsid = await fetchWifi();
+    if (currentSsid) {
+      setSsid(currentSsid);
+      setError("");
+    }
+  };
+
+  const saveRename = () => {
     if (pending) return;
-    const result = (
-      view === "rename" ? machineNameSchema : machineSsidSchema
-    ).safeParse(view === "rename" ? name : ssid);
+    const result = machineNameSchema.safeParse(name);
     if (!result.success) {
       setError(result.error.issues[0].message);
-      if (Platform.OS !== "web")
+      if (Platform.OS !== "web") {
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
       return;
     }
     setError("");
-    const callbacks = {
-      onSuccess: () => {
-        if (Platform.OS !== "web")
-          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        showToast(
-          view === "rename"
-            ? "Machine name updated successfully."
-            : "Mock Wi-Fi name saved. Hardware credentials unchanged.",
-          "success",
-        );
-        setPassword("");
-        setView("menu");
+    rename.mutate(
+      { id, name: result.data },
+      {
+        onSuccess: () => {
+          if (Platform.OS !== "web") {
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }
+          showToast("Machine name updated successfully.", "success");
+          setView("menu");
+        },
+        onError: () => {
+          showToast("Could not save changes. Please try again.", "error");
+        },
       },
-      onError: () => {
-        showToast("Could not save changes. Please try again.", "error");
-      },
-    };
-    if (view === "rename") rename.mutate({ id, name: result.data }, callbacks);
-    else wifi.mutate({ id, wifi_ssid: result.data }, callbacks);
+    );
   };
-  const dirty =
-    view === "rename"
-      ? name.trim() !== machine?.name
-      : ssid.trim() !== (machine?.wifi_ssid ?? "") || password.length > 0;
+
+  const handleApplyWifiToHardware = async () => {
+    if (pending) return;
+    const result = machineSsidSchema.safeParse(ssid);
+    if (!result.success) {
+      setError(result.error.issues[0].message);
+      if (Platform.OS !== "web") {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+      return;
+    }
+    if (!password.trim()) {
+      setError("Wi-Fi Password is required");
+      if (Platform.OS !== "web") {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+      return;
+    }
+
+    setError("");
+    clearProvisioningError();
+    setIsProvisioning(true);
+
+    try {
+      // 1. Write credentials to ESP32 over BLE and wait for connection test
+      await provisionWifi(ssid.trim(), password);
+
+      // 2. Sync new SSID with backend database
+      await wifi.mutateAsync({ id, wifi_ssid: ssid.trim() });
+
+      if (Platform.OS !== "web") {
+        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      showToast("Wi-Fi credentials updated successfully!", "success");
+      resetBle();
+      setPassword("");
+      setView("menu");
+    } catch (err) {
+      if (Platform.OS !== "web") {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Failed to connect machine to Wi-Fi. Please check password.";
+      setError(msg);
+      showToast(msg, "error");
+    } finally {
+      setIsProvisioning(false);
+    }
+  };
+
   const disconnected = machine?.status === "offline";
+
   return (
     <KeyboardAvoidingView
       className="flex-1 bg-background"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <View
-        className="flex-row items-center gap-2 px-4 pb-8"
+        className="flex-row items-center gap-2 px-4 pb-6"
         style={{ paddingTop: Math.max(headerPaddingTop, 48) }}
       >
         <Pressable
@@ -148,11 +260,13 @@ export default function MachineSettingsScreen() {
             ? "Machine Settings"
             : view === "rename"
               ? "Rename Machine"
-              : "Change Wi-Fi Credentials"}
+              : view === "wifi-scan"
+                ? "Select Machine to Re-configure"
+                : "Change Wi-Fi Credentials"}
         </Text>
-        {view !== "menu" && (dirty || error) && (
+        {view === "rename" && (name.trim() !== machine?.name || error) && (
           <Pressable
-            onPress={save}
+            onPress={saveRename}
             disabled={pending}
             accessibilityRole="button"
             accessibilityState={{ disabled: pending, busy: pending }}
@@ -166,13 +280,14 @@ export default function MachineSettingsScreen() {
           </Pressable>
         )}
       </View>
+
       <ScrollView
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         contentContainerStyle={{
           paddingHorizontal: 16,
           paddingBottom: scrollPaddingBottom,
-          gap: 12,
+          flexGrow: 1,
         }}
       >
         {query.isError && (
@@ -186,6 +301,7 @@ export default function MachineSettingsScreen() {
             retrying={query.isFetching}
           />
         )}
+
         {query.isPending ? (
           <View
             accessible
@@ -199,128 +315,218 @@ export default function MachineSettingsScreen() {
             ))}
           </View>
         ) : (
-          machine &&
-          (view === "menu" ? (
+          machine && (
             <>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => open("rename")}
-                className="min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4"
-              >
-                <PencilLine size={24} color={colors.semantic.foreground} />
-                <Text className="flex-1 text-sm font-sans text-foreground">
-                  Rename machine
-                </Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => open("wifi")}
-                className="min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4"
-              >
-                <Wifi size={24} color={colors.semantic.foreground} />
-                <Text className="flex-1 text-sm font-sans text-foreground">
-                  Change Wi-Fi credentials
-                </Text>
-              </Pressable>
-              <Pressable
-                disabled
-                accessibilityRole="button"
-                accessibilityState={{ disabled: true }}
-                accessibilityLabel="Remove current batch. Batch cancellation is not available yet."
-                className="min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 opacity-50"
-              >
-                <CompostIcon size={24} color={colors.red[500]} />
-                <Text className="flex-1 text-sm font-sans text-destructive">
-                  Remove current batch
-                </Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => setRemoveVisible(true)}
-                className="min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4"
-              >
-                <Trash2 size={24} color={colors.red[500]} />
-                <Text className="flex-1 text-sm font-sans text-destructive">
-                  Remove machine
-                </Text>
-              </Pressable>
-            </>
-          ) : view === "rename" ? (
-            <Input
-              label="Machine Name"
-              accessibilityLabel="Machine Name"
-              value={name}
-              onChangeText={(value) => {
-                setName(value);
-                setError("");
-              }}
-              error={error}
-              editable={!pending}
-              controlClassName="rounded-[14px]"
-              autoCapitalize="words"
-              returnKeyType="done"
-              onSubmitEditing={save}
-            />
-          ) : (
-            <>
-              <View className="rounded-[14px] border border-border p-6 gap-2 mb-5">
-                <Text className="text-sm font-bold text-foreground">
-                  {machine.wifi_ssid || "No Wi-Fi configured"}
-                </Text>
-                <View className="flex-row items-center gap-2">
-                  {disconnected ? (
-                    <WifiOff size={18} color={colors.red[500]} />
-                  ) : (
-                    <Wifi size={18} color={colors.brand[500]} />
-                  )}
-                  <Text
-                    className={`text-sm font-sans ${disconnected ? "text-destructive" : "text-primary"}`}
+              {view === "menu" && (
+                <View className="gap-3">
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={openRename}
+                    className="min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 bg-card active:bg-muted"
                   >
-                    {disconnected
-                      ? "Disconnected"
-                      : machine.wifi_ssid
-                        ? "Connected"
-                        : "Not configured"}
-                  </Text>
+                    <PencilLine size={24} color={colors.semantic.foreground} />
+                    <Text className="flex-1 text-sm font-sans text-foreground">
+                      Rename machine
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={openWifiScan}
+                    className="min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 bg-card active:bg-muted"
+                  >
+                    <Wifi size={24} color={colors.semantic.foreground} />
+                    <View className="flex-1">
+                      <Text className="text-sm font-sans text-foreground">
+                        Change Wi-Fi credentials
+                      </Text>
+                      <Text className="text-xs text-muted-foreground mt-0.5">
+                        Requires Bluetooth to update hardware
+                      </Text>
+                    </View>
+                  </Pressable>
+
+                  <Pressable
+                    disabled
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: true }}
+                    accessibilityLabel="Remove current batch. Batch cancellation is not available yet."
+                    className="min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 opacity-50 bg-card"
+                  >
+                    <CompostIcon size={24} color={colors.red[500]} />
+                    <Text className="flex-1 text-sm font-sans text-destructive">
+                      Remove current batch
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => setRemoveVisible(true)}
+                    className="min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 bg-card active:bg-muted"
+                  >
+                    <Trash2 size={24} color={colors.red[500]} />
+                    <Text className="flex-1 text-sm font-sans text-destructive">
+                      Remove machine
+                    </Text>
+                  </Pressable>
                 </View>
-              </View>
-              <Input
-                label="SSID"
-                accessibilityLabel="SSID"
-                value={ssid}
-                onChangeText={(value) => {
-                  setSsid(value);
-                  setError("");
-                }}
-                error={error}
-                editable={!pending}
-                autoCapitalize="none"
-                autoCorrect={false}
-                controlClassName="rounded-[14px]"
-              />
-              <Input
-                label="Wi-Fi Password"
-                accessibilityLabel="Wi-Fi Password"
-                value={password}
-                onChangeText={setPassword}
-                isPassword
-                editable={!pending}
-                autoCapitalize="none"
-                autoCorrect={false}
-                controlClassName="rounded-[14px]"
-              />
-              <Text className="text-xs font-sans text-foreground">
-                Mock mode: only the Wi-Fi name is saved. Passwords are not
-                stored or sent to the machine.
-              </Text>
+              )}
+
+              {view === "rename" && (
+                <View className="mt-2">
+                  <Input
+                    label="Machine Name"
+                    accessibilityLabel="Machine Name"
+                    value={name}
+                    onChangeText={(value) => {
+                      setName(value);
+                      setError("");
+                    }}
+                    error={error}
+                    editable={!pending}
+                    controlClassName="rounded-[14px]"
+                    autoCapitalize="words"
+                    returnKeyType="done"
+                    onSubmitEditing={saveRename}
+                  />
+                </View>
+              )}
+
+              {view === "wifi-scan" && (
+                <View className="flex-1">
+                  <View className="p-4 mb-4 bg-brand-50 border border-brand-200 rounded-2xl flex-row items-center gap-3">
+                    <Info size={20} color="#718619" style={{ flexShrink: 0 }} />
+                    <Text className="text-xs text-foreground flex-1 leading-relaxed">
+                      Ensure your machine is nearby and in BLE provisioning mode
+                      (hold BOOT button on ESP32 for 3s if not broadcasting).
+                    </Text>
+                  </View>
+
+                  <ConnectStep
+                    status={bleStatus}
+                    devices={bleDevices}
+                    connectedDevice={connectedDevice}
+                    connectingDeviceId={connectingDeviceId}
+                    errorMessage={bleErrorMessage}
+                    onConnect={handleDeviceConnect}
+                    onRetry={startScan}
+                  />
+                </View>
+              )}
+
+              {view === "wifi-form" && (
+                <View className="flex-1 mt-2">
+                  <View className="rounded-[14px] border border-border p-4 gap-2 mb-4 bg-card">
+                    <Text className="text-xs text-muted-foreground">
+                      Target Machine:
+                    </Text>
+                    <Text className="text-sm font-bold text-foreground">
+                      {connectedDevice?.name || machine.name} (
+                      {connectedDevice?.id || machine.mac_address})
+                    </Text>
+                  </View>
+
+                  {pending && (
+                    <View className="p-4 mb-4 bg-brand-50 border border-brand-200 rounded-2xl flex-row items-center gap-3">
+                      <ActivityIndicator size="small" color="#718619" />
+                      <View className="flex-1">
+                        <Text className="text-sm font-semibold text-foreground">
+                          Testing & connecting machine to Wi-Fi...
+                        </Text>
+                        <Text className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                          Sending credentials to ESP32 over Bluetooth. This may
+                          take 10-20 seconds.
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+
+                  {(error || provisioningError) && !pending && (
+                    <View className="p-4 mb-4 bg-red-50 border border-destructive/20 rounded-2xl flex-row items-center gap-3">
+                      <AlertCircle
+                        size={20}
+                        color="#E84C4C"
+                        style={{ flexShrink: 0 }}
+                      />
+                      <View className="flex-1">
+                        <Text className="text-sm font-semibold text-destructive">
+                          Connection Failed
+                        </Text>
+                        <Text className="text-xs text-destructive mt-0.5 leading-relaxed">
+                          {error || provisioningError}
+                        </Text>
+                      </View>
+                    </View>
+                  )}
+
+                  <View className="mb-4 flex-row justify-end">
+                    <Button
+                      title="Use Current Wi-Fi SSID"
+                      variant="outline"
+                      size="sm"
+                      onPress={handleAutoFillWifi}
+                      loading={isFetchingWifi}
+                      disabled={pending || isFetchingWifi}
+                      haptic
+                    />
+                  </View>
+
+                  <Input
+                    label="SSID"
+                    placeholder="SSID"
+                    accessibilityLabel="SSID"
+                    value={ssid}
+                    onChangeText={(value) => {
+                      setSsid(value);
+                      setError("");
+                    }}
+                    error={error && !password ? error : undefined}
+                    editable={!pending}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    controlClassName="rounded-[14px]"
+                  />
+
+                  <Input
+                    label="Wi-Fi Password"
+                    placeholder="Wi-Fi Password"
+                    accessibilityLabel="Wi-Fi Password"
+                    value={password}
+                    onChangeText={(value) => {
+                      setPassword(value);
+                      setError("");
+                    }}
+                    isPassword
+                    editable={!pending}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    controlClassName="rounded-[14px]"
+                  />
+
+                  <View className="mt-6">
+                    <Button
+                      title={
+                        pending
+                          ? "Connecting to Wi-Fi..."
+                          : "Update Machine Wi-Fi"
+                      }
+                      loading={pending}
+                      disabled={pending || !ssid.trim() || !password.trim()}
+                      onPress={handleApplyWifiToHardware}
+                      haptic
+                    />
+                  </View>
+                </View>
+              )}
             </>
-          ))
+          )
         )}
       </ScrollView>
+
       <ConfirmModal
         visible={removeVisible}
         title="Remove machine?"
-        description="Remove this machine from the app's mock list? This does not stop hardware or remove recorded batch history."
+        description="Are you sure you want to remove this machine from your barangay? You will no longer see it in your machines list."
         confirmText="Yes, remove it"
         isDestructive
         pending={remove.isPending}
@@ -343,3 +549,4 @@ export default function MachineSettingsScreen() {
     </KeyboardAvoidingView>
   );
 }
+

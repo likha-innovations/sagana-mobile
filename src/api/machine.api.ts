@@ -34,4 +34,20 @@ export const machineApi = {
     toMachine(
       await api.get<MachineResponse>(`/machines/${encodeURIComponent(id)}`),
     ),
+  updateMachine: async (
+    id: string,
+    payload: { name?: string; wifi_ssid?: string },
+  ): Promise<Machine> =>
+    toMachine(
+      await api.patch<MachineResponse>(
+        `/machines/${encodeURIComponent(id)}`,
+        payload,
+      ),
+    ),
+  removeMachine: async (
+    id: string,
+  ): Promise<{ success: boolean; message: string }> =>
+    api.delete<{ success: boolean; message: string }>(
+      `/machines/${encodeURIComponent(id)}`,
+    ),
 };
