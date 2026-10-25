@@ -35,31 +35,31 @@ export function MachineCard({
   );
   // Values
   const temp =
-    isVacant || machine.latest_readings?.temperature == null
+    machine.latest_readings?.temperature == null
       ? "--"
       : `${machine.latest_readings.temperature}°C`;
   const moisture =
-    isVacant || machine.latest_readings?.moisture == null
+    machine.latest_readings?.moisture == null
       ? "--"
       : `${machine.latest_readings.moisture}%`;
   const o2 =
-    isVacant || machine.latest_readings?.oxygen == null
+    machine.latest_readings?.oxygen == null
       ? "--"
       : `${machine.latest_readings.oxygen}%`;
   const co2 =
-    isVacant || machine.latest_readings?.co2 == null
+    machine.latest_readings?.co2 == null
       ? "--"
       : `${machine.latest_readings.co2}%`;
 
   // Colors
-  const tempColor = isVacant
+  const tempColor = temp === "--"
     ? colors.gray.textIcon
     : colors.sensors.temperature;
-  const moistureColor = isVacant
+  const moistureColor = moisture === "--"
     ? colors.gray.textIcon
     : colors.sensors.moisture;
-  const o2Color = isVacant ? colors.gray.textIcon : colors.sensors.oxygen;
-  const co2Color = isVacant
+  const o2Color = o2 === "--" ? colors.gray.textIcon : colors.sensors.oxygen;
+  const co2Color = co2 === "--"
     ? colors.gray.textIcon
     : colors.sensors.carbonDioxide;
 

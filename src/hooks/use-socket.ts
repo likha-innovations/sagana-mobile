@@ -123,17 +123,82 @@ export function useSocket() {
 
       setLatestTelemetry(telemetryPayload);
 
-      // If telemetry is received, device is definitely active
+      // If telemetry is received, device is active & update latest sensor readings
       if (telemetryPayload && typeof telemetryPayload === 'object' && 'macAddress' in telemetryPayload) {
-        const mac = (telemetryPayload as { macAddress?: string }).macAddress;
+        const payloadObj = telemetryPayload as Record<string, unknown>;
+        const mac = payloadObj.macAddress as string | undefined;
         if (mac) {
+          const bme = payloadObj.bme280 as { temp?: number } | undefined;
+          const ds = payloadObj.ds18b20 as { probe1?: number } | undefined;
+          const scd = payloadObj.scd41 as { co2?: number } | undefined;
+          const moist = payloadObj.moisture as { sensor1?: number } | undefined;
+
+          const tempVal =
+            typeof bme?.temp === 'number'
+              ? bme.temp
+              : typeof ds?.probe1 === 'number'
+                ? ds.probe1
+                : typeof payloadObj.temperature === 'number'
+                  ? (payloadObj.temperature as number)
+                  : undefined;
+
+          const moistVal =
+            typeof moist?.sensor1 === 'number'
+              ? moist.sensor1
+              : typeof payloadObj.moisture === 'number'
+                ? (payloadObj.moisture as number)
+                : undefined;
+
+          const o2Val =
+            typeof payloadObj.o2 === 'number'
+              ? (payloadObj.o2 as number)
+              : typeof payloadObj.oxygen === 'number'
+                ? (payloadObj.oxygen as number)
+                : undefined;
+
+          const co2Val =
+            typeof scd?.co2 === 'number'
+              ? scd.co2
+              : typeof payloadObj.co2 === 'number'
+                ? (payloadObj.co2 as number)
+                : undefined;
+
           queryClient.setQueriesData<Machine[]>({ queryKey: ['machines'] }, (old) => {
             if (!old || !Array.isArray(old)) return old;
-            return old.map((m) =>
-              m.mac_address === mac && m.status === 'offline'
-                ? { ...m, status: 'active' }
-                : m,
-            );
+            return old.map((m) => {
+              if (m.mac_address === mac) {
+                return {
+                  ...m,
+                  status: 'active',
+                  latest_readings: {
+                    temperature: tempVal ?? m.latest_readings?.temperature ?? 0,
+                    moisture: moistVal ?? m.latest_readings?.moisture ?? 0,
+                    oxygen: o2Val ?? m.latest_readings?.oxygen ?? 0,
+                    co2: co2Val ?? m.latest_readings?.co2 ?? 0,
+                    updated_at: new Date().toISOString(),
+                  },
+                };
+              }
+              return m;
+            });
+          });
+
+          queryClient.setQueriesData<Machine>({ queryKey: ['machines'] }, (old) => {
+            if (!old || Array.isArray(old)) return old;
+            if (old.mac_address === mac) {
+              return {
+                ...old,
+                status: 'active',
+                latest_readings: {
+                  temperature: tempVal ?? old.latest_readings?.temperature ?? 0,
+                  moisture: moistVal ?? old.latest_readings?.moisture ?? 0,
+                  oxygen: o2Val ?? old.latest_readings?.oxygen ?? 0,
+                  co2: co2Val ?? old.latest_readings?.co2 ?? 0,
+                  updated_at: new Date().toISOString(),
+                },
+              };
+            }
+            return old;
           });
         }
       }
