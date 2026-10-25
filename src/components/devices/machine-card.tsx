@@ -2,6 +2,7 @@ import { View, Text, Pressable, useWindowDimensions } from "react-native";
 import {
   ChevronRight,
   Radio,
+  RadioOff,
   Thermometer,
   Droplets,
   Wind,
@@ -93,10 +94,11 @@ export function MachineCard({
       {/* Header */}
       <View className="flex-row items-center justify-between mb-4">
         <View className="flex-1 flex-row items-center gap-3">
-          <Radio
-            size={20}
-            color={isOffline ? colors.gray.textIcon : colors.brand[500]}
-          />
+          {isOffline ? (
+            <RadioOff size={20} color={colors.red[500]} />
+          ) : (
+            <Radio size={20} color={colors.brand[500]} />
+          )}
           <Text className="flex-1 text-[14px] font-bold text-foreground">
             {machine.name}
           </Text>

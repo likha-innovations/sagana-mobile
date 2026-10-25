@@ -1,12 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { getSocket, getSocketUrl, disconnectSocket } from '@/lib/socket';
 import { TelemetryData, RealtimeEventLog } from '@/types';
+import type { Machine } from '@/types/machine';
 import { useAuthContext } from '@/context/auth-context';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('useSocket');
 
 export function useSocket() {
+  const queryClient = useQueryClient();
   const { isSignedIn } = useAuthContext();
   const [isConnected, setIsConnected] = useState(false);
   const [socketId, setSocketId] = useState<string | null>(null);
@@ -72,12 +75,69 @@ export function useSocket() {
       });
     };
 
+    const onStatus = (data: unknown) => {
+      const payload = data as { machineId?: string; macAddress?: string; status?: string };
+      if (!payload?.status) return;
+
+      const normalizedStatus: Machine['status'] =
+        payload.status === 'online' || payload.status === 'active' ? 'active' : 'offline';
+
+      // Instantly update machine in cached list for 0ms latency UI flip
+      queryClient.setQueriesData<Machine[]>({ queryKey: ['machines'] }, (old) => {
+        if (!old || !Array.isArray(old)) return old;
+        return old.map((m) =>
+          (payload.machineId && m.id === payload.machineId) ||
+          (payload.macAddress && m.mac_address === payload.macAddress)
+            ? { ...m, status: normalizedStatus }
+            : m,
+        );
+      });
+
+      // Update machine detail query if currently viewed
+      queryClient.setQueriesData<Machine>({ queryKey: ['machines'] }, (old) => {
+        if (!old || Array.isArray(old)) return old;
+        if (
+          (payload.machineId && old.id === payload.machineId) ||
+          (payload.macAddress && old.mac_address === payload.macAddress)
+        ) {
+          return { ...old, status: normalizedStatus };
+        }
+        return old;
+      });
+
+      // Invalidate queries to ensure background consistency with DB
+      queryClient.invalidateQueries({ queryKey: ['machines'] });
+
+      addLog({
+        type: 'connection',
+        title: `Machine status changed: ${normalizedStatus}`,
+        payload,
+        timestamp: new Date().toISOString(),
+      });
+    };
+
     const onTelemetry = (data: unknown) => {
       const telemetryPayload = typeof data === 'object' && data !== null
         ? (data as TelemetryData)
         : { raw: data };
 
       setLatestTelemetry(telemetryPayload);
+
+      // If telemetry is received, device is definitely active
+      if (telemetryPayload && typeof telemetryPayload === 'object' && 'macAddress' in telemetryPayload) {
+        const mac = (telemetryPayload as { macAddress?: string }).macAddress;
+        if (mac) {
+          queryClient.setQueriesData<Machine[]>({ queryKey: ['machines'] }, (old) => {
+            if (!old || !Array.isArray(old)) return old;
+            return old.map((m) =>
+              m.mac_address === mac && m.status === 'offline'
+                ? { ...m, status: 'active' }
+                : m,
+            );
+          });
+        }
+      }
+
       addLog({
         type: 'telemetry',
         title: 'Live Telemetry Received',
@@ -90,16 +150,18 @@ export function useSocket() {
     socket.on('disconnect', onDisconnect);
     socket.on('connect_error', onConnectError);
     socket.on('telemetry', onTelemetry);
+    socket.on('status', onStatus);
 
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('connect_error', onConnectError);
       socket.off('telemetry', onTelemetry);
+      socket.off('status', onStatus);
     };
-  }, [isSignedIn, addLog]);
+  }, [isSignedIn, addLog, queryClient]);
 
-  // Dispatches custom command from mobile to backend -> HiveMQ sagana/commands
+  // Dispatches custom command from mobile to backend -> EMQX commands topic
   const sendCommand = useCallback(
     (commandData: string | object) => {
       const socket = getSocket();
@@ -120,7 +182,7 @@ export function useSocket() {
       socket.emit('command', payload);
       addLog({
         type: 'command',
-        title: 'Command Dispatched to HiveMQ',
+        title: 'Command Dispatched to Broker',
         payload,
         timestamp: new Date().toISOString(),
       });

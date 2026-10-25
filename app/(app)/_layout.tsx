@@ -1,8 +1,10 @@
 import { Stack, Redirect } from 'expo-router';
 import { useAuthContext } from '@/context/auth-context';
+import { useSocket } from '@/hooks/use-socket';
 
 export default function AppLayout() {
   const { isSignedIn, isLoaded, user } = useAuthContext();
+  useSocket();
 
   if (!isLoaded) return null;
 
