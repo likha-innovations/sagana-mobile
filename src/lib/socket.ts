@@ -17,7 +17,7 @@ export function getSocket(): Socket {
     logger.info(`Initializing Socket.IO connection to: ${url}`);
 
     socketInstance = io(url, {
-      transports: ['websocket', 'polling'],
+      transports: ['websocket'],
       autoConnect: false,
       reconnection: true,
       reconnectionAttempts: 10,
