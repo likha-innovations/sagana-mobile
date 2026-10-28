@@ -1,4 +1,4 @@
-import { View, Text, Pressable, Platform, Linking } from 'react-native';
+import { View, Text, Pressable, Platform, Linking, ActivityIndicator } from 'react-native';
 import { Info, AlertCircle, Bluetooth } from 'lucide-react-native';
 import * as IntentLauncher from 'expo-intent-launcher';
 import { Input } from '@/components/ui/input';
@@ -226,7 +226,7 @@ export function WifiCredentialsStep({
 
       {isConnecting && (
         <View className="p-4 mb-4 bg-brand-50 border border-brand-200 rounded-2xl flex-row items-center gap-3">
-          <Skeleton className="w-5 h-5 rounded-full" />
+          <ActivityIndicator size="small" color="#718619" />
           <View className="flex-1">
             <Text className="text-sm font-semibold text-foreground">
               Connecting device to WiFi...
