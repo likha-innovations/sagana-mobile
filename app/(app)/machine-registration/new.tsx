@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { 
-  View, 
-  Pressable, 
-  ScrollView, 
-  KeyboardAvoidingView, 
-  Platform, 
-  Keyboard, 
-  TouchableWithoutFeedback 
+import {
+  View,
+  Pressable,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
@@ -19,12 +19,12 @@ import { useAuthContext } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
 import { ApiError, machineRegistrationSchema, type MachineRegistrationInput } from '@/types';
 import { useBluetooth } from '@/hooks/use-bluetooth';
-import { 
-  TurnOnStep, 
-  ConnectStep, 
-  WifiCredentialsStep, 
-  NameMachineStep, 
-  SuccessStep 
+import {
+  TurnOnStep,
+  ConnectStep,
+  WifiCredentialsStep,
+  NameMachineStep,
+  SuccessStep
 } from '@/components/devices/registration-steps';
 
 export default function AddMachineScreen() {
@@ -36,9 +36,9 @@ export default function AddMachineScreen() {
   const [confirmedMac, setConfirmedMac] = useState<string | null>(null);
   const registerMachineMutation = useRegisterMachine();
 
-  const { 
-    status, 
-    devices, 
+  const {
+    status,
+    devices,
     connectedDevice,
     connectingDeviceId,
     hardwareMac,
@@ -50,7 +50,7 @@ export default function AddMachineScreen() {
     provisionWifi,
     writeMachineName,
     clearProvisioningError,
-    reset 
+    reset
   } = useBluetooth();
 
   const isConnectingWifi = isWriting || provisioningStatus === 'testing-wifi';
@@ -100,8 +100,8 @@ export default function AddMachineScreen() {
         setStep(5);
       } catch (error) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        const errorMsg = error instanceof Error 
-          ? error.message 
+        const errorMsg = error instanceof Error
+          ? error.message
           : 'Failed to connect to WiFi. Please check your credentials and try again.';
         toast({ title: 'Connection Failed', message: errorMsg, preset: 'error' });
         setIsWriting(false);
@@ -165,14 +165,14 @@ export default function AddMachineScreen() {
           }
         }
 
-        const errorMsg = error instanceof Error 
-          ? error.message 
+        const errorMsg = error instanceof Error
+          ? error.message
           : 'Failed to complete machine registration.';
         toast({ title: 'Registration Failed', message: errorMsg, preset: 'error' });
       }
       return;
     }
-    
+
     setStep((prev) => prev + 1);
   };
 
@@ -223,17 +223,32 @@ export default function AddMachineScreen() {
     );
   };
 
+  const nextButtonLabel = () => {
+    if (step === 4) return isConnectingWifi ? 'Connecting device to WiFi...' : 'Next';
+    if (step === 5) return 'Finish';
+    if (step === 6) return 'Finish';
+    return 'Next';
+  };
+
+  const handlePrimaryAction = () => {
+    if (step === 6) {
+      handleFinishFlow();
+    } else {
+      handleNext();
+    }
+  };
+
   return (
-    <KeyboardAvoidingView 
-      style={{ flex: 1 }} 
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
           {step < 6 && (
             <View className="flex-row items-center px-4 py-4 border-b border-transparent">
-              <Pressable 
-                onPress={handleBack} 
+              <Pressable
+                onPress={handleBack}
                 disabled={isConnectingWifi || isWriting}
                 className="p-2 -ml-2 rounded-full active:bg-muted disabled:opacity-30"
               >
@@ -250,23 +265,23 @@ export default function AddMachineScreen() {
             className="px-6"
           >
             {step === 1 && <TurnOnStep />}
-            
+
             {(step === 2 || step === 3) && (
-              <ConnectStep 
-                status={status} 
+              <ConnectStep
+                status={status}
                 devices={devices}
                 connectedDevice={connectedDevice}
                 connectingDeviceId={connectingDeviceId}
                 errorMessage={errorMessage}
                 onConnect={connectToDevice}
-                onRetry={startScan} 
+                onRetry={startScan}
               />
             )}
-            
+
             {step === 4 && (
-              <WifiCredentialsStep 
-                control={control} 
-                setValue={setValue} 
+              <WifiCredentialsStep
+                control={control}
+                setValue={setValue}
                 isConnecting={isConnectingWifi}
                 errorMessage={provisioningError}
               />
@@ -277,32 +292,17 @@ export default function AddMachineScreen() {
             <View className="flex-1 min-h-[40px]" />
 
             <View className="mt-auto pt-4">
-              {step === 4 ? (
-                <Button 
-                  title={isConnectingWifi ? "Connecting device to WiFi..." : "Submit"} 
-                  onPress={handleNext} 
-                  disabled={isConnectingWifi}
-                  loading={isConnectingWifi}
-                  haptic 
-                />
-              ) : step < 4 ? (
-                <Button 
-                  title="Next" 
-                  onPress={handleNext} 
-                  disabled={(step === 2 || step === 3) ? status !== 'connected' : false}
-                  haptic 
-                />
-              ) : step === 5 ? (
-                <Button 
-                  title="Finish" 
-                  onPress={handleNext} 
-                  disabled={isWriting}
-                  loading={isWriting}
-                  haptic 
-                />
-              ) : (
-                <Button title="Finish" onPress={handleFinishFlow} haptic />
-              )}
+              <Button
+                title={nextButtonLabel()}
+                onPress={handlePrimaryAction}
+                disabled={
+                  isConnectingWifi ||
+                  isWriting ||
+                  ((step === 2 || step === 3) && status !== 'connected')
+                }
+                loading={isConnectingWifi || isWriting}
+                haptic
+              />
             </View>
           </ScrollView>
         </View>
