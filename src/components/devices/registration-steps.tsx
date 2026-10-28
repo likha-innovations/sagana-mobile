@@ -1,5 +1,4 @@
-import { useEffect, useRef } from 'react';
-import { View, Text, Pressable, Platform, Linking, AppState, type AppStateStatus } from 'react-native';
+import { View, Text, Pressable, Platform, Linking } from 'react-native';
 import { Info, AlertCircle, Bluetooth } from 'lucide-react-native';
 import * as IntentLauncher from 'expo-intent-launcher';
 import { Input } from '@/components/ui/input';
@@ -24,7 +23,7 @@ export function TurnOnStep() {
   );
 }
 
-// Skeleton placeholder rows shown while BLE is scanning
+// Skeleton placeholder rows shown while BLE is scanning with no results yet
 function DeviceSkeletons() {
   return (
     <View className="gap-3">
@@ -98,34 +97,20 @@ export function ConnectStep({
   const isConnectError = status === 'error' && devices.length > 0;
   const isScanning = status === 'scanning' || status === 'connecting' || status === 'requesting-permission';
 
-  // Track whether the user left to grant BT permission/enable BT
-  const wentToSettingsRef = useRef(false);
-
   const handleEnableBluetooth = async () => {
-    wentToSettingsRef.current = true;
     try {
       if (Platform.OS === 'android') {
+        // startActivityAsync awaits the dialog close, so retry immediately after
         await IntentLauncher.startActivityAsync('android.bluetooth.adapter.action.REQUEST_ENABLE');
+        onRetry();
       } else {
         await Linking.openURL('App-Prefs:root=Bluetooth');
+        // iOS Settings does not return on close, user taps Refresh manually
       }
     } catch {
-      // settings unavailable or dismissed
+      // dialog dismissed or settings unavailable
     }
   };
-
-  // Auto-retry scan when the app returns to foreground after the user enabled BT
-  useEffect(() => {
-    const handleAppStateChange = (next: AppStateStatus) => {
-      if (next === 'active' && wentToSettingsRef.current) {
-        wentToSettingsRef.current = false;
-        onRetry();
-      }
-    };
-
-    const sub = AppState.addEventListener('change', handleAppStateChange);
-    return () => sub.remove();
-  }, [onRetry]);
 
   return (
     <View className="flex-1 mt-4">
@@ -192,7 +177,7 @@ export function ConnectStep({
                 ))}
             </View>
           ) : isScanning && devices.length === 0 ? (
-            // Show shimmer skeleton rows while no devices have been discovered yet
+            // Skeleton rows while scan has not yet returned any devices
             <DeviceSkeletons />
           ) : (
             devices.map((d) => (
@@ -200,7 +185,7 @@ export function ConnectStep({
                 key={d.id}
                 device={d}
                 isConnecting={status === 'connecting' && connectingDeviceId === d.id}
-                // Mark the card that failed the connection attempt
+                // Mark the card whose connection attempt failed
                 hasError={isConnectError && connectingDeviceId === d.id}
                 onConnect={() => onConnect(d)}
               />
