@@ -28,7 +28,12 @@ export default function MachinesListScreen() {
   useFocusEffect(
     useCallback(() => {
       logger.screen("Machines");
-    }, []),
+      // Refetch on every focus so DB-level changes are caught when returning to this tab
+      void machines.refetch();
+      void batches.refetch();
+    // machines.refetch and batches.refetch are stable refs - no infinite loop risk
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [machines.refetch, batches.refetch]),
   );
   const refreshing = machines.isRefetching || batches.isRefetching;
   const refetch = () => {

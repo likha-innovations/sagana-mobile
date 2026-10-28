@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { MachineSkeletons } from "@/components/devices/machine-skeletons";
 import {
   MetricSkeletons,
@@ -10,7 +11,7 @@ import {
   Pressable,
   useWindowDimensions,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { MapPin, Box } from "lucide-react-native";
 import { useAuthContext } from "@/context/auth-context";
 import { useProfile, useBarangays, useDynamicLayout } from "@/hooks";
@@ -22,6 +23,9 @@ import { CompletedBatchCard } from "@/components/dashboard/completed-batch-card"
 import { MachineCard } from "@/components/devices/machine-card";
 import { colors } from "@/constants";
 import { getBarangayName } from "@/lib/utils";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("DashboardScreen");
 
 export default function DashboardScreen() {
   const { headerPaddingTop, scrollPaddingBottom } = useDynamicLayout();
@@ -34,6 +38,15 @@ export default function DashboardScreen() {
   const machines = useMachines();
   const activeBatches = useCompostBatches();
   const dashboard = useDashboardMetrics();
+  useFocusEffect(
+    useCallback(() => {
+      logger.screen("Dashboard");
+      // Refetch machines on focus so database-level removals are visible without restart
+      void machines.refetch();
+    // machines.refetch is a stable ref
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [machines.refetch]),
+  );
   const user = profileData || authUser;
   const firstName = user?.fullName?.split(" ")[0] || "Operator";
   const metrics = dashboard.data;
