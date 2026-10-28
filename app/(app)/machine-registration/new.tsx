@@ -15,6 +15,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'burnt';
 import * as Haptics from 'expo-haptics';
 import { useDynamicLayout, useRegisterMachine } from '@/hooks';
+import { createLogger } from '@/lib/logger';
 import { useAuthContext } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
 import { ApiError, machineRegistrationSchema, type MachineRegistrationInput } from '@/types';
@@ -26,6 +27,8 @@ import {
   NameMachineStep, 
   SuccessStep 
 } from '@/components/devices/registration-steps';
+
+const logger = createLogger('AddMachineScreen');
 
 export default function AddMachineScreen() {
   const router = useRouter();
@@ -129,7 +132,11 @@ export default function AddMachineScreen() {
         setIsWriting(true);
 
         // 1. Send machine name and userId to ESP32 firmware over BLE
-        await writeMachineName(machineName, user?.id);
+        try {
+          await writeMachineName(machineName, user?.id);
+        } catch (bleError) {
+          logger.warn('Could not write machine name over BLE, proceeding with backend registration', bleError);
+        }
 
         // 2. Register machine in backend database using physical hardware MAC
         await registerMachineMutation.mutateAsync({
