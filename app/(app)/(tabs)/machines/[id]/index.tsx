@@ -110,7 +110,7 @@ export default function MachineDetailsDashboard() {
     {
       key: "co2" as const,
       label: "Carbon Dioxide",
-      unit: "%",
+      unit: "ppm",
       Icon: Cloud,
       color: colors.sensors.carbonDioxide,
     },
@@ -395,7 +395,7 @@ export default function MachineDetailsDashboard() {
                         value={
                           machine.latest_readings?.[key] == null
                             ? "--"
-                            : `${machine.latest_readings[key]}${unit}`
+                            : `${machine.latest_readings[key]}${unit === "°C" || unit === "%" ? unit : ` ${unit}`}`
                         }
                       />
                     ))}

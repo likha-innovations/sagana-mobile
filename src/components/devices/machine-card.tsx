@@ -48,7 +48,7 @@ export function MachineCard({
   const co2 =
     machine.latest_readings?.co2 == null
       ? "--"
-      : `${machine.latest_readings.co2}%`;
+      : `${machine.latest_readings.co2} ppm`;
 
   const tempColor = temp === "--"
     ? colors.gray.textIcon

@@ -31,7 +31,7 @@ export function SensorTrendGraph({
   const values = points.flatMap((point) =>
     point.value === null ? [] : [point.value],
   );
-  const formatValue = (value: number) => `${Number(value.toFixed(3))}${unit}`;
+  const formatValue = (value: number) => `${Number(value.toFixed(1))}${unit === "°C" || unit === "%" ? unit : ` ${unit}`}`;
   const middle = Math.floor((points.length - 1) / 2);
   const data: lineDataItem[] = points.map((point, index) => ({
     value: point.value ?? undefined,
