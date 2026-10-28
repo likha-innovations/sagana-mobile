@@ -1,7 +1,9 @@
-import { View, Text, ActivityIndicator, Pressable, Platform, Linking } from 'react-native';
-import { Info, AlertCircle, Bluetooth, BluetoothOff } from 'lucide-react-native';
+import { useEffect, useRef } from 'react';
+import { View, Text, Pressable, Platform, Linking, AppState, type AppStateStatus } from 'react-native';
+import { Info, AlertCircle, Bluetooth } from 'lucide-react-native';
 import * as IntentLauncher from 'expo-intent-launcher';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Controller, type Control, UseFormSetValue } from 'react-hook-form';
 import type { Device } from 'react-native-ble-plx';
 import type { MachineRegistrationInput } from '@/types/device';
@@ -22,7 +24,24 @@ export function TurnOnStep() {
   );
 }
 
-// Renders a single BLE device row in the scan list
+// Skeleton placeholder rows shown while BLE is scanning
+function DeviceSkeletons() {
+  return (
+    <View className="gap-3">
+      {[0, 1, 2].map((i) => (
+        <View
+          key={i}
+          className="flex-row items-center px-4 py-4 bg-card border border-border rounded-2xl"
+        >
+          <Skeleton className="w-5 h-5 rounded-full mr-4" />
+          <Skeleton className="h-4 flex-1 rounded" />
+        </View>
+      ))}
+    </View>
+  );
+}
+
+// Single BLE device row
 function DeviceCard({
   device,
   isConnecting,
@@ -73,13 +92,17 @@ export function ConnectStep({
   onConnect: (d: Device) => void;
   onRetry: () => void;
 }) {
-  // BT is off or permission denied — no device list to show
+  // BT off or permission denied — no device list available
   const isBtError = status === 'error' && devices.length === 0;
-  // Connection attempt failed but BT is on — device list remains
+  // Connection attempt failed but BT is still on — list remains
   const isConnectError = status === 'error' && devices.length > 0;
   const isScanning = status === 'scanning' || status === 'connecting' || status === 'requesting-permission';
 
+  // Track whether the user left to grant BT permission/enable BT
+  const wentToSettingsRef = useRef(false);
+
   const handleEnableBluetooth = async () => {
+    wentToSettingsRef.current = true;
     try {
       if (Platform.OS === 'android') {
         await IntentLauncher.startActivityAsync('android.bluetooth.adapter.action.REQUEST_ENABLE');
@@ -90,6 +113,19 @@ export function ConnectStep({
       // settings unavailable or dismissed
     }
   };
+
+  // Auto-retry scan when the app returns to foreground after the user enabled BT
+  useEffect(() => {
+    const handleAppStateChange = (next: AppStateStatus) => {
+      if (next === 'active' && wentToSettingsRef.current) {
+        wentToSettingsRef.current = false;
+        onRetry();
+      }
+    };
+
+    const sub = AppState.addEventListener('change', handleAppStateChange);
+    return () => sub.remove();
+  }, [onRetry]);
 
   return (
     <View className="flex-1 mt-4">
@@ -102,36 +138,39 @@ export function ConnectStep({
         <View className="mt-6">
           <View className="flex-row items-center gap-2 mb-3">
             <AlertCircle size={16} color="#E84C4C" />
-            <Text className="text-sm text-destructive">
+            <Text className="text-sm text-destructive flex-1">
               {errorMessage ?? 'Cannot proceed because Bluetooth is turned off.'}
             </Text>
           </View>
-          <Pressable onPress={handleEnableBluetooth}>
-            <Text className="text-sm font-bold text-primary">Turn on my Bluetooth</Text>
-          </Pressable>
+          <View className="flex-row items-center justify-between">
+            <Pressable onPress={handleEnableBluetooth}>
+              <Text className="text-sm font-bold text-primary">Turn on my Bluetooth</Text>
+            </Pressable>
+            <Pressable onPress={onRetry}>
+              <Text className="text-sm font-bold text-primary">Refresh</Text>
+            </Pressable>
+          </View>
         </View>
       )}
 
       {(isScanning || isConnectError || status === 'connected') && (
         <View className="mt-6">
           <View className="flex-row items-center justify-between mb-4">
-            {isScanning && (
+            {isScanning ? (
               <Text className="text-sm text-muted-foreground">
                 {status === 'connecting' ? 'Connecting...' : 'Finding devices..'}
               </Text>
+            ) : (
+              <View />
             )}
-            {!isScanning && <View />}
             <Pressable onPress={onRetry}>
               <Text className="text-sm font-bold text-primary">Refresh</Text>
             </Pressable>
           </View>
 
           {status === 'connected' && connectedDevice ? (
-            // Connected: show the device marked as connected, rest of list unchanged
             <View>
-              <Pressable
-                className="flex-row items-center px-4 py-4 mb-3 bg-card border border-primary rounded-2xl"
-              >
+              <Pressable className="flex-row items-center px-4 py-4 mb-3 bg-card border border-primary rounded-2xl">
                 <View className="mr-4">
                   <Bluetooth size={20} color="#718619" />
                 </View>
@@ -152,23 +191,20 @@ export function ConnectStep({
                   />
                 ))}
             </View>
+          ) : isScanning && devices.length === 0 ? (
+            // Show shimmer skeleton rows while no devices have been discovered yet
+            <DeviceSkeletons />
           ) : (
             devices.map((d) => (
               <DeviceCard
                 key={d.id}
                 device={d}
                 isConnecting={status === 'connecting' && connectingDeviceId === d.id}
-                // Mark previously attempted device when a connection error occurred
+                // Mark the card that failed the connection attempt
                 hasError={isConnectError && connectingDeviceId === d.id}
                 onConnect={() => onConnect(d)}
               />
             ))
-          )}
-
-          {devices.length === 0 && status === 'scanning' && (
-            <Text className="text-sm text-muted-foreground text-center py-8">
-              No machines found yet. Ensure it is turned on and close to your phone.
-            </Text>
           )}
         </View>
       )}
@@ -205,7 +241,7 @@ export function WifiCredentialsStep({
 
       {isConnecting && (
         <View className="p-4 mb-4 bg-brand-50 border border-brand-200 rounded-2xl flex-row items-center gap-3">
-          <ActivityIndicator size="small" color="#718619" />
+          <Skeleton className="w-5 h-5 rounded-full" />
           <View className="flex-1">
             <Text className="text-sm font-semibold text-foreground">
               Connecting device to WiFi...
