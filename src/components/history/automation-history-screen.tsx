@@ -86,7 +86,7 @@ export function AutomationHistoryScreen({ scope }: { scope: HistoryScope }) {
               }
               iconColor={colors.semantic.foreground}
               message={item.message}
-              timeAgo={format(parseISO(item.created_at), "h:mm a")}
+              timeAgo={format(parseISO(item.createdAt), "h:mm a")}
             />
           )}
           ListEmptyComponent={

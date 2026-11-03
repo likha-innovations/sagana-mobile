@@ -141,8 +141,8 @@ export default function AddMachineScreen() {
         // 2. Register machine in backend database using physical hardware MAC
         await registerMachineMutation.mutateAsync({
           name: machineName.trim(),
-          mac_address: macAddress,
-          wifi_ssid: ssid,
+          macAddress: macAddress,
+          wifiSsid: ssid,
         });
 
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

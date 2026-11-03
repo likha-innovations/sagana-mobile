@@ -57,7 +57,7 @@ export default function MachineDetailsDashboard() {
   const machine = machineQuery.data;
   const batch = batchQuery.data ?? null;
   const overview =
-    overviewQuery.data?.batch_id === batch?.batch_id
+    overviewQuery.data?.batchId === batch?.id
       ? overviewQuery.data
       : null;
   const pending =
@@ -81,10 +81,10 @@ export default function MachineDetailsDashboard() {
   const days = batch
     ? Math.max(
         0,
-        Math.floor((Date.now() - Date.parse(batch.start_date)) / 86400000),
+        Math.floor((Date.now() - Date.parse(batch.startDate)) / 86400000),
       )
     : 0;
-  const phase = getMachinePhase(machine?.latest_readings?.temperature, days);
+  const phase = getMachinePhase(machine?.latestReadings?.temperature, days);
   const sensors = [
     {
       key: "temperature" as const,
@@ -271,7 +271,7 @@ export default function MachineDetailsDashboard() {
                         </Text>
                       </View>
                       <Text className="font-sans text-xs text-primary-foreground">
-                        {formatTimeAgo(machine.latest_readings?.updated_at)}
+                        {formatTimeAgo(machine.latestReadings?.updatedAt)}
                       </Text>
                     </View>
                     <View className="flex-row items-center">
@@ -303,9 +303,9 @@ export default function MachineDetailsDashboard() {
                       { value: `${days} Days`, label: "Composting" },
                       {
                         value:
-                          overview?.current_weight == null
+                          overview?.currentWeight == null
                             ? "--"
-                            : `${overview.current_weight} kg`,
+                            : `${overview.currentWeight} kg`,
                         label: "Current batch weight",
                       },
                     ].map((stat) => (
@@ -324,12 +324,12 @@ export default function MachineDetailsDashboard() {
                   </View>
                   <View className="rounded-[14px] border border-border p-6 gap-3">
                     {[
-                      ["Batch ID", batch.batch_code],
+                      ["Batch ID", batch.batchCode],
                       ["Machine used", machine.name],
-                      ["Initial feedstock weight", `${batch.total_weight} kg`],
+                      ["Initial feedstock weight", `${batch.totalWeight} kg`],
                       [
                         "Started on",
-                        format(parseISO(batch.start_date), "MMMM d, yyyy"),
+                        format(parseISO(batch.startDate), "MMMM d, yyyy"),
                       ],
                     ].map(([label, value]) => (
                       <View
@@ -393,15 +393,15 @@ export default function MachineDetailsDashboard() {
                         iconColor={color}
                         label={label}
                         value={
-                          machine.latest_readings?.[key] == null
+                          machine.latestReadings?.[key] == null
                             ? "--"
-                            : `${machine.latest_readings[key]}${unit}`
+                            : `${machine.latestReadings[key]}${unit}`
                         }
                       />
                     ))}
                   </View>
                   <UpdatedAt
-                    timestamp={machine.latest_readings?.updated_at}
+                    timestamp={machine.latestReadings?.updatedAt}
                     disconnected={state.disconnected}
                   />
                 </View>
@@ -475,7 +475,7 @@ export default function MachineDetailsDashboard() {
                     </Text>
                   )}
                   <UpdatedAt
-                    timestamp={overview?.recorded_at}
+                    timestamp={overview?.recordedAt}
                     disconnected={state.disconnected}
                   />
                 </View>

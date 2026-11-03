@@ -55,7 +55,7 @@ export function useActiveBatch(machineId: string) {
     queryFn: async (): Promise<CompostBatch | null> => {
       await new Promise((resolve) => setTimeout(resolve, 150));
       const batch = mockActiveBatches.find(
-        (b) => b.machine_id === machineId && b.status === "active",
+        (b) => b.machineId === machineId && b.status === "active",
       );
       return batch ? { ...batch } : null;
     },
@@ -122,31 +122,31 @@ export function useCreateCompostBatch() {
           feedstockId: itemId,
           name: master?.name ?? "Feedstock",
           category: master?.category ?? "green",
-          weight_kg: item.weight,
+          weightKg: item.weight,
         };
       });
 
       const newBatch: CompostBatch = {
-        batch_id: batchId,
-        machine_id: input.machine_id,
-        user_id: "user_current",
-        total_weight: totalWeight,
-        batch_code: batchCode,
-        start_date: now.toISOString(),
-        completion_date: null,
+        id: batchId,
+        machineId: input.machineId,
+        userId: "user_current",
+        totalWeight: totalWeight,
+        batchCode: batchCode,
+        startDate: now.toISOString(),
+        completionDate: null,
         status: "active",
         feedstocks,
       };
 
       mockActiveBatches.push(newBatch);
-      setMockMachineStatus(input.machine_id, "active");
+      setMockMachineStatus(input.machineId, "active");
 
       return newBatch;
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: batchKeys.all });
       queryClient.invalidateQueries({
-        queryKey: batchKeys.active(variables.machine_id),
+        queryKey: batchKeys.active(variables.machineId),
       });
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
     },

@@ -130,7 +130,7 @@ export default function MachineSettingsScreen() {
   };
 
   const openWifiScan = () => {
-    setSsid(machine?.wifi_ssid ?? "");
+    setSsid(machine?.wifiSsid ?? "");
     setPassword("");
     setError("");
     setView("wifi-scan");
@@ -210,7 +210,7 @@ export default function MachineSettingsScreen() {
       await provisionWifi(ssid.trim(), password);
 
       // 2. Sync new SSID with backend database
-      await wifi.mutateAsync({ id, wifi_ssid: ssid.trim() });
+      await wifi.mutateAsync({ id, wifiSsid: ssid.trim() });
 
       if (Platform.OS !== "web") {
         void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -422,7 +422,7 @@ export default function MachineSettingsScreen() {
                     </Text>
                     <Text className="text-sm font-bold text-foreground">
                       {connectedDevice?.name || machine.name} (
-                      {connectedDevice?.id || machine.mac_address})
+                      {connectedDevice?.id || machine.macAddress})
                     </Text>
                   </View>
 

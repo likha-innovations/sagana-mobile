@@ -37,7 +37,7 @@ export function FeedstockGrid({
                 {item.name}
               </Text>
               <Text className="text-center text-[12px] font-sans text-muted-foreground">
-                {item.weight_kg} kg
+                {item.weightKg} kg
               </Text>
             </View>
           </View>

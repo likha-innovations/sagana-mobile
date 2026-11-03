@@ -54,12 +54,13 @@ sagana-mobile/
 | --- | --- | --- |
 | Profile | Screen → `use-profile.ts` → `user.api.ts` → `/me` | Keep REST calls in `src/api`; update the profile query after saving. |
 | Barangays | Screen → `use-barangays.ts` → `barangays.api.ts` | Reuse the shared query for location selectors. |
-| Machines and batches | Screen → hooks → `data.json` and module-level arrays | These are mock stores. Changes reset when the JS runtime reloads. |
-| Pairing | Registration → `use-bluetooth.ts` → `lib/bluetooth.ts` | Coordinate the protocol with firmware; backend registration is pending. |
-| Telemetry | `use-socket.ts` → `lib/socket.ts` | Infrastructure exists, but current screens do not call the hook. |
+| Machines | Screen → `use-machines.ts` → `machine.api.ts` → `/machines` | Responses are validated by `machineSchema`; registration and updates use camelCase request fields. |
+| Batches | Screen → `use-batches.ts` → module-level arrays | Batch creation is local; data resets when the JS runtime reloads. |
+| Pairing | Registration → `use-bluetooth.ts` and `/machines/register` | Coordinate the Bluetooth protocol with firmware. |
+| Telemetry | App layout → `use-socket.ts` → `lib/socket.ts` | Socket events update the machine query cache. |
 | Authentication | `AuthProvider` → Clerk | Read session state through `useAuthContext()`. |
 
-`types/machine.ts` owns machine status, readings, logs and history. `types/batch.ts` owns batches and feedstocks. `types/device.ts` retains telemetry, command and registration contracts. These are client contracts; do not assume every field matches Prisma or every response is runtime-validated.
+`types/machine.ts` defines machines and current readings; `types/batch.ts` defines batches and feedstocks. Machine and batch objects use `id` for their own identifier and camelCase properties. Fields such as `machineId` and `batchId` identify related records. `types/device.ts` retains telemetry, command and registration contracts.
 
 Use `@/*` for `src/*`, `@/assets/*` for assets, and `~/*` for root-relative imports. Keep reusable presentation in components and shared data operations in hooks/API modules.
 

@@ -87,7 +87,7 @@ export function useSocket() {
         if (!old || !Array.isArray(old)) return old;
         return old.map((m) =>
           (payload.machineId && m.id === payload.machineId) ||
-          (payload.macAddress && m.mac_address === payload.macAddress)
+          (payload.macAddress && m.macAddress === payload.macAddress)
             ? { ...m, status: normalizedStatus }
             : m,
         );
@@ -98,7 +98,7 @@ export function useSocket() {
         if (!old || Array.isArray(old)) return old;
         if (
           (payload.machineId && old.id === payload.machineId) ||
-          (payload.macAddress && old.mac_address === payload.macAddress)
+          (payload.macAddress && old.macAddress === payload.macAddress)
         ) {
           return { ...old, status: normalizedStatus };
         }
@@ -166,16 +166,16 @@ export function useSocket() {
           queryClient.setQueriesData<Machine[]>({ queryKey: ['machines'] }, (old) => {
             if (!old || !Array.isArray(old)) return old;
             return old.map((m) => {
-              if (m.mac_address === mac) {
+              if (m.macAddress === mac) {
                 return {
                   ...m,
                   status: 'active',
-                  latest_readings: {
-                    temperature: tempVal ?? m.latest_readings?.temperature ?? 0,
-                    moisture: moistVal ?? m.latest_readings?.moisture ?? 0,
-                    oxygen: o2Val ?? m.latest_readings?.oxygen ?? 0,
-                    co2: co2Val ?? m.latest_readings?.co2 ?? 0,
-                    updated_at: new Date().toISOString(),
+                  latestReadings: {
+                    temperature: tempVal ?? m.latestReadings?.temperature ?? 0,
+                    moisture: moistVal ?? m.latestReadings?.moisture ?? 0,
+                    oxygen: o2Val ?? m.latestReadings?.oxygen ?? 0,
+                    co2: co2Val ?? m.latestReadings?.co2 ?? 0,
+                    updatedAt: new Date().toISOString(),
                   },
                 };
               }
@@ -185,16 +185,16 @@ export function useSocket() {
 
           queryClient.setQueriesData<Machine>({ queryKey: ['machines'] }, (old) => {
             if (!old || Array.isArray(old)) return old;
-            if (old.mac_address === mac) {
+            if (old.macAddress === mac) {
               return {
                 ...old,
                 status: 'active',
-                latest_readings: {
-                  temperature: tempVal ?? old.latest_readings?.temperature ?? 0,
-                  moisture: moistVal ?? old.latest_readings?.moisture ?? 0,
-                  oxygen: o2Val ?? old.latest_readings?.oxygen ?? 0,
-                  co2: co2Val ?? old.latest_readings?.co2 ?? 0,
-                  updated_at: new Date().toISOString(),
+                latestReadings: {
+                  temperature: tempVal ?? old.latestReadings?.temperature ?? 0,
+                  moisture: moistVal ?? old.latestReadings?.moisture ?? 0,
+                  oxygen: o2Val ?? old.latestReadings?.oxygen ?? 0,
+                  co2: co2Val ?? old.latestReadings?.co2 ?? 0,
+                  updatedAt: new Date().toISOString(),
                 },
               };
             }
@@ -261,14 +261,14 @@ export function useSocket() {
 
       const newMachine: Machine = {
         id: payload.machineId,
-        barangay_id: payload.barangayId ?? '',
-        mac_address: payload.macAddress,
+        barangayId: payload.barangayId ?? '',
+        macAddress: payload.macAddress,
         name: payload.name,
         status: normalizedStatus,
-        wifi_ssid: payload.wifiSsid ?? null,
-        last_seen: null,
-        created_at: payload.createdAt ?? new Date().toISOString(),
-        removed_at: null,
+        wifiSsid: payload.wifiSsid ?? null,
+        lastSeen: null,
+        createdAt: payload.createdAt ?? new Date().toISOString(),
+        removedAt: null,
       };
 
       // Instantly prepend or append new machine to list cache

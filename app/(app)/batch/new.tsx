@@ -183,7 +183,7 @@ export default function NewBatchScreen() {
       }));
 
       await createBatchMutation.mutateAsync({
-        machine_id: selectedMachineId,
+        machineId: selectedMachineId,
         feedstocks: items,
       });
 

@@ -51,8 +51,8 @@ export default function DashboardScreen() {
   const firstName = user?.fullName?.split(" ")[0] || "Operator";
   const metrics = dashboard.data;
   const dashboardMachines = (machines.data ?? [])
-    .filter((machine) => !machine.removed_at)
-    .sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
+    .filter((machine) => !machine.removedAt)
+    .sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
 
   return (
     <View className="flex-1 bg-background">
@@ -192,12 +192,12 @@ export default function DashboardScreen() {
               <View className="gap-3">
                 {dashboard.recentCompleted.map((batch) => (
                   <CompletedBatchCard
-                    key={batch.batch_id}
+                    key={batch.id}
                     batch={batch}
                     onPress={() =>
                       router.push({
                         pathname: "/(app)/(tabs)/history/[batchId]",
-                        params: { batchId: batch.batch_id },
+                        params: { batchId: batch.id },
                       })
                     }
                   />
@@ -240,7 +240,7 @@ export default function DashboardScreen() {
                     activeBatch={
                       activeBatches.data?.find(
                         (batch) =>
-                          batch.machine_id === machine.id &&
+                          batch.machineId === machine.id &&
                           batch.status === "active",
                       ) ?? null
                     }

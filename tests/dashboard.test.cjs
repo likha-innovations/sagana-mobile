@@ -47,7 +47,7 @@ test("totals distinguish input and output weights and exclude removed machines",
   const empty = helpers.getDashboardMetrics(
     [],
     [],
-    [{ removed_at: "2026-01-01" }],
+    [{ removedAt: "2026-01-01" }],
   );
   assert.equal(empty.totalCompost.value, 0);
   assert.equal(empty.completedBatches, 0);
@@ -57,18 +57,18 @@ test("totals distinguish input and output weights and exclude removed machines",
 
 test("recent batches sort newest first, cap at three, and preserve input order", () => {
   const input = [...completed].reverse();
-  const originalIds = input.map((batch) => batch.batch_id).join();
+  const originalIds = input.map((batch) => batch.id).join();
   const recent = helpers.getRecentCompletedBatches([
     ...input,
     {
       ...completed[0],
-      batch_id: "old",
-      completion_date: "2020-01-01T00:00:00Z",
+      id: "old",
+      completionDate: "2020-01-01T00:00:00Z",
     },
   ]);
   assert.equal(recent.length, 3);
-  assert.equal(recent[0].batch_id, "completed-1");
-  assert.equal(input.map((batch) => batch.batch_id).join(), originalIds);
+  assert.equal(recent[0].id, "completed-1");
+  assert.equal(input.map((batch) => batch.id).join(), originalIds);
 });
 
 test("local mock creation updates ongoing counts and invalidates dashboard dependencies", async () => {
@@ -104,7 +104,7 @@ test("local mock creation updates ongoing counts and invalidates dashboard depen
   });
   const mutation = hooks.useCreateCompostBatch();
   const input = {
-    machine_id: "2",
+    machineId: "2",
     feedstocks: [{ id: "fs-1", weight: 10 }],
   };
   const created = await mutation.mutationFn(input);

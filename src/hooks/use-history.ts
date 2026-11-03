@@ -13,7 +13,7 @@ export function useHistory(scope: HistoryScope) {
   const machines = useMachines(scope.kind === "machine");
   const batch =
     scope.kind === "batch"
-      ? batches.data?.find((item) => item.batch_id === scope.batchId)
+      ? batches.data?.find((item) => item.id === scope.batchId)
       : undefined;
   const machine =
     scope.kind === "machine"
@@ -35,8 +35,8 @@ export function useHistory(scope: HistoryScope) {
   });
   return {
     exists: !!entity,
-    startDate: batch?.start_date ?? machine?.created_at,
-    endDate: batch?.completion_date ?? new Date().toISOString(),
+    startDate: batch?.startDate ?? machine?.createdAt,
+    endDate: batch?.completionDate ?? new Date().toISOString(),
     readings: entity ? (history.data?.readings ?? []) : [],
     logs: entity ? (history.data?.logs ?? []) : [],
     isPending: metadata.isPending || (!!entity && history.isPending),
