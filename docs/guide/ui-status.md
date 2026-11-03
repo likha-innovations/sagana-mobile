@@ -25,7 +25,7 @@ Paths below omit `.tsx` and are relative to `app/`.
 | Batch sensors · `history/[batchId]/sensors-history` under tabs | Latest recorded day, day/week/month/custom ranges, bounded date navigation                                                                           | Batch-specific fixed timestamps; hourly/day means; missing intervals remain gaps           |
 | Batch logs · `history/[batchId]/automation-logs` under tabs    | All time/custom ranges; newest-first groups by actual local date                                                                                     | Validated batch-specific mock events                                                       |
 | New batch · `(app)/batch/new`                                  | Select machine → confirm power → feedstock weights → transfer instructions → success; optional preselected machine                                   | Validates input, creates a local batch and marks the mock machine active; no backend write |
-| Add machine · `(app)/machine-registration/new`                 | Power instructions → BLE selection/connection → Wi-Fi → name → success                                                                               | Native BLE wired; backend registration pending                                             |
+| Add machine · `(app)/machine-registration/new`                 | Power instructions → BLE selection/connection → Wi-Fi → name → backend registration                                  | Native BLE and backend `POST /machines/register` wired via `useRegisterMachine()`; BLE name write failsafe |
 | Account · `(app)/(tabs)/profile`                               | Profile/location, edit link, password change or Google account label, logout confirmation                                                            | Backend profile with Clerk fallback; Clerk sign-out                                        |
 | Edit profile · `(app)/edit-profile`                            | Read/edit modes, name, birthday sheet, barangay sheet, save and discard confirmation                                                                 | `GET/PATCH /me`; birthday display uses `MMMM d, yyyy`                                      |
 | Change password · `(app)/change-password/`                     | `current-password` → `new-password` → `success`; forgot-password branch                                                                              | Clerk wired; temporary current password stays in the in-memory flow store                  |
@@ -51,7 +51,7 @@ See [styling and spacing rules](/core/design-system) before adding another share
 2. Grant Bluetooth/location permissions and turn Bluetooth on. The hook scans for the firmware service UUID in `src/lib/bluetooth.ts` and exposes scanning, connecting, connected and error states.
 3. Select the machine, enter Wi-Fi credentials or retrieve the current SSID. Android SSID lookup also needs Location Services enabled.
 4. The hook writes a Base64-encoded `ssid,password` payload to the firmware characteristic. A successful write is not a Wi-Fi connectivity acknowledgment. Do not log the payload.
-5. Naming currently validates the form and advances to success. `POST /api/machines/register` appears only as a TODO; the flow does not save a machine or update the list.
+5. Machine registration calls `POST /machines/register` via `useRegisterMachine()`. If the ESP32 BLE friendly name write fails or times out, the registration gracefully falls back and completes database registration so the machine appears in the dashboard immediately.
 
 The route has six internal step values; steps 2 and 3 currently render the same connection component.
 
@@ -59,7 +59,7 @@ The route has six internal step values; steps 2 and 3 currently render the same 
 
 1. Machine list and detail reload from Neon; machine settings and batch edits remain local mocks. Dashboard weight totals and completed counts derive from local completed-batch state.
 2. Finish Batch has no mutation. Machine and batch history share aggregation and preserve missing readings as gaps. Machine history spans batches; batch history requires explicit membership and lifetime bounds.
-3. Socket.IO and REST command helpers exist, but no current screen calls `useSocket()` or `deviceApi.sendCommand()`.
+3. Socket.IO real-time sync is globally wired at `app/(app)/_layout.tsx` via `useSocket()`, invalidating and patching TanStack query caches on `status`, `machine_added`, `machine_updated`, `machine_removed`, and live sensor `telemetry`. REST actuator commands remain deferred to hardware testing.
 4. Notifications have a dependency/plugin and Android permission, but no runtime notification flow was found in `app/` or `src/`. Camera configuration likewise does not establish a QR-scanning flow.
 5. Power/transfer instructions still include gray illustration placeholders. Machine list, detail and settings now have initial skeletons and retry states, including missing-machine feedback.
 
