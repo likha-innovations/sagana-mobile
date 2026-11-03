@@ -48,7 +48,7 @@ export function MachineCard({
   const co2 =
     machine.latest_readings?.co2 == null
       ? "--"
-      : machine.latest_readings.co2;
+      : `${machine.latest_readings.co2} ppm`;
 
   const tempColor = temp === "--"
     ? colors.gray.textIcon
@@ -178,25 +178,14 @@ export function MachineCard({
           className="min-h-[99px] items-center justify-center border border-border rounded-[8px] px-1 py-3"
         >
           <Cloud size={24} color={co2Color} className="mb-2" />
-          <View className="flex-row items-baseline justify-center max-w-full px-0.5">
-            <Text
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              className="text-sm font-bold"
-              style={{ color: co2Color }}
-            >
-              {co2}
-            </Text>
-            {machine.latest_readings?.co2 != null && (
-              <Text
-                numberOfLines={1}
-                className="text-[10px] font-bold ml-0.5"
-                style={{ color: co2Color }}
-              >
-                ppm
-              </Text>
-            )}
-          </View>
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            className="text-sm font-bold"
+            style={{ color: co2Color }}
+          >
+            {co2}
+          </Text>
           <Text className="text-[12px] font-sans text-foreground mt-0.5">
             CO2
           </Text>
