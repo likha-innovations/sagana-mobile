@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const machineSchema = z.object({
-  machine_id: z.string(),
+  id: z.string(),
   barangay_id: z.string(),
   mac_address: z.string(),
   name: z.string(),

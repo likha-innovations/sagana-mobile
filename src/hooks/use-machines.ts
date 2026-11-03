@@ -1,81 +1,98 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Machine, AutomationLog, SensorHistory } from "@/types/machine";
+﻿import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { Machine } from "@/types/machine";
 import type { RegisterMachinePayload } from "@/types/device";
 import { deviceApi } from "@/api/device.api";
+import { machineApi } from "@/api/machine.api";
+import { useAuthContext } from "@/context/auth-context";
+import { useProfile } from "./use-profile";
 import {
   machineOverviewSchema,
   machineNameSchema,
   machineSsidSchema,
 } from "@/lib/machine-overview";
-import mockData from "@/data/data.json";
-
-// Initialize mutable state from the global JSON
-let mockMachines: Machine[] = [...(mockData.machines as Machine[])];
 
 // ponytail: direct in-memory mutation helper for mock state transition
+let mockMachines: Machine[] = [];
+
 export function setMockMachineStatus(id: string, status: Machine["status"]) {
-  const idx = mockMachines.findIndex((m) => m.machine_id === id);
+  const idx = mockMachines.findIndex((m) => m.id === id);
   if (idx > -1) {
-    const updated = { ...mockMachines[idx], status };
-    if (status === "active" && !updated.latest_readings) {
-      updated.latest_readings = {
-        temperature: 32,
-        moisture: 45,
-        oxygen: 68,
-        co2: 0.03,
-        updated_at: new Date().toISOString(),
-      };
-    }
-    mockMachines[idx] = updated;
+    mockMachines[idx] = { ...mockMachines[idx], status };
   }
 }
 
 export const machineKeys = {
   all: ["machines"] as const,
-  detail: (id: string) => ["machines", id] as const,
-  feedstocks: (id: string) => ["machines", id, "feedstocks"] as const,
+  list: (userId: string | undefined, barangayId: string | null | undefined) =>
+    ["machines", userId, barangayId, "list"] as const,
+  detail: (
+    userId: string | undefined,
+    barangayId: string | null | undefined,
+    id: string,
+  ) => ["machines", userId, barangayId, "detail", id] as const,
 };
 
 export function useMachines(enabled = true) {
-  return useQuery({
-    queryKey: machineKeys.all,
-    enabled,
+  const { user, isLoaded, isSignedIn } = useAuthContext();
+  const profile = useProfile();
+  const ready = isLoaded && isSignedIn && !!user && profile.isSuccess;
+  const query = useQuery({
+    queryKey: machineKeys.list(user?.id, profile.data?.barangayId),
+    enabled: enabled && ready,
+    staleTime: 0,
     queryFn: async () => {
-      // Simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      return [...mockMachines]; // Return a copy
+      if (!ready) throw new Error("User profile is not ready");
+      return machineApi.getMachines();
     },
   });
+  return {
+    ...query,
+    data: ready && !query.isError ? query.data : undefined,
+    isError: profile.isError || query.isError,
+    isPending: !profile.isError && query.isPending,
+    error: profile.error ?? query.error,
+    refetch: profile.isError ? profile.refetch : query.refetch,
+  };
 }
 
 export function useMachine(id: string) {
-  return useQuery({
-    queryKey: machineKeys.detail(id),
+  const { user, isLoaded, isSignedIn } = useAuthContext();
+  const profile = useProfile();
+  const ready = isLoaded && isSignedIn && !!user && profile.isSuccess;
+  const query = useQuery({
+    queryKey: machineKeys.detail(user?.id, profile.data?.barangayId, id),
+    enabled: ready && !!id,
+    staleTime: 0,
+    retry: false,
     queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      const machine = mockMachines.find((m) => m.machine_id === id);
-      if (!machine) throw new Error("Machine not found");
-      return { ...machine };
+      if (!ready) throw new Error("User profile is not ready");
+      return machineApi.getMachine(id);
     },
   });
+  return {
+    ...query,
+    data: ready && !query.isError ? query.data : undefined,
+    isError: profile.isError || query.isError,
+    isPending: !profile.isError && query.isPending,
+    error: profile.error ?? query.error,
+    refetch: profile.isError ? profile.refetch : query.refetch,
+  };
 }
 
 export function useUpdateMachineName() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const idx = mockMachines.findIndex((m) => m.machine_id === id);
-      if (idx < 0) throw new Error("Machine not found");
-      mockMachines[idx] = {
-        ...mockMachines[idx],
-        name: machineNameSchema.parse(name),
-      };
+      const validName = machineNameSchema.parse(name);
+      return machineApi.updateMachine(id, { name: validName });
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
       queryClient.invalidateQueries({
-        queryKey: machineKeys.detail(variables.id),
+        predicate: (query) =>
+          Array.isArray(query.queryKey) &&
+          query.queryKey[0] === "machines" &&
+          query.queryKey.includes(variables.id),
       });
     },
   });
@@ -91,18 +108,16 @@ export function useUpdateMachineWifi() {
       id: string;
       wifi_ssid: string;
     }) => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const idx = mockMachines.findIndex((m) => m.machine_id === id);
-      if (idx < 0) throw new Error("Machine not found");
-      mockMachines[idx] = {
-        ...mockMachines[idx],
-        wifi_ssid: machineSsidSchema.parse(wifi_ssid),
-      };
+      const validSsid = machineSsidSchema.parse(wifi_ssid);
+      return machineApi.updateMachine(id, { wifi_ssid: validSsid });
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
       queryClient.invalidateQueries({
-        queryKey: machineKeys.detail(variables.id),
+        predicate: (query) =>
+          Array.isArray(query.queryKey) &&
+          query.queryKey[0] === "machines" &&
+          query.queryKey.includes(variables.id),
       });
     },
   });
@@ -111,13 +126,15 @@ export function useUpdateMachineWifi() {
 export function useRemoveMachine() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      mockMachines = mockMachines.filter((m) => m.machine_id !== id);
-    },
+    mutationFn: async (id: string) => machineApi.removeMachine(id),
     onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
-      queryClient.invalidateQueries({ queryKey: machineKeys.detail(id) });
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          Array.isArray(query.queryKey) &&
+          query.queryKey[0] === "machines" &&
+          query.queryKey.includes(id),
+      });
     },
   });
 }
@@ -137,9 +154,7 @@ export function useMachineOverview(id: string) {
   return useQuery({
     queryKey: ["machine-overview", id],
     queryFn: async () => {
-      const records = machineOverviewSchema
-        .array()
-        .parse(mockData.machine_overviews);
+      const records = machineOverviewSchema.array().parse([]);
       return records.find((record) => record.machine_id === id) ?? null;
     },
   });

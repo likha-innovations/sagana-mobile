@@ -10,7 +10,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import {
   ChevronLeft,
   Radio,
-  WifiOff,
+  RadioOff,
   Settings,
   Clock,
   Thermometer,
@@ -143,7 +143,7 @@ export default function MachineDetailsDashboard() {
               }
             >
               {state.disconnected ? (
-                <WifiOff size={24} color={colors.red[500]} />
+                <RadioOff size={24} color={colors.red[500]} />
               ) : (
                 <Radio size={24} color={colors.brand[500]} />
               )}

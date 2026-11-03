@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import mockData from "@/data/data.json";
 import {
   historyReadingSchema,
   historyEventSchema,
@@ -18,7 +17,7 @@ export function useHistory(scope: HistoryScope) {
       : undefined;
   const machine =
     scope.kind === "machine"
-      ? machines.data?.find((item) => item.machine_id === scope.machineId)
+      ? machines.data?.find((item) => item.id === scope.machineId)
       : undefined;
   const entity = scope.kind === "batch" ? batch : machine;
   const metadata = scope.kind === "batch" ? batches : machines;
@@ -28,8 +27,8 @@ export function useHistory(scope: HistoryScope) {
     enabled: !!entity,
     queryFn: async () =>
       selectHistory(
-        historyReadingSchema.array().parse(mockData.history_readings),
-        historyEventSchema.array().parse(mockData.history_events),
+        historyReadingSchema.array().parse([]),
+        historyEventSchema.array().parse([]),
         scope,
         batch,
       ),

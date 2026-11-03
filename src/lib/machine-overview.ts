@@ -18,7 +18,7 @@ export const machineOverviewSchema = z.object({
 
 export function getMachineState(machine: Machine, batch: CompostBatch | null) {
   const occupied =
-    batch?.status === "active" && batch.machine_id === machine.machine_id;
+    batch?.status === "active" && batch.machine_id === machine.id;
   return { vacant: !occupied, disconnected: machine.status === "offline" };
 }
 

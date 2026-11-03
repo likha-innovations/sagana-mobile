@@ -17,15 +17,9 @@ import {
   getDashboardMetrics,
   getRecentCompletedBatches,
 } from "@/lib/dashboard";
-import mockData from "@/data/data.json";
+import { feedstockApi } from "@/api/feedstock.api";
 
-// In-memory mock store holding backend-aligned DTO objects
-let mockFeedstocks: Feedstock[] = [
-  ...((mockData.feedstocks ?? []) as Feedstock[]),
-];
-let mockActiveBatches: CompostBatch[] = [
-  ...((mockData.active_batches ?? []) as CompostBatch[]),
-];
+let mockActiveBatches: CompostBatch[] = [];
 
 export { type BatchFeedstock, type CompostBatch, type DashboardMetrics };
 
@@ -39,10 +33,8 @@ export const batchKeys = {
 export function useFeedstocks() {
   return useQuery({
     queryKey: batchKeys.feedstocks,
-    queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 150));
-      return [...mockFeedstocks];
-    },
+    queryFn: feedstockApi.getFeedstocks,
+    staleTime: 1000 * 60 * 60,
   });
 }
 
@@ -76,7 +68,7 @@ export function useCompletedBatches(enabled = true) {
     enabled,
     queryFn: async () => {
       await new Promise((resolve) => setTimeout(resolve, 150));
-      return completedBatchSchema.array().parse(mockData.completed_batches);
+      return completedBatchSchema.array().parse([]);
     },
   });
 }
@@ -119,15 +111,17 @@ export function useCreateCompostBatch() {
       const codeRand = Math.floor(100 + Math.random() * 900);
       const batchCode = `BATCH-${codeDate}-${codeRand}`;
 
+      const cachedFeedstocks =
+        queryClient.getQueryData<Feedstock[]>(batchKeys.feedstocks) ?? [];
+
       const feedstocks: BatchFeedstock[] = input.feedstocks.map((item, idx) => {
-        const master = mockFeedstocks.find(
-          (f) => f.feedstock_id === item.feedstock_id,
-        );
+        const itemId = item.id;
+        const master = cachedFeedstocks.find((f) => f.id === itemId);
         return {
           id: `bf-${Date.now()}-${idx}`,
-          feedstock_id: item.feedstock_id,
+          feedstockId: itemId,
           name: master?.name ?? "Feedstock",
-          category: master?.category ?? "Greens",
+          category: master?.category ?? "green",
           weight_kg: item.weight,
         };
       });
@@ -155,12 +149,6 @@ export function useCreateCompostBatch() {
         queryKey: batchKeys.active(variables.machine_id),
       });
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
-      queryClient.invalidateQueries({
-        queryKey: machineKeys.detail(variables.machine_id),
-      });
-      queryClient.invalidateQueries({
-        queryKey: machineKeys.feedstocks(variables.machine_id),
-      });
     },
   });
 }

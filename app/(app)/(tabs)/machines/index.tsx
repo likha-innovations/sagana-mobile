@@ -28,7 +28,12 @@ export default function MachinesListScreen() {
   useFocusEffect(
     useCallback(() => {
       logger.screen("Machines");
-    }, []),
+      // Refetch on every focus so DB-level changes are caught when returning to this tab
+      void machines.refetch();
+      void batches.refetch();
+    // machines.refetch and batches.refetch are stable refs - no infinite loop risk
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [machines.refetch, batches.refetch]),
   );
   const refreshing = machines.isRefetching || batches.isRefetching;
   const refetch = () => {
@@ -76,19 +81,19 @@ export default function MachinesListScreen() {
             <View className="gap-3">
               {machines.data.map((machine) => (
                 <MachineCard
-                  key={machine.machine_id}
+                  key={machine.id}
                   machine={machine}
                   activeBatch={
                     batches.data.find(
                       (batch) =>
-                        batch.machine_id === machine.machine_id &&
+                        batch.machine_id === machine.id &&
                         batch.status === "active",
                     ) ?? null
                   }
                   onPress={() =>
                     router.push({
                       pathname: "/(app)/(tabs)/machines/[id]",
-                      params: { id: machine.machine_id },
+                      params: { id: machine.id },
                     })
                   }
                 />

@@ -71,7 +71,7 @@ test("recent batches sort newest first, cap at three, and preserve input order",
   assert.equal(input.map((batch) => batch.batch_id).join(), originalIds);
 });
 
-test("real mock creation updates ongoing counts and invalidates dashboard dependencies", async () => {
+test("local mock creation updates ongoing counts and invalidates dashboard dependencies", async () => {
   const invalidations = [];
   const statusChanges = [];
   const hooks = loadSource("src/hooks/use-batches.ts", {
@@ -81,9 +81,15 @@ test("real mock creation updates ongoing counts and invalidates dashboard depend
       useQueryClient: () => ({
         invalidateQueries: ({ queryKey }) =>
           invalidations.push(queryKey.join("/")),
+        getQueryData: () => [],
       }),
     },
     "@/types/batch": types,
+    "@/api/feedstock.api": {
+      feedstockApi: {
+        getFeedstocks: async () => [],
+      },
+    },
     "@/lib/dashboard": helpers,
     "@/data/data.json": fixtures,
     "@/hooks/use-machines": {
@@ -99,7 +105,7 @@ test("real mock creation updates ongoing counts and invalidates dashboard depend
   const mutation = hooks.useCreateCompostBatch();
   const input = {
     machine_id: "2",
-    feedstocks: [{ feedstock_id: "fs-1", weight: 10 }],
+    feedstocks: [{ id: "fs-1", weight: 10 }],
   };
   const created = await mutation.mutationFn(input);
   mutation.onSuccess(created, input);
@@ -107,7 +113,7 @@ test("real mock creation updates ongoing counts and invalidates dashboard depend
   assert.equal(
     helpers.getDashboardMetrics(completed, batches, fixtures.machines)
       .ongoingBatches,
-    3,
+    1,
   );
   assert.equal(
     helpers.getDashboardMetrics(completed, batches, fixtures.machines)

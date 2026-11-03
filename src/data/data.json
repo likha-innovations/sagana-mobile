@@ -1,7 +1,7 @@
 {
   "machines": [
     {
-      "machine_id": "1",
+      "id": "1",
       "barangay_id": "b-1",
       "mac_address": "00:11:22:33:44:55",
       "name": "SAGANA-1",
@@ -19,7 +19,7 @@
       }
     },
     {
-      "machine_id": "2",
+      "id": "2",
       "barangay_id": "b-1",
       "mac_address": "00:11:22:33:44:66",
       "name": "SAGANA-2",
@@ -30,7 +30,7 @@
       "removed_at": null
     },
     {
-      "machine_id": "3",
+      "id": "3",
       "barangay_id": "b-1",
       "mac_address": "00:11:22:33:44:77",
       "name": "SAGANA-3",
@@ -48,7 +48,7 @@
       }
     },
     {
-      "machine_id": "4",
+      "id": "4",
       "barangay_id": "b-1",
       "mac_address": "00:11:22:33:44:88",
       "name": "SAGANA-4",
@@ -61,44 +61,44 @@
   ],
   "feedstocks": [
     {
-      "feedstock_id": "fs-1",
+      "id": "fs-1",
       "name": "Vegetable Waste",
-      "category": "Greens",
+      "category": "green",
       "description": "Kitchen and raw vegetable scraps",
       "status": "active"
     },
     {
-      "feedstock_id": "fs-2",
+      "id": "fs-2",
       "name": "Dried Leaves",
-      "category": "Greens",
+      "category": "green",
       "description": "Yard waste and dried garden foliage",
       "status": "active"
     },
     {
-      "feedstock_id": "fs-3",
+      "id": "fs-3",
       "name": "Cardboards",
-      "category": "Browns",
+      "category": "brown",
       "description": "Shredded corrugated cardboard and paper",
       "status": "active"
     },
     {
-      "feedstock_id": "fs-4",
+      "id": "fs-4",
       "name": "Tea Bags",
-      "category": "Browns",
+      "category": "brown",
       "description": "Used tea leaves and paper tea bags",
       "status": "active"
     },
     {
-      "feedstock_id": "fs-5",
+      "id": "fs-5",
       "name": "Fruit Peels",
-      "category": "Greens",
+      "category": "green",
       "description": "Fruit rinds and peels",
       "status": "active"
     },
     {
-      "feedstock_id": "fs-6",
+      "id": "fs-6",
       "name": "Wood Shavings",
-      "category": "Browns",
+      "category": "brown",
       "description": "Clean untreated sawdust and wood shavings",
       "status": "active"
     }
@@ -116,28 +116,28 @@
       "feedstocks": [
         {
           "id": "bf-1",
-          "feedstock_id": "fs-1",
+          "feedstockId": "fs-1",
           "name": "Vegetable Waste",
           "category": "Greens",
           "weight_kg": 12
         },
         {
           "id": "bf-2",
-          "feedstock_id": "fs-2",
+          "feedstockId": "fs-2",
           "name": "Dried Leaves",
           "category": "Greens",
           "weight_kg": 10
         },
         {
           "id": "bf-3",
-          "feedstock_id": "fs-3",
+          "feedstockId": "fs-3",
           "name": "Cardboards",
           "category": "Browns",
           "weight_kg": 20
         },
         {
           "id": "bf-4",
-          "feedstock_id": "fs-4",
+          "feedstockId": "fs-4",
           "name": "Tea Bags",
           "category": "Browns",
           "weight_kg": 20
@@ -156,14 +156,14 @@
       "feedstocks": [
         {
           "id": "bf-5",
-          "feedstock_id": "fs-1",
+          "feedstockId": "fs-1",
           "name": "Vegetable Waste",
           "category": "Greens",
           "weight_kg": 18
         },
         {
           "id": "bf-6",
-          "feedstock_id": "fs-3",
+          "feedstockId": "fs-3",
           "name": "Cardboards",
           "category": "Browns",
           "weight_kg": 30
@@ -185,42 +185,42 @@
       "feedstocks": [
         {
           "id": "completed-1-feed-0",
-          "feedstock_id": "history-feed-0",
+          "feedstockId": "history-feed-0",
           "name": "Coffee Grounds",
           "category": "Greens",
           "weight_kg": 10.7
         },
         {
           "id": "completed-1-feed-1",
-          "feedstock_id": "history-feed-1",
+          "feedstockId": "history-feed-1",
           "name": "Cardboards",
           "category": "Browns",
           "weight_kg": 10.7
         },
         {
           "id": "completed-1-feed-2",
-          "feedstock_id": "history-feed-2",
+          "feedstockId": "history-feed-2",
           "name": "Grass Clippings",
           "category": "Greens",
           "weight_kg": 10.7
         },
         {
           "id": "completed-1-feed-3",
-          "feedstock_id": "history-feed-3",
+          "feedstockId": "history-feed-3",
           "name": "Dried Leaves",
           "category": "Browns",
           "weight_kg": 10.7
         },
         {
           "id": "completed-1-feed-4",
-          "feedstock_id": "history-feed-4",
+          "feedstockId": "history-feed-4",
           "name": "Woodchips",
           "category": "Browns",
           "weight_kg": 10.7
         },
         {
           "id": "completed-1-feed-5",
-          "feedstock_id": "history-feed-5",
+          "feedstockId": "history-feed-5",
           "name": "Vegetable Waste",
           "category": "Greens",
           "weight_kg": 10.7
@@ -240,42 +240,42 @@
       "feedstocks": [
         {
           "id": "completed-2-feed-0",
-          "feedstock_id": "history-feed-0",
+          "feedstockId": "history-feed-0",
           "name": "Coffee Grounds",
           "category": "Greens",
           "weight_kg": 6
         },
         {
           "id": "completed-2-feed-1",
-          "feedstock_id": "history-feed-1",
+          "feedstockId": "history-feed-1",
           "name": "Cardboards",
           "category": "Browns",
           "weight_kg": 6
         },
         {
           "id": "completed-2-feed-2",
-          "feedstock_id": "history-feed-2",
+          "feedstockId": "history-feed-2",
           "name": "Grass Clippings",
           "category": "Greens",
           "weight_kg": 6
         },
         {
           "id": "completed-2-feed-3",
-          "feedstock_id": "history-feed-3",
+          "feedstockId": "history-feed-3",
           "name": "Dried Leaves",
           "category": "Browns",
           "weight_kg": 6
         },
         {
           "id": "completed-2-feed-4",
-          "feedstock_id": "history-feed-4",
+          "feedstockId": "history-feed-4",
           "name": "Woodchips",
           "category": "Browns",
           "weight_kg": 6
         },
         {
           "id": "completed-2-feed-5",
-          "feedstock_id": "history-feed-5",
+          "feedstockId": "history-feed-5",
           "name": "Vegetable Waste",
           "category": "Greens",
           "weight_kg": 6
@@ -295,42 +295,42 @@
       "feedstocks": [
         {
           "id": "completed-3-feed-0",
-          "feedstock_id": "history-feed-0",
+          "feedstockId": "history-feed-0",
           "name": "Coffee Grounds",
           "category": "Greens",
           "weight_kg": 4.16
         },
         {
           "id": "completed-3-feed-1",
-          "feedstock_id": "history-feed-1",
+          "feedstockId": "history-feed-1",
           "name": "Cardboards",
           "category": "Browns",
           "weight_kg": 4.16
         },
         {
           "id": "completed-3-feed-2",
-          "feedstock_id": "history-feed-2",
+          "feedstockId": "history-feed-2",
           "name": "Grass Clippings",
           "category": "Greens",
           "weight_kg": 4.16
         },
         {
           "id": "completed-3-feed-3",
-          "feedstock_id": "history-feed-3",
+          "feedstockId": "history-feed-3",
           "name": "Dried Leaves",
           "category": "Browns",
           "weight_kg": 4.16
         },
         {
           "id": "completed-3-feed-4",
-          "feedstock_id": "history-feed-4",
+          "feedstockId": "history-feed-4",
           "name": "Woodchips",
           "category": "Browns",
           "weight_kg": 4.16
         },
         {
           "id": "completed-3-feed-5",
-          "feedstock_id": "history-feed-5",
+          "feedstockId": "history-feed-5",
           "name": "Vegetable Waste",
           "category": "Greens",
           "weight_kg": 4.2
