@@ -1,100 +1,104 @@
+<div align="center">
+  <img src="assets/sagana_logo.png" alt="Sagana logo" width="150" />
+
 # Sagana Mobile
 
-Sagana Mobile is the mobile app for operators of Sagana automated composting machines (AIVSP units) by Likha Innovations.
+Mobile application for Sagana composting machine operators
 
-Operators use the app to monitor composting cycles, check sensor readings, and manage their operator accounts.
+Machine management · Sensor monitoring · Batch workflows · Bluetooth provisioning
+
+[Explore the docs](docs/index.md) · [Report a bug or request a feature](https://github.com/likha-innovations/sagana-mobile/issues) · [Contact](mailto:likhainnovations.tech@gmail.com)
+
+[![Contributors](https://img.shields.io/github/contributors/likha-innovations/sagana-mobile)](https://github.com/likha-innovations/sagana-mobile/graphs/contributors) [![Forks](https://img.shields.io/github/forks/likha-innovations/sagana-mobile)](https://github.com/likha-innovations/sagana-mobile/forks) [![Stars](https://img.shields.io/github/stars/likha-innovations/sagana-mobile)](https://github.com/likha-innovations/sagana-mobile/stargazers) [![Issues](https://img.shields.io/github/issues/likha-innovations/sagana-mobile)](https://github.com/likha-innovations/sagana-mobile/issues)
+
+</div>
+
+## Contents
+https://www.facebook.com/profile.php?id=61593904382435
+- [About](#about)
+- [Features](#features)
+- [Built with](#built-with)
+- [Getting started](#getting-started)
+- [Commands](#commands)
+- [Sagana ecosystem](#sagana-ecosystem)
+- [Contact](#contact)
+
+## About
+
+Sagana Mobile helps operators register and manage automated composting machines, view machine information, and follow composting workflows. It connects to the Sagana backend for account, machine, and feedstock data, and uses Bluetooth to provision machines.
+
+Machine information is backed by the API. Batch creation is currently local to the app, and batch and sensor history use mock or empty data. Socket.IO handles live machine and telemetry events; hardware behavior requires a development build and a physical device for verification.
+
+## Features
+
+- **Accounts and profiles:** Sign in with Clerk, manage a profile, and select a barangay.
+- **Machine management:** Register a machine, view machines assigned to your barangay, rename, update Wi-Fi settings, or remove a machine.
+- **Bluetooth provisioning:** Connect to a machine and configure its Wi-Fi credentials.
+- **Machine monitoring:** Show machine details, connectivity, and live sensor readings when telemetry is received.
+- **Batch workflows:** Select feedstocks, enter weights, and create a local batch. Browse batch and history screens with search and date filters.
+- **Dashboard:** View machines and summary information from available data.
+
+See [feature status](docs/guide/ui-status.md) for current implementation details and limitations.
+
+## Built with
+
+[Expo](https://expo.dev/) · [React Native](https://reactnative.dev/) · [TypeScript](https://www.typescriptlang.org/) · [TanStack Query](https://tanstack.com/query) · [Zustand](https://zustand.docs.pmnd.rs/) · [Socket.IO](https://socket.io/)
 
 ## Getting started
 
 ### Prerequisites
 
-- Node.js 24.13.0 (the CI version)
-- pnpm 12.11.2 (the CI version; package.json and EAS pins are still pending)
-- An Android development build on a device or emulator; Bluetooth requires a physical device
+- Node.js 24.13.0 and pnpm 12.11.2, matching mobile CI.
+- Android Studio and an Android development build, or Xcode on macOS for iOS development.
+- A physical supported device and development build for Bluetooth provisioning. Expo Go does not include the required native Bluetooth module.
+- Access to a configured Sagana backend and Clerk application.
 
-### Setup
+### Installation
 
-1. Install dependencies:
-   ```bash
-   pnpm install --frozen-lockfile
-   ```
+```bash
+git clone https://github.com/likha-innovations/sagana-mobile.git
+cd sagana-mobile
+pnpm install --frozen-lockfile
+cp .env.example .env
+```
 
-2. Create your environment file:
-   ```bash
-   cp .env.example .env
-   ```
+Configure the Clerk publishable key and backend URL in your local environment file. See [environment variables](docs/reference/env-vars.md). For an Android development client, follow [team setup](docs/guide/team-setup.md).
 
-3. Configure your `.env` variables:
-   ```env
-   # Clerk publishable key (required for login and signup)
-   EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_your_clerk_key
-   ```
+```bash
+pnpm exec expo start --dev-client
+```
 
-4. Start the app:
-   ```bash
-   pnpm run start:app --dev-client
-   ```
-
-Open the development client and connect it to Metro. Expo Go does not include this app's custom Bluetooth native module.
+Open the development client and connect it to Metro. Native dependency or configuration changes may require rebuilding the client.
 
 ## Commands
 
 | Command | Purpose |
-| :--- | :--- |
-| `pnpm run start` | Starts Expo Metro bundler and documentation preview |
-| `pnpm run start:app` | Starts Expo Metro bundler directly |
-| `pnpm run android` | Builds and runs Android locally |
-| `pnpm run ios` | Builds and runs iOS locally on macOS |
-| `pnpm run web` | Launches web preview |
-| `pnpm run typecheck` | Checks TypeScript types without building |
-| `pnpm run lint` | Runs ESLint and fixes auto-fixable issues |
-| `pnpm run format` | Formats code with Prettier |
-
-## Before submitting an EAS development build
-
-Run this from the project root in Bash (Git Bash on Windows), using Node 24.13.0 and pnpm 12.11.2:
-
-```bash
-(
-  set -eu
-  node --version
-  pnpm --version
-  snapshot=$(mktemp)
-  trap 'rm -f "$snapshot"' EXIT
-  sha256sum package.json pnpm-workspace.yaml pnpm-lock.yaml > "$snapshot"
-  pnpm install --frozen-lockfile
-  sha256sum --check "$snapshot"
-  pnpm run typecheck
-)
-```
-
-CI runs on pull requests into `development` and `main`, not standalone pushes. Pushing another commit to an open PR reruns the checks and cancels its older run. Dependency downloads are cached; each job still installs from the frozen lockfile.
-
-| PR target | Checks |
 | --- | --- |
-| `development` | Frozen install and typecheck with pnpm 12.11.2; dependency-file integrity when relevant files change |
-| `main` | All development checks plus `pnpm exec expo install --check` and `pnpm exec expo-doctor` |
+| `pnpm run start` | Start the Expo development server |
+| `pnpm run android` | Build and run Android locally |
+| `pnpm run ios` | Build and run iOS locally on macOS |
+| `pnpm run typecheck` | Check TypeScript types |
+| `node --test tests/*.test.cjs` | Run mobile tests |
+| `pnpm run lint` | Run ESLint with autofix |
+| `pnpm run docs:dev` | Start the VitePress documentation server |
+| `pnpm run docs:build` | Build the documentation |
 
-Each PR runs one pnpm 12.11.2 installation for typechecking, including code-only changes. Main checks do not require production secrets and do not load `.env` files.
+For CI, dependency checks, and EAS development builds, see [team setup](docs/guide/team-setup.md).
 
-Dependency-file snapshots and integrity checks run only when the PR changes `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `.npmrc`, or `.github/workflows/mobile-quality.yml`. Code-only PRs skip these two steps; frozen installation and typecheck still run.
+## Sagana ecosystem
 
-Configure **`Mobile merge ready`** as the required GitHub status on both branches. This final check passes only when the quality job succeeds; failures, cancellations, and skipped quality jobs block it. Branch protection is configured on GitHub, not by this YAML file. Wait for this status before merging; the workflow does not submit EAS builds.
+- **sagana-mobile:** Operator mobile application.
+- **sagana-admin:** Administration application.
+- **sagana-backend:** API, database, and device messaging services.
+- **sagana-ai:** AI component.
+- **sagana-firmware:** Machine firmware.
 
-Keep one `allowBuilds` map and one `overrides` map in `pnpm-workspace.yaml`. Do not move them into package.json. Include package.json, pnpm-workspace.yaml, pnpm-lock.yaml and the old package-lock.json deletion together when committing the pnpm migration. Do not delete the pnpm lockfile or disable EAS frozen installation to bypass a failure.
+The backend repository is available at [sagana-backend](https://github.com/likha-innovations/sagana-backend).
 
-After changing dependencies, the lockfile, Expo plugins, or native configuration, explicitly submit the existing development APK profile when ready:
+## Contact
 
-```bash
-eas build --platform android --profile development
-```
+Likha Innovations · [Email](mailto:likhainnovations.tech@gmail.com) · [Facebook](https://www.facebook.com/profile.php?id=61593904382435)
 
-This cloud command can consume build credits; it is not part of the preflight. Record the build URL/commit, EAS image, Node version and pnpm version from the build log. Install the APK on an Android device, connect it to Metro, then check startup, Home/Machines/Account navigation, and pairing with a physical Sagana Bluetooth device. Record pass/fail for each. A successful dependency gate alone does not verify native compilation or Bluetooth.
+## License
 
-For ordinary screen/style changes, reuse the development client. Rebuild when native dependencies or configuration change. iOS native verification is outside this Android development gate.
-
-If EAS uses a new pnpm major, reproduce its failure with that logged version before changing the lockfile. Validate a toolchain upgrade in CI before claiming support, and align local and EAS versions with it. Keep the previous working dependency state in Git; revert a failed dependency-change commit instead of regenerating dependencies blindly.
-
----
-
-License: MIT. Likha Innovations.
+See [LICENSE](LICENSE).
