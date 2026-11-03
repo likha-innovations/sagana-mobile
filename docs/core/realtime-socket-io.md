@@ -1,9 +1,9 @@
 # Real-time WebSocket & Socket.IO
 
-Sagana Mobile provides `socket.io-client` infrastructure in `src/lib/socket.ts` and `src/hooks/use-socket.ts` for communication with the backend telemetry gateway. MQTT stays on the backend/firmware side.
+Sagana Mobile provides `socket.io-client` infrastructure in `src/lib/socket.ts` and `src/hooks/use-socket.ts` for communication with the backend telemetry gateway. MQTT communication is managed entirely on the backend and firmware layer.
 
-::: warning Current screen integration
-At commit `38b132d`, no route in `app/` calls `useSocket()`. Machine dashboards read mock hooks, so their sensor values are not live telemetry. The example below demonstrates the available hook, not the current dashboard implementation. See [UI & Feature Status](/guide/ui-status).
+::: tip ⚡ Global Gateway Subscription
+`useSocket()` is mounted at the root layout in `app/(app)/_layout.tsx`. As long as the operator is signed in, the client maintains a persistent WebSocket connection, streaming live status transitions and cache invalidations across all views with 0ms UI lag.
 :::
 
 ---
@@ -11,8 +11,8 @@ At commit `38b132d`, no route in `app/` calls `useSocket()`. Machine dashboards 
 ## 🏗️ 2-Way Real-time Architecture
 
 ```
-[Firmware / ESP32] ──(MQTT: sagana/stream)──> [HiveMQ Cloud] ──> [NestJS Backend] ──(Socket.IO: 'telemetry')──> [Sagana Mobile]
-[Sagana Mobile] ──(Socket.IO: 'command')──> [NestJS Backend] ──> [HiveMQ Cloud] ──(MQTT: sagana/commands)──> [Firmware / ESP32]
+[Firmware / ESP32] ──(MQTT: sagana/devices/:mac/telemetry)──> [HiveMQ Cloud] ──> [NestJS Backend] ──(Socket.IO: 'telemetry')──> [Sagana Mobile]
+[Sagana Mobile] ──(Socket.IO: 'command')──> [NestJS Backend] ──> [HiveMQ Cloud] ──(MQTT: sagana/devices/:mac/commands)──> [Firmware / ESP32]
 ```
 
 ---
@@ -22,8 +22,8 @@ At commit `38b132d`, no route in `app/` calls `useSocket()`. Machine dashboards 
 The backend gateway exposes a dedicated namespace for real-time telemetry:
 
 - **Namespace**: `/telemetry`
-- **Full Endpoint**: `${API_BASE_URL}/telemetry` (e.g. `http://localhost:3000/telemetry` or LAN IP)
-- **Transports**: `['websocket', 'polling']`
+- **Full Endpoint**: `${API_BASE_URL}/telemetry` (e.g. `http://localhost:3000/telemetry` or local LAN IP)
+- **Transports**: `['websocket']` *(enforced pure WebSocket transport for React Native stability)*
 
 ---
 
@@ -31,15 +31,19 @@ The backend gateway exposes a dedicated namespace for real-time telemetry:
 
 ### 1. Server ➔ Client Events (Subscribed on Mobile)
 
-| Event Name | Payload Shape | Description |
-|---|---|---|
-| `'telemetry'` | `TelemetryData \| unknown` | Live hardware sensor readings received from HiveMQ topic `sagana/stream`. |
+| Event Name | Payload Shape | Description & TanStack Cache Sync |
+| :--- | :--- | :--- |
+| **`telemetry`** | `TelemetryData \| Record<string, unknown>` | Live sensor readings. Updates latest telemetry readings in cache for active machine views. |
+| **`status`** | `{ machineId?: string; macAddress?: string; status?: string }` | Machine connectivity changes (`online`/`active` vs `offline`). Directly flips `machine.status` in the `['machines']` list query cache with zero latency. |
+| **`machine_added`** | `{ machineId: string; name: string; macAddress: string; barangayId?: string; wifiSsid?: string \| null; status?: string; createdAt?: string }` | Emitted when a new machine is registered or re-provisioned. Prepends/appends the machine into the `['machines']` list cache and invalidates query. |
+| **`machine_updated`** | `{ machineId: string; name?: string; barangayId?: string }` | Emitted on machine rename or config update. Patches name in both list and detail query cache. |
+| **`machine_removed`** | `{ machineId: string; barangayId?: string }` | Emitted on soft-deletion. Removes machine from the `['machines']` list cache immediately. |
 
 ### 2. Client ➔ Server Events (Emitted by Mobile)
 
 | Event Name | Payload Shape | Description |
-|---|---|---|
-| `'command'` | `string \| object` | Custom actuator control/instructions forwarded to HiveMQ topic `sagana/commands`. |
+| :--- | :--- | :--- |
+| **`command`** | `string \| object` | Custom actuator control/instructions forwarded to HiveMQ command topic for the machine. |
 
 ---
 
@@ -52,7 +56,8 @@ import { io, Socket } from 'socket.io-client';
 import { getApiBaseUrl } from '@/api/client';
 
 export function getSocket(): Socket {
-  // Returns singleton Socket.IO instance configured for /telemetry
+  // Configured with pure websocket transport:
+  // transports: ['websocket']
 }
 
 export function disconnectSocket(): void {
@@ -64,7 +69,7 @@ export function disconnectSocket(): void {
 
 ## 🎣 React Hook (`useSocket`)
 
-The `useSocket` hook manages subscription lifecycles, incoming telemetry state, and command dispatching:
+The `useSocket` hook manages subscription lifecycles, incoming telemetry state, TanStack cache patching, and command dispatching:
 
 ```typescript
 import { useSocket } from '@/hooks';
@@ -81,7 +86,7 @@ export function Dashboard() {
 
   // Send an actuator command to firmware
   const onToggleRelay = () => {
-    sendCommand('RELAY_ON');
+    sendCommand({ action: 'RELAY_ON' });
   };
 }
 ```

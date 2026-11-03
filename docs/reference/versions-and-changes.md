@@ -7,7 +7,7 @@ Audited on **13 October 2026**, at mobile commit **`38b132d`**. Versions below c
 | Item | Declared version / behavior |
 | --- | --- |
 | App | `package.json` and `app.json`: **1.3.0** |
-| Expo / Router | `~57.0.26` / `~57.0.24` |
+| Expo / Router | `~57.0.31` / `~57.0.29` |
 | React / React Native | `19.2.3` / `0.86.3` |
 | TypeScript | `~6.0.3` |
 | Uniwind / Tailwind | `^1.11.0` / `^4.3.3` |
@@ -23,6 +23,14 @@ Commit links identify the source changes, not release tags.
 
 | Commit | Change collaborators need to know |
 | --- | --- |
+| [`3c74745`](https://github.com/likha-innovations/sagana-mobile/commit/3c74745) | Updated Expo packages to compatible `~57.0.31` set. |
+| [`216ac08`](https://github.com/likha-innovations/sagana-mobile/commit/216ac08) | Machine registration gracefully handles BLE friendly name write failure and completes backend registration. |
+| [`8306de3`](https://github.com/likha-innovations/sagana-mobile/commit/8306de3) | Handle `machine_added` Socket.IO event for real-time list sync in TanStack Query. |
+| [`382ff6a`](https://github.com/likha-innovations/sagana-mobile/commit/382ff6a) | Handle `machine_updated` and `machine_removed` Socket.IO events for instantaneous cache mutations. |
+| [`4e183b1`](https://github.com/likha-innovations/sagana-mobile/commit/4e183b1) | Enforce pure `websocket` transport in `socket.ts` for React Native stability. |
+| [`2145d01`](https://github.com/likha-innovations/sagana-mobile/commit/2145d01) | Update latest sensor readings in cache on telemetry socket event. |
+| [`9c5bdb9`](https://github.com/likha-innovations/sagana-mobile/commit/9c5bdb9) | Wire real-time machine status updates (`active` vs `offline`) from Socket.IO `status` events. |
+| [`b8368a2`](https://github.com/likha-innovations/sagana-mobile/commit/b8368a2) | Machine settings and BLE re-provisioning flow support. |
 | [`38b132d`](https://github.com/likha-innovations/sagana-mobile/commit/38b132d) | Edit profile formats birthday values and uses `BirthdayBottomSheet`. |
 | [`7afafdf`](https://github.com/likha-innovations/sagana-mobile/commit/7afafdf), [`2aa087c`](https://github.com/likha-innovations/sagana-mobile/commit/2aa087c) | NativeWind replaced by Uniwind; Metro/CSS integration and type declarations changed. |
 | [`77d3240`](https://github.com/likha-innovations/sagana-mobile/commit/77d3240) | App 1.3.0; notification dependency, plugin and permission added. Runtime delivery remains unwired. |

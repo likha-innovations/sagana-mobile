@@ -315,6 +315,7 @@ export function useSocket() {
     socket.on('connect_error', onConnectError);
     socket.on('telemetry', onTelemetry);
     socket.on('status', onStatus);
+    socket.on('machine_added', onMachineAdded);
     socket.on('machine_updated', onMachineUpdated);
     socket.on('machine_removed', onMachineRemoved);
 
@@ -324,6 +325,7 @@ export function useSocket() {
       socket.off('connect_error', onConnectError);
       socket.off('telemetry', onTelemetry);
       socket.off('status', onStatus);
+      socket.off('machine_added', onMachineAdded);
       socket.off('machine_updated', onMachineUpdated);
       socket.off('machine_removed', onMachineRemoved);
     };
