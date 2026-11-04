@@ -78,7 +78,7 @@ Open the development client and connect it to Metro. Native dependency or config
 | `pnpm run android` | Build and run Android locally |
 | `pnpm run ios` | Build and run iOS locally on macOS |
 | `pnpm run typecheck` | Check TypeScript types |
-| `node --test tests/*.test.cjs` | Run mobile tests |
+| `pnpm test` | Run mobile Jest tests |
 | `pnpm run lint` | Run ESLint with autofix |
 | `pnpm run docs:dev` | Start the VitePress documentation server |
 | `pnpm run docs:build` | Build the documentation |

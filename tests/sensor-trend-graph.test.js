@@ -1,5 +1,3 @@
-const assert = require("node:assert/strict");
-const { test } = require("node:test");
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
@@ -62,34 +60,45 @@ test("Gifted Charts preserves missing intervals, zero readings and exact tooltip
   const chart = nodes(render(points)).find(
     (node) => node.type === "LineChart",
   ).props;
-  assert.equal(chart.data.length, 4);
-  assert.equal(chart.data[0].value, 0);
-  assert.equal(chart.data[1].value, undefined);
-  assert.equal(chart.interpolateMissingValues, false);
-  assert.equal(chart.extrapolateMissingValues, false);
-  assert.equal(chart.pointerConfig.hidePointerForMissingValues, true);
+  expect(chart.data.length).toBe(4);
+  expect(chart.data[0].value).toBe(0);
+  expect(chart.data[1].value).toBe(undefined);
+  expect(chart.interpolateMissingValues).toBe(false);
+  expect(chart.extrapolateMissingValues).toBe(false);
+  expect(chart.pointerConfig.hidePointerForMissingValues).toBe(true);
+  expect(chart.pointerConfig.activatePointersOnLongPress).toBe(false);
+  expect(chart.pointerConfig.activatePointersInstantlyOnTouch).toBe(true);
+  expect(chart.dataPointsRadius < 2.5).toBeTruthy();
   const tooltip = chart.pointerConfig.pointerLabelComponent;
-  assert.equal(tooltip([], null, 1), null);
+  expect(tooltip([], null, 1)).toBe(null);
   const labels = nodes(tooltip([], null, 0))
     .filter((node) => node.type === "Text")
     .map((node) => node.props.children);
-  assert.deepEqual(labels, ["0°C", "00:00"]);
+  expect(labels).toEqual(["0°C", "00:00"]);
+});
+
+test("the selected point displays its actual reading date and time", () => {
+  const recordedAt = new Date(2026, 0, 2, 13, 45, 12).toISOString();
+  const chart = nodes(
+    render([{ x: 0, value: 29.5, label: "13:00", recordedAt }]),
+  ).find((node) => node.type === "LineChart").props;
+  const labels = nodes(chart.pointerConfig.pointerLabelComponent([], null, 0))
+    .filter((node) => node.type === "Text")
+    .map((node) => node.props.children);
+  expect(labels).toEqual(["29.5°C", "Jan 2, 2026 · 1:45:12 PM"]);
 });
 
 test("empty series shows a message instead of an invented zero line", () => {
   const tree = nodes(
     render(points.map((point) => ({ ...point, value: null }))),
   );
-  assert.equal(
-    tree.some((node) => node.type === "LineChart"),
-    false,
-  );
-  assert.ok(
+  expect(tree.some((node) => node.type === "LineChart")).toBe(false);
+  expect(
     tree.some(
       (node) =>
         node.props?.children === "No readings recorded for this sensor.",
     ),
-  );
+  ).toBeTruthy();
 });
 
 test("large text uses fewer labels and a narrower plot; single and negative readings remain visible", () => {
@@ -99,12 +108,12 @@ test("large text uses fewer labels and a narrower plot; single and negative read
   const large = nodes(render(points, 1.5)).find(
     (node) => node.type === "LineChart",
   ).props;
-  assert.ok(large.width < normal.width);
-  assert.equal(large.data.filter((point) => point.label).length, 2);
+  expect(large.width < normal.width).toBeTruthy();
+  expect(large.data.filter((point) => point.label).length).toBe(2);
   const single = nodes(render([{ x: 0, value: -5, label: "Jan 2" }])).find(
     (node) => node.type === "LineChart",
   ).props;
-  assert.equal(single.data[0].value, -5);
-  assert.equal(single.noOfSectionsBelowXAxis, 1);
-  assert.ok(single.dataPointsRadius > 0);
+  expect(single.data[0].value).toBe(-5);
+  expect(single.noOfSectionsBelowXAxis).toBe(1);
+  expect(single.dataPointsRadius > 0).toBeTruthy();
 });

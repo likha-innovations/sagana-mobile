@@ -1,5 +1,3 @@
-const assert = require("node:assert/strict");
-const { test } = require("node:test");
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
@@ -31,6 +29,27 @@ const schemas = load("src/types/history.ts");
 const stamp = (day, hour = 0, minute = 0) =>
   new Date(2026, 0, day, hour, minute).toISOString();
 
+test("sensor chart preserves the latest actual reading and its timestamp within each interval", () => {
+  const base = {
+    machineId: "m",
+    batchId: null,
+    moisture: null,
+    oxygen: null,
+    co2: null,
+  };
+  const readings = [
+    { ...base, recordedAt: stamp(2, 10, 5), temperature: 20 },
+    { ...base, recordedAt: stamp(2, 10, 45), temperature: 30 },
+  ];
+  const point = h.aggregateReadings(
+    readings,
+    { startDate: "2026-01-02", endDate: "2026-01-02" },
+    true,
+  ).temperature[10];
+  expect(point.value).toBe(30);
+  expect(point.recordedAt).toBe(readings[1].recordedAt);
+});
+
 test("search combines trimmed case-insensitive codes with inclusive local dates", () => {
   const batches = [
     { id: "a", batchCode: "SG-Alpha", completionDate: stamp(2) },
@@ -43,40 +62,35 @@ test("search combines trimmed case-insensitive codes with inclusive local dates"
     { id: "d", batchCode: "SG-Beta", completionDate: stamp(2) },
   ];
   const range = { startDate: "2026-01-02", endDate: "2026-01-02" };
-  assert.equal(
+  expect(
     h
       .filterCompletedBatches(batches, "  ALPHA ", range)
       .map((b) => b.id)
       .join(),
-    "b,a",
-  );
-  assert.equal(batches[0].id, "a");
-  assert.equal(h.isInRange(stamp(1, 23, 59), range), false);
-  assert.equal(h.filterCompletedBatches(batches, "missing", range).length, 0);
+  ).toBe("b,a");
+  expect(batches[0].id).toBe("a");
+  expect(h.isInRange(stamp(1, 23, 59), range)).toBe(false);
+  expect(h.filterCompletedBatches(batches, "missing", range).length).toBe(0);
 });
 
 test("month presets cross years and include the current month", () => {
   const now = new Date(2026, 0, 31);
-  assert.equal(
-    h.historyRange("This month", undefined, now).startDate,
+  expect(h.historyRange("This month", undefined, now).startDate).toBe(
     "2026-01-01",
   );
-  assert.equal(
-    h.historyRange("Last 6 months", undefined, now).startDate,
+  expect(h.historyRange("Last 6 months", undefined, now).startDate).toBe(
     "2025-08-01",
   );
-  assert.equal(
-    h.historyRange("Last 12 months", undefined, now).startDate,
+  expect(h.historyRange("Last 12 months", undefined, now).startDate).toBe(
     "2025-02-01",
   );
-  assert.equal(
-    h.historyRange("Last 6 months", undefined, now).endDate,
+  expect(h.historyRange("Last 6 months", undefined, now).endDate).toBe(
     "2026-01-31",
   );
-  assert.equal(h.historyRange("All time"), undefined);
+  expect(h.historyRange("All time")).toBe(undefined);
   const week = h.sensorRange("Per week", new Date(2026, 0, 1));
-  assert.equal(week.startDate, "2025-12-29");
-  assert.equal(week.endDate, "2026-01-04");
+  expect(week.startDate).toBe("2025-12-29");
+  expect(week.endDate).toBe("2026-01-04");
 });
 
 test("range selection supports same-day, reversed and incomplete ranges", () => {
@@ -84,15 +98,15 @@ test("range selection supports same-day, reversed and incomplete ranges", () => 
     { startDate: null, endDate: null },
     "2026-01-03",
   );
-  assert.equal(first.endDate, null);
-  assert.equal(h.nextRangeSelection(first, "2026-01-03").endDate, "2026-01-03");
+  expect(first.endDate).toBe(null);
+  expect(h.nextRangeSelection(first, "2026-01-03").endDate).toBe("2026-01-03");
   const reversed = h.nextRangeSelection(first, "2026-01-01");
-  assert.equal(reversed.startDate, "2026-01-01");
-  assert.equal(reversed.endDate, "2026-01-03");
-  assert.equal(h.nextRangeSelection(reversed, "2026-01-04").endDate, null);
+  expect(reversed.startDate).toBe("2026-01-01");
+  expect(reversed.endDate).toBe("2026-01-03");
+  expect(h.nextRangeSelection(reversed, "2026-01-04").endDate).toBe(null);
 });
 
-test("hourly and daily means isolate batches and preserve missing sensor intervals", () => {
+test("latest hourly and daily readings isolate batches and preserve missing sensor intervals", () => {
   const reading = (batchId, recordedAt, temperature, moisture = null) => ({
     batchId,
     machineId: batchId,
@@ -115,22 +129,22 @@ test("hourly and daily means isolate batches and preserve missing sensor interva
     machineId: "a",
   }).readings;
   const hourly = h.aggregateReadings(scoped, range, true);
-  assert.equal(hourly.temperature.length, 24);
-  assert.equal(hourly.temperature[1].value, 20);
-  assert.equal(hourly.temperature[2].value, null);
-  assert.equal(hourly.moisture[1].value, 0);
-  assert.equal(hourly.moisture[3].value, null);
-  assert.equal(hourly.temperature[3].x, 3 / 24);
+  expect(hourly.temperature.length).toBe(24);
+  expect(hourly.temperature[1].value).toBe(30);
+  expect(hourly.temperature[2].value).toBe(null);
+  expect(hourly.moisture[1].value).toBe(0);
+  expect(hourly.moisture[3].value).toBe(null);
+  expect(hourly.temperature[3].x).toBe(3 / 24);
   const daily = h.aggregateReadings(
     scoped,
     { ...range, endDate: "2026-01-03" },
     false,
   );
-  assert.equal(daily.temperature[0].value, 30);
-  assert.equal(daily.temperature[1].value, null);
-  assert.equal(hourly.temperature[3].label, "03:00");
-  assert.equal(daily.temperature[1].label, "Jan 3");
-  assert.ok(hourly.co2.every((point) => point.value === null));
+  expect(daily.temperature[0].value).toBe(50);
+  expect(daily.temperature[1].value).toBe(null);
+  expect(hourly.temperature[3].label).toBe("03:00");
+  expect(daily.temperature[1].label).toBe("Jan 3");
+  expect(hourly.co2.every((point) => point.value === null)).toBeTruthy();
 });
 
 test("fixtures validate, stay inside their batches and preserve initial feedstock weights", () => {
@@ -141,39 +155,39 @@ test("fixtures validate, stay inside their batches and preserve initial feedstoc
     .array()
     .parse(fixtures.history_events);
   for (const batch of fixtures.completed_batches) {
-    assert.equal(
+    expect(
       Number(
         batch.feedstocks.reduce((sum, f) => sum + f.weightKg, 0).toFixed(2),
       ),
-      batch.totalWeight,
-    );
-    assert.notEqual(batch.totalWeight, batch.finalWeight);
-    assert.ok(readings.some((r) => r.batchId === batch.id));
-    assert.ok(logs.some((r) => r.batchId === batch.id));
+    ).toBe(batch.totalWeight);
+    expect(batch.totalWeight).not.toBe(batch.finalWeight);
+    expect(readings.some((r) => r.batchId === batch.id)).toBeTruthy();
+    expect(logs.some((r) => r.batchId === batch.id)).toBeTruthy();
   }
   for (const event of [...readings, ...logs]) {
     const machine = fixtures.machines.find((m) => m.id === event.machineId);
-    assert.ok(machine);
-    assert.ok(
+    expect(machine).toBeTruthy();
+    expect(
       Date.parse(event.recordedAt ?? event.createdAt) >=
         Date.parse(machine.createdAt),
-    );
+    ).toBeTruthy();
     if (event.batchId === null) continue;
     const batch = fixtures.completed_batches.find(
       (b) => b.id === event.batchId,
     );
-    assert.ok(batch);
+    expect(batch).toBeTruthy();
     const time = Date.parse(event.recordedAt ?? event.createdAt);
-    assert.ok(
+    expect(
       time >= Date.parse(batch.startDate) &&
         time <= Date.parse(batch.completionDate),
-    );
+    ).toBeTruthy();
   }
-  assert.equal(
-    schemas.historyReadingSchema.safeParse({ ...readings[0], moisture: 101 })
-      .success,
-    false,
-  );
+  expect(
+    schemas.historyReadingSchema.safeParse({
+      ...readings[0],
+      moisture: Infinity,
+    }).success,
+  ).toBe(false);
 });
 
 function sheetHarness(file, exportName) {
@@ -260,19 +274,19 @@ test("filter sheet drafts cancel, reopen and apply; legacy callers still select 
   tree.props.onChange(0);
   tree = render(props);
   nodes(tree, "Pressable")[1].props.onPress();
-  assert.equal(applied.length, 0);
+  expect(applied.length).toBe(0);
   tree.props.onDismiss();
   tree.props.onChange(0);
   tree = render(props);
   nodes(tree, "Button")[0].props.onPress();
-  assert.equal(applied.join(), "All time");
+  expect(applied.join()).toBe("All time");
   nodes(tree, "Pressable")[1].props.onPress();
   tree = render(props);
   nodes(tree, "Button")[0].props.onPress();
-  assert.equal(applied.join(), "All time,This month");
+  expect(applied.join()).toBe("All time,This month");
   tree = render({ ...props, onApply: undefined });
   nodes(tree, "Pressable")[1].props.onPress();
-  assert.equal(selected.join(), "This month");
+  expect(selected.join()).toBe("This month");
 });
 
 test("date sheet cancels drafts, restores applied dates and refuses incomplete selection", () => {
@@ -293,16 +307,16 @@ test("date sheet cancels drafts, restores applied dates and refuses incomplete s
   tree = render(props);
   nodes(tree, "Calendar")[0].props.onDayPress({ dateString: "2026-01-05" });
   tree = render(props);
-  assert.equal(nodes(tree, "Button")[0].props.disabled, true);
+  expect(nodes(tree, "Button")[0].props.disabled).toBe(true);
   nodes(tree, "Button")[0].props.onPress();
-  assert.equal(applied.length, 0);
+  expect(applied.length).toBe(0);
   tree.props.onDismiss();
   tree.props.onChange(0);
   tree = render(props);
-  assert.equal(nodes(tree, "Button")[0].props.disabled, false);
+  expect(nodes(tree, "Button")[0].props.disabled).toBe(false);
   nodes(tree, "Button")[0].props.onPress();
-  assert.equal(applied[0].startDate, "2026-01-02");
-  assert.equal(applied[0].endDate, "2026-01-03");
+  expect(applied[0].startDate).toBe("2026-01-02");
+  expect(applied[0].endDate).toBe("2026-01-03");
 });
 
 test("machine scope includes multiple batches and unassigned records without crossing machines", () => {
@@ -311,12 +325,12 @@ test("machine scope includes multiple batches and unassigned records without cro
     fixtures.history_events,
     { kind: "machine", machineId: "1" },
   );
-  assert.ok(result.readings.every((r) => r.machineId === "1"));
-  assert.ok(result.logs.every((r) => r.machineId === "1"));
-  assert.ok(result.readings.some((r) => r.batchId === "completed-1"));
-  assert.ok(result.readings.some((r) => r.batchId === "completed-3"));
-  assert.ok(result.readings.some((r) => r.batchId === null));
-  assert.ok(result.logs.some((r) => r.batchId === null));
+  expect(result.readings.every((r) => r.machineId === "1")).toBeTruthy();
+  expect(result.logs.every((r) => r.machineId === "1")).toBeTruthy();
+  expect(result.readings.some((r) => r.batchId === "completed-1")).toBeTruthy();
+  expect(result.readings.some((r) => r.batchId === "completed-3")).toBeTruthy();
+  expect(result.readings.some((r) => r.batchId === null)).toBeTruthy();
+  expect(result.logs.some((r) => r.batchId === null)).toBeTruthy();
 });
 
 test("batch scope requires membership, matching machine and inclusive lifetime boundaries", () => {
@@ -333,9 +347,7 @@ test("batch scope requires membership, matching machine and inclusive lifetime b
     },
     {
       ...original,
-      recordedAt: new Date(
-        Date.parse(batch.completionDate) + 1,
-      ).toISOString(),
+      recordedAt: new Date(Date.parse(batch.completionDate) + 1).toISOString(),
     },
     { ...original, batchId: null },
     { ...original, batchId: "another-batch" },
@@ -350,11 +362,11 @@ test("batch scope requires membership, matching machine and inclusive lifetime b
   }));
   const scope = { kind: "batch", batchId: batch.id };
   const selected = h.selectHistory(samples, events, scope, batch);
-  assert.equal(selected.readings.length, 2);
-  assert.equal(selected.logs.length, 2);
-  assert.equal(selected.readings[0].recordedAt, batch.startDate);
-  assert.equal(selected.logs[0].createdAt, batch.completionDate);
-  assert.equal(h.selectHistory(samples, events, scope).readings.length, 0);
+  expect(selected.readings.length).toBe(2);
+  expect(selected.logs.length).toBe(2);
+  expect(selected.readings[0].recordedAt).toBe(batch.startDate);
+  expect(selected.logs[0].createdAt).toBe(batch.completionDate);
+  expect(h.selectHistory(samples, events, scope).readings.length).toBe(0);
 });
 
 test("automation grouping sorts actual local dates and preserves input order and timestamps", () => {
@@ -363,31 +375,28 @@ test("automation grouping sorts actual local dates and preserves input order and
   );
   const before = JSON.stringify(logs);
   const groups = h.groupHistoryEvents(logs);
-  assert.equal(groups.length, 2);
-  assert.equal(groups[0].data.map((l) => l.id).join(), "2,0");
-  assert.equal(groups[1].data[0].id, "1");
-  assert.equal(JSON.stringify(logs), before);
+  expect(groups.length).toBe(2);
+  expect(groups[0].data.map((l) => l.id).join()).toBe("2,0");
+  expect(groups[1].data[0].id).toBe("1");
+  expect(JSON.stringify(logs)).toBe(before);
   const filtered = h.groupHistoryEvents(logs, {
     startDate: "2026-01-02",
     endDate: "2026-01-02",
   });
-  assert.equal(filtered.length, 1);
-  assert.equal(filtered[0].data.length, 2);
+  expect(filtered.length).toBe(1);
+  expect(filtered[0].data.length).toBe(2);
 });
 
 test("machine presets use inclusive local calendar days across year boundaries", () => {
   const now = new Date(2026, 0, 3, 12);
-  assert.equal(h.historyRange("Today", undefined, now).startDate, "2026-01-03");
-  assert.equal(
-    h.historyRange("Last 7 days", undefined, now).startDate,
+  expect(h.historyRange("Today", undefined, now).startDate).toBe("2026-01-03");
+  expect(h.historyRange("Last 7 days", undefined, now).startDate).toBe(
     "2025-12-28",
   );
-  assert.equal(
-    h.historyRange("Last 31 days", undefined, now).startDate,
+  expect(h.historyRange("Last 31 days", undefined, now).startDate).toBe(
     "2025-12-04",
   );
-  assert.equal(
-    h.historyRange("Last 7 days", undefined, now).endDate,
+  expect(h.historyRange("Last 7 days", undefined, now).endDate).toBe(
     "2026-01-03",
   );
 });
@@ -396,17 +405,12 @@ test("migrated machine samples retain values with explicit daily positions and n
   const samples = fixtures.history_readings.filter(
     (r) => r.machineId === "1" && r.batchId === null,
   );
-  assert.equal(
-    samples.map((r) => r.temperature).join(),
-    "20,30,45,55,60,45,40",
-  );
-  assert.equal(samples[0].recordedAt, "2026-09-29T16:00:00.000Z");
-  assert.equal(
+  expect(samples.map((r) => r.temperature).join()).toBe("20,30,45,55,60,45,40");
+  expect(samples[0].recordedAt).toBe("2026-09-29T16:00:00.000Z");
+  expect(
     Date.parse(samples.at(-1).recordedAt) - Date.parse(samples[0].recordedAt),
-    86400000,
-  );
-  assert.equal(
-    new Set(fixtures.history_events.map((e) => e.id)).size,
+  ).toBe(86400000);
+  expect(new Set(fixtures.history_events.map((e) => e.id)).size).toBe(
     fixtures.history_events.length,
   );
   for (const type of [
@@ -417,13 +421,12 @@ test("migrated machine samples retain values with explicit daily positions and n
     "emergency_stop",
     "ventilation_adjust",
   ]) {
-    assert.equal(
+    expect(
       schemas.historyEventSchema.safeParse({
         ...fixtures.history_events[0],
         type,
       }).success,
-      true,
-    );
+    ).toBe(true);
   }
 });
 
@@ -433,6 +436,13 @@ test("history queries separate scope caches, load only relevant metadata and han
   const enabled = [];
   const { useHistory } = load("src/hooks/use-history.ts", {
     "@/data/data.json": fixtures,
+    "@/context/auth-context": {
+      useAuthContext: () => ({ user: { id: "user" } }),
+    },
+    "./use-profile": {
+      useProfile: () => ({ data: { barangayId: "barangay" } }),
+    },
+    "@/api/batch.api": { batchApi: { readings: async () => [] } },
     "@/types/history": schemas,
     "@/lib/history": h,
     "./use-batches": {
@@ -455,7 +465,11 @@ test("history queries separate scope caches, load only relevant metadata and han
       useQuery: (options) => {
         const key = options.queryKey.join("/");
         if (options.enabled && !cache.has(key))
-          requests.push(options.queryFn().then((data) => cache.set(key, data)));
+          requests.push(
+            options
+              .queryFn({ signal: new AbortController().signal })
+              .then((data) => cache.set(key, data)),
+          );
         return {
           data: cache.get(key),
           isPending: !cache.has(key),
@@ -466,26 +480,33 @@ test("history queries separate scope caches, load only relevant metadata and han
   });
   const batchScope = { kind: "batch", batchId: "completed-1" };
   const machineScope = { kind: "machine", machineId: "1" };
-  useHistory(batchScope);
-  useHistory(machineScope);
+  useHistory(batchScope, { period: "Per day" });
+  useHistory(machineScope, { period: "Per day" });
   await Promise.all(requests);
   const batch = useHistory(batchScope),
-    machine = useHistory(machineScope);
-  assert.equal(batch.readings.length, 0);
-  assert.equal(machine.readings.length, 0);
-  assert.ok(cache.has("history/batch/completed-1"));
-  assert.ok(cache.has("history/machine/1"));
-  assert.equal(
+    machine = useHistory(machineScope, { period: "Per day" });
+  expect(batch.readings.length).toBe(0);
+  expect(machine.readings.length).toBe(0);
+  expect(
+    [...cache.keys()].some((key) =>
+      key.startsWith("history/user/barangay/batch/completed-1/"),
+    ),
+  ).toBeTruthy();
+  expect(
+    [...cache.keys()].some((key) =>
+      key.startsWith("history/user/barangay/machine/1/"),
+    ),
+  ).toBeTruthy();
+  expect(
     enabled
       .slice(0, 4)
       .map(([kind, active]) => kind + ":" + active)
       .join(),
-    "batch:true,machine:false,batch:false,machine:true",
-  );
+  ).toBe("batch:true,machine:false,batch:false,machine:true");
   const missing = useHistory({ kind: "machine", machineId: "missing" });
-  assert.equal(missing.exists, false);
-  assert.equal(missing.isPending, false);
-  assert.equal(missing.readings.length, 0);
+  expect(missing.exists).toBe(false);
+  expect(missing.isPending).toBe(false);
+  expect(missing.readings.length).toBe(0);
 });
 
 test("route wrappers preserve scope and log every focus visit", () => {
@@ -513,17 +534,15 @@ test("route wrappers preserve scope and log every focus visit", () => {
         [`@/components/history/${sensor ? "sensor" : "automation"}-history-screen`]:
           { [component]: component },
       }).default();
-      assert.equal(screen.type, component);
-      assert.equal(screen.props.scope.kind, kind);
-      assert.equal(
+      expect(screen.type).toBe(component);
+      expect(screen.props.scope.kind).toBe(kind);
+      expect(
         screen.props.scope[kind === "batch" ? "batchId" : "machineId"],
-        kind === "batch" ? "completed-1" : "1",
-      );
+      ).toBe(kind === "batch" ? "completed-1" : "1");
       callbacks[0]();
       callbacks[0]();
-      assert.equal(logs.length, 2);
-      assert.equal(
-        logs[0].params[kind === "batch" ? "batchId" : "id"],
+      expect(logs.length).toBe(2);
+      expect(logs[0].params[kind === "batch" ? "batchId" : "id"]).toBe(
         kind === "batch" ? "completed-1" : "1",
       );
     }
