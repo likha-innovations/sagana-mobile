@@ -11,16 +11,6 @@ import {
   machineSsidSchema,
 } from "@/lib/machine-overview";
 
-// ponytail: direct in-memory mutation helper for mock state transition
-let mockMachines: Machine[] = [];
-
-export function setMockMachineStatus(id: string, status: Machine["status"]) {
-  const idx = mockMachines.findIndex((m) => m.id === id);
-  if (idx > -1) {
-    mockMachines[idx] = { ...mockMachines[idx], status };
-  }
-}
-
 export const machineKeys = {
   all: ["machines"] as const,
   list: (userId: string | undefined, barangayId: string | null | undefined) =>

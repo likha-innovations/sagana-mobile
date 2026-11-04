@@ -66,7 +66,7 @@ export default function MachinesListScreen() {
             retrying={refreshing}
           />
         )}
-        {machines.isPending || batches.isPending ? (
+        {!failed && (machines.isPending || batches.isPending) ? (
           <MachineSkeletons stacked={width < 360 || fontScale > 1.2} />
         ) : (
           machines.data &&
@@ -84,7 +84,7 @@ export default function MachinesListScreen() {
                   key={machine.id}
                   machine={machine}
                   activeBatch={
-                    batches.data.find(
+                    batches.data?.find(
                       (batch) =>
                         batch.machineId === machine.id &&
                         batch.status === "active",

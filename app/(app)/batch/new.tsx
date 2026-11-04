@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Pressable,
   ScrollView,
   TextInput,
   KeyboardAvoidingView,
@@ -12,6 +11,7 @@ import {
   Keyboard,
   BackHandler,
   ActivityIndicator,
+  useWindowDimensions,
 } from 'react-native';
 import {
   BottomSheetModal,
@@ -27,9 +27,8 @@ import { toast } from 'burnt';
 
 import { useDynamicLayout } from '@/hooks/use-layout';
 import { useMachines } from '@/hooks/use-machines';
-import { useFeedstocks, useCreateCompostBatch } from '@/hooks/use-batches';
+import { useFeedstocks, useCreateCompostBatch, useCompostBatches } from '@/hooks/use-batches';
 import { getFeedstockImage } from '@/constants/feedstocks';
-import type { FeedstockCategory } from '@/types/batch';
 
 type WizardStep = 1 | 2 | 3 | 4 | 5;
 
@@ -41,6 +40,8 @@ export default function NewBatchScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ machineId?: string }>();
   const { insets, headerPaddingTop, stackScrollPadding } = useDynamicLayout();
+  const { width, fontScale } = useWindowDimensions();
+  const columns = fontScale > 1.5 ? 1 : width < 340 || fontScale > 1.2 ? 2 : 3;
 
   const [step, setStep] = useState<WizardStep>(1);
   const [selectedMachineId, setSelectedMachineId] = useState<string>(params.machineId ?? '');
@@ -65,7 +66,8 @@ export default function NewBatchScreen() {
   const [selectedFeedstocks, setSelectedFeedstocks] = useState<SelectedFeedstockState>({});
 
   const { data: machines = [], isLoading: isMachinesLoading } = useMachines();
-  const { data: feedstocks = [], isLoading: isFeedstocksLoading } = useFeedstocks();
+  const batches = useCompostBatches();
+  const { data: feedstocks = [], isLoading: isFeedstocksLoading, isError: isFeedstocksError, refetch: refetchFeedstocks } = useFeedstocks();
   const createBatchMutation = useCreateCompostBatch();
 
   // Pre-select machine if passed via search params
@@ -98,27 +100,10 @@ export default function NewBatchScreen() {
     [machines, selectedMachineId]
   );
 
-  const categorizedFeedstocks = useMemo(() => {
-    const categories: Record<FeedstockCategory, typeof feedstocks> = {
-      green: [],
-      brown: [],
-    };
-    feedstocks.forEach((f) => {
-      if (categories[f.category]) {
-        categories[f.category].push(f);
-      }
-    });
-    return categories;
-  }, [feedstocks]);
-
-  // Validation: Step 3 is valid if >= 1 feedstock is selected and all selected have positive weight
   const isStep3Valid = useMemo(() => {
-    const keys = Object.keys(selectedFeedstocks);
-    if (keys.length === 0) return false;
-    return keys.every((key) => {
-      const val = parseFloat(selectedFeedstocks[key]);
-      return !isNaN(val) && val > 0;
-    });
+    const weights = Object.values(selectedFeedstocks).filter((value) => value !== '');
+    return weights.some((value) => Number(value) > 0) &&
+      weights.every((value) => value !== '.' && Number.isFinite(Number(value)));
   }, [selectedFeedstocks]);
 
   // Handlers
@@ -146,25 +131,11 @@ export default function NewBatchScreen() {
     setStep(3);
   };
 
-  const handleToggleFeedstock = (feedstockId: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedFeedstocks((prev) => {
-      const next = { ...prev };
-      if (feedstockId in next) {
-        delete next[feedstockId];
-      } else {
-        next[feedstockId] = '0';
-      }
-      return next;
-    });
-  };
-
   const handleWeightChange = (feedstockId: string, text: string) => {
-    // ponytail: clean numeric filter allowing decimal values
-    const clean = text.replace(/[^0-9.]/g, '');
+    if (!/^\d*\.?\d*$/.test(text)) return;
     setSelectedFeedstocks((prev) => ({
       ...prev,
-      [feedstockId]: clean,
+      [feedstockId]: text,
     }));
   };
 
@@ -177,9 +148,9 @@ export default function NewBatchScreen() {
   const handleStep4Submit = async () => {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      const items = Object.entries(selectedFeedstocks).map(([id, weightStr]) => ({
+      const items = Object.entries(selectedFeedstocks).filter(([, weight]) => Number(weight) > 0).map(([id, weightStr]) => ({
         id,
-        weight: parseFloat(weightStr) || 0,
+        weight: Number(weightStr),
       }));
 
       await createBatchMutation.mutateAsync({
@@ -336,102 +307,55 @@ export default function NewBatchScreen() {
 
                 {isFeedstocksLoading ? (
                   <ActivityIndicator color="#718619" className="my-8" />
+                ) : isFeedstocksError ? (
+                  <View className="items-center py-8">
+                    <Text className="text-sm font-sans text-foreground text-center">
+                      Feedstocks could not be loaded.
+                    </Text>
+                    <TouchableOpacity onPress={() => refetchFeedstocks()} className="min-h-12 justify-center px-4">
+                      <Text className="text-sm font-bold text-primary">Try again</Text>
+                    </TouchableOpacity>
+                  </View>
                 ) : feedstocks.length === 0 ? (
                   <Text className="text-sm font-sans text-foreground">
                     No feedstocks available yet.
                   </Text>
                 ) : (
-                  (['green', 'brown'] as FeedstockCategory[]).map((category) => {
-                    const items = categorizedFeedstocks[category] ?? [];
-                    if (items.length === 0) return null;
-
-                    return (
-                      <View key={category} className="mb-4">
-                        <Text className="text-sm font-bold text-foreground mb-3 capitalize">
-                          {category}
-                        </Text>
-
-                        {items.map((feedstock) => {
-                          const isSelected = feedstock.id in selectedFeedstocks;
-                          const weightValue = selectedFeedstocks[feedstock.id] ?? '0';
-
-                          return (
-                            <View
-                              key={feedstock.id}
-                              className="bg-card rounded-2xl border border-border p-4 mb-3"
-                            >
-                              {/* Top Row: Image, Name, Toggle */}
-                              <Pressable
-                                onPress={() => handleToggleFeedstock(feedstock.id)}
-                                className="flex-row items-center justify-between"
-                              >
-                                <View className="flex-row items-center flex-1 pr-3">
-                                  {(() => {
-                                    const img = getFeedstockImage(feedstock.name);
-                                    return img ? (
-                                      <View className="w-12 h-12 rounded-xl bg-card items-center justify-center mr-3 overflow-hidden">
-                                        <Image
-                                          source={img}
-                                          style={{ width: 44, height: 44 }}
-                                          contentFit="contain"
-                                          accessible={false}
-                                        />
-                                      </View>
-                                    ) : (
-                                      <View className="w-12 h-12 rounded-xl bg-muted/40 items-center justify-center mr-3">
-                                        <Sprout size={24} color="#718619" />
-                                      </View>
-                                    );
-                                  })()}
-                                  <Text className="text-sm font-medium text-foreground flex-1">
-                                    {feedstock.name}
-                                  </Text>
-                                </View>
-
-                                {/* Radio Circle */}
-                                <View
-                                  className={`w-[22px] h-[22px] rounded-full items-center justify-center border-[1.5px] ${
-                                    isSelected
-                                      ? 'border-primary'
-                                      : 'border-border'
-                                  }`}
-                                >
-                                  {isSelected && (
-                                    <View className="w-3 h-3 rounded-full bg-primary" />
-                                  )}
-                                </View>
-                              </Pressable>
-
-                              {/* Expandable Weight Input */}
-                              {isSelected && (
-                                <View className="h-[58px] rounded-2xl border-[1.5px] border-border bg-[#FAF9EE] px-4 flex-row items-center justify-between mt-3">
-                                  <Text className="text-[13px] font-sans text-muted-foreground">
-                                    Weight
-                                  </Text>
-                                  <View className="flex-row items-center">
-                                    <TextInput
-                                      keyboardType="decimal-pad"
-                                      value={weightValue}
-                                      onChangeText={(t) =>
-                                        handleWeightChange(feedstock.id, t)
-                                      }
-                                      className="text-sm font-sans text-foreground text-right p-0 mr-1 min-w-[40px]"
-                                      placeholder="0"
-                                      placeholderTextColor="#AFAEA7"
-                                      selectTextOnFocus
-                                    />
-                                    <Text className="text-sm font-sans text-muted-foreground">
-                                      kg
-                                    </Text>
-                                  </View>
-                                </View>
-                              )}
-                            </View>
-                          );
-                        })}
-                      </View>
-                    );
-                  })
+                  <View className="flex-row flex-wrap">
+                    {feedstocks.map((feedstock) => {
+                      const image = getFeedstockImage(feedstock.name);
+                      return (
+                        <View
+                          key={feedstock.id}
+                          style={{ width: `${100 / columns}%` }}
+                          className="items-center px-1 mb-8"
+                        >
+                          <View className="h-[76px] w-[76px] items-center justify-center">
+                            {image ? (
+                              <Image source={image} style={{ width: 72, height: 72 }} contentFit="contain" accessible={false} />
+                            ) : (
+                              <Sprout size={32} color="#718619" />
+                            )}
+                          </View>
+                          <Text className="text-xs font-sans text-foreground text-center mt-2 mb-3 min-h-[36px]">
+                            {feedstock.name}
+                          </Text>
+                          <View className="w-full max-w-[110px] min-h-12 flex-row items-center rounded-xl border border-border px-3">
+                            <TextInput
+                              accessibilityLabel={`${feedstock.name} weight in kilograms`}
+                              keyboardType="decimal-pad"
+                              value={selectedFeedstocks[feedstock.id] ?? ''}
+                              onChangeText={(text) => handleWeightChange(feedstock.id, text)}
+                              className="flex-1 min-h-12 p-0 text-sm font-sans text-foreground"
+                              placeholder="0"
+                              placeholderTextColor="#898981"
+                            />
+                            <Text className="text-sm font-sans text-muted-foreground ml-1">kg</Text>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </View>
                 )}
               </ScrollView>
 
@@ -540,7 +464,7 @@ export default function NewBatchScreen() {
               className="px-6 pt-2"
               style={{ paddingBottom: Math.max(insets.bottom, 20) }}
             >
-              {isMachinesLoading ? (
+              {isMachinesLoading || batches.isPending ? (
                 <ActivityIndicator color="#718619" className="my-6" />
               ) : machines.length === 0 ? (
                 <Text className="text-sm font-sans text-foreground py-4">
@@ -548,7 +472,7 @@ export default function NewBatchScreen() {
                 </Text>
               ) : (
                 machines.map((m) => {
-                  const isAvailable = m.status === 'available';
+                  const isAvailable = !batches.isError && m.status !== 'offline' && !batches.data?.some((batch) => batch.machineId === m.id && batch.status === 'active');
 
                   return (
                     <TouchableOpacity
@@ -577,7 +501,7 @@ export default function NewBatchScreen() {
                           isAvailable ? 'text-primary' : 'text-destructive'
                         }`}
                       >
-                        {isAvailable ? 'Available' : 'Composting'}
+                        {isAvailable ? 'Available' : 'Unavailable'}
                       </Text>
                     </TouchableOpacity>
                   );

@@ -49,7 +49,7 @@ export async function apiFetch<T>(
   options: FetchOptions = {},
   isRetry = false
 ): Promise<T> {
-  const { withAuth = true, headers, ...restOptions } = options;
+  const { withAuth = true, headers, signal, timeoutMs, ...restOptions } = options;
 
   const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
   const url = `${API_BASE_URL}${normalizedEndpoint}`;
@@ -74,8 +74,11 @@ export async function apiFetch<T>(
 
   logger.debug(`${options.method || 'GET'} -> ${url}${isRetry ? ' (RETRY)' : ''}`);
 
-  const timeout = options.timeoutMs || 10000; // Default 10 seconds timeout
+  const timeout = timeoutMs || 10000;
   const controller = new AbortController();
+  const abortRequest = () => controller.abort();
+  if (signal?.aborted) abortRequest();
+  else signal?.addEventListener('abort', abortRequest, { once: true });
   const id = setTimeout(() => controller.abort(), timeout);
 
   try {
@@ -84,8 +87,6 @@ export async function apiFetch<T>(
       headers: requestHeaders,
       signal: controller.signal,
     });
-
-    clearTimeout(id);
 
     // Intercept 401 Unauthorized errors
     if (response.status === 401 && withAuth && !isRetry) {
@@ -125,6 +126,7 @@ export async function apiFetch<T>(
     return json as T;
   } catch (error: any) {
     if (error.name === 'AbortError') {
+      if (signal?.aborted) throw error;
       logger.error(`Request timed out after ${timeout}ms: ${url}`);
       throw new ApiError(408, 'Request timed out. Please check your connection.');
     }
@@ -135,6 +137,9 @@ export async function apiFetch<T>(
 
     logger.error(`Network error -> ${url}`, error);
     throw new ApiError(0, error?.message || 'Network connection failed.');
+  } finally {
+    clearTimeout(id);
+    signal?.removeEventListener('abort', abortRequest);
   }
 }
 

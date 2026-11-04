@@ -21,6 +21,7 @@ import { CompostIcon } from "@/components/icons";
 import { GradientMetricCard, QuickActionButton } from "@/components/dashboard";
 import { CompletedBatchCard } from "@/components/dashboard/completed-batch-card";
 import { MachineCard } from "@/components/devices/machine-card";
+import { HistoryState } from "@/components/history/history-state";
 import { colors } from "@/constants";
 import { getBarangayName } from "@/lib/utils";
 import { createLogger } from "@/lib/logger";
@@ -77,24 +78,7 @@ export default function DashboardScreen() {
             </View>
           </View>
           {dashboard.isError ? (
-            <View className="gap-2">
-              <Text
-                accessibilityRole="alert"
-                className="text-sm font-sans text-foreground"
-              >
-                Could not load dashboard data.
-              </Text>
-              <Pressable
-                accessibilityRole="button"
-                disabled={dashboard.isFetching}
-                onPress={() => void dashboard.refetch()}
-                className="min-h-12 justify-center"
-              >
-                <Text className="text-sm font-bold text-primary">
-                  {dashboard.isFetching ? "Retrying…" : "Retry"}
-                </Text>
-              </Pressable>
-            </View>
+            <HistoryState message="Could not load dashboard data." onRetry={() => void dashboard.refetch()} retrying={dashboard.isFetching} />
           ) : dashboard.isPending || !metrics ? (
             <MetricSkeletons stacked={stackMetrics} />
           ) : (
@@ -108,8 +92,8 @@ export default function DashboardScreen() {
                 style={stackMetrics ? undefined : { flex: 212 }}
               >
                 <GradientMetricCard
-                  value={metrics.totalCompost.value}
-                  unit={metrics.totalCompost.unit}
+                  value={metrics.totalCompost.value ?? "Unavailable"}
+                  unit={metrics.totalCompost.value == null ? undefined : metrics.totalCompost.unit}
                   label="Total compost produced"
                 />
                 <GradientMetricCard

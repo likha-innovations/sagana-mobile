@@ -128,17 +128,14 @@ export function useSocket() {
         const payloadObj = telemetryPayload as Record<string, unknown>;
         const mac = payloadObj.macAddress as string | undefined;
         if (mac) {
-          const bme = payloadObj.bme280 as { temp?: number } | undefined;
           const ds = payloadObj.ds18b20 as { probe1?: number } | undefined;
           const scd = payloadObj.scd41 as { co2?: number } | undefined;
           const moist = payloadObj.moisture as { sensor1?: number } | undefined;
 
           const tempVal =
-            typeof bme?.temp === 'number'
-              ? bme.temp
-              : typeof ds?.probe1 === 'number'
-                ? ds.probe1
-                : typeof payloadObj.temperature === 'number'
+            typeof ds?.probe1 === 'number'
+              ? ds.probe1
+              : typeof payloadObj.temperature === 'number'
                   ? (payloadObj.temperature as number)
                   : undefined;
 
@@ -171,10 +168,10 @@ export function useSocket() {
                   ...m,
                   status: 'active',
                   latestReadings: {
-                    temperature: tempVal ?? m.latestReadings?.temperature ?? 0,
-                    moisture: moistVal ?? m.latestReadings?.moisture ?? 0,
-                    oxygen: o2Val ?? m.latestReadings?.oxygen ?? 0,
-                    co2: co2Val ?? m.latestReadings?.co2 ?? 0,
+                    temperature: tempVal ?? m.latestReadings?.temperature ?? null,
+                    moisture: moistVal ?? m.latestReadings?.moisture ?? null,
+                    oxygen: o2Val ?? m.latestReadings?.oxygen ?? null,
+                    co2: co2Val ?? m.latestReadings?.co2 ?? null,
                     updatedAt: new Date().toISOString(),
                   },
                 };
@@ -190,10 +187,10 @@ export function useSocket() {
                 ...old,
                 status: 'active',
                 latestReadings: {
-                  temperature: tempVal ?? old.latestReadings?.temperature ?? 0,
-                  moisture: moistVal ?? old.latestReadings?.moisture ?? 0,
-                  oxygen: o2Val ?? old.latestReadings?.oxygen ?? 0,
-                  co2: co2Val ?? old.latestReadings?.co2 ?? 0,
+                  temperature: tempVal ?? old.latestReadings?.temperature ?? null,
+                  moisture: moistVal ?? old.latestReadings?.moisture ?? null,
+                  oxygen: o2Val ?? old.latestReadings?.oxygen ?? null,
+                  co2: co2Val ?? old.latestReadings?.co2 ?? null,
                   updatedAt: new Date().toISOString(),
                 },
               };
