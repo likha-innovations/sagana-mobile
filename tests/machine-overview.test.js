@@ -1,5 +1,3 @@
-const assert = require("node:assert/strict");
-const { test } = require("node:test");
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
@@ -31,24 +29,21 @@ test("occupancy follows active batch membership, independently of connectivity a
   const batch = fixtures.active_batches[0];
   for (const status of ["active", "available", "maintenance", "offline"]) {
     const machine = { ...base, status, latestReadings: undefined };
-    assert.equal(logic.getMachineState(machine, batch).vacant, false);
-    assert.equal(
-      logic.getMachineState(machine, batch).disconnected,
+    expect(logic.getMachineState(machine, batch).vacant).toBe(false);
+    expect(logic.getMachineState(machine, batch).disconnected).toBe(
       status === "offline",
     );
-    assert.equal(logic.getMachineState(machine, null).vacant, true);
+    expect(logic.getMachineState(machine, null).vacant).toBe(true);
   }
-  assert.equal(
+  expect(
     logic.getMachineState(base, { ...batch, machineId: "another" }).vacant,
-    true,
-  );
-  assert.equal(
+  ).toBe(true);
+  expect(
     logic.getMachineState(base, { ...batch, status: "completed" }).vacant,
-    true,
-  );
-  assert.equal(logic.getMachinePhase(undefined, 30), null);
-  assert.equal(logic.getMachinePhase(0, 30), 2);
-  assert.equal(logic.getMachinePhase(57, 2), 1);
+  ).toBe(true);
+  expect(logic.getMachinePhase(undefined, 30)).toBe(null);
+  expect(logic.getMachinePhase(0, 30)).toBe(2);
+  expect(logic.getMachinePhase(57, 2)).toBe(1);
 });
 
 test("overview fixtures are valid, keyed to active batches, and separate current from initial weight", () => {
@@ -59,36 +54,35 @@ test("overview fixtures are valid, keyed to active batches, and separate current
     const batch = fixtures.active_batches.find(
       (item) => item.id === record.batchId,
     );
-    assert.equal(record.machineId, batch.machineId);
-    assert.ok(
+    expect(record.machineId).toBe(batch.machineId);
+    expect(
       record.currentWeight >= 0 && record.currentWeight < batch.totalWeight,
-    );
-    assert.ok(Date.parse(record.recordedAt) >= Date.parse(batch.startDate));
-    assert.equal(record.automations.length, 2);
+    ).toBeTruthy();
+    expect(
+      Date.parse(record.recordedAt) >= Date.parse(batch.startDate),
+    ).toBeTruthy();
+    expect(record.automations.length).toBe(2);
   }
-  assert.equal(
+  expect(
     logic.machineOverviewSchema.safeParse({ ...records[0], currentWeight: -1 })
       .success,
-    false,
-  );
-  assert.equal(
+  ).toBe(false);
+  expect(
     logic.machineOverviewSchema.safeParse({ ...records[0], recordedAt: "bad" })
       .success,
-    false,
-  );
-  assert.equal(
+  ).toBe(false);
+  expect(
     logic.machineOverviewSchema.safeParse({
       ...records[0],
       currentWeight: null,
     }).success,
-    true,
-  );
+  ).toBe(true);
 });
 
 test("settings validate required values and preserve data when a machine is missing", async () => {
-  assert.equal(logic.machineNameSchema.parse("  SAGANA  "), "SAGANA");
-  assert.equal(logic.machineSsidSchema.safeParse("   ").success, false);
-  assert.equal(logic.machineNameSchema.safeParse("   ").success, false);
+  expect(logic.machineNameSchema.parse("  SAGANA  ")).toBe("SAGANA");
+  expect(logic.machineSsidSchema.safeParse("   ").success).toBe(false);
+  expect(logic.machineNameSchema.safeParse("   ").success).toBe(false);
   const invalidations = [];
   const hooks = load("src/hooks/use-machines.ts", {
     "@/api/device.api": {},
@@ -108,14 +102,22 @@ test("settings validate required values and preserve data when a machine is miss
     },
   });
   const rename = hooks.useUpdateMachineName();
-  await assert.rejects(() => rename.mutationFn({ id: "missing", name: "New" }));
-  await assert.rejects(() => rename.mutationFn({ id: "1", name: "  " }));
-  await assert.rejects(() => rename.mutationFn({ id: "1", name: " Renamed " }));
+  await expect(
+    (() => rename.mutationFn({ id: "missing", name: "New" }))(),
+  ).rejects.toThrow();
+  await expect(
+    (() => rename.mutationFn({ id: "1", name: "  " }))(),
+  ).rejects.toThrow();
+  await expect(
+    (() => rename.mutationFn({ id: "1", name: " Renamed " }))(),
+  ).rejects.toThrow();
   rename.onSuccess(undefined, { id: "1" });
-  assert.ok(invalidations.includes("machines"));
+  expect(invalidations.includes("machines")).toBeTruthy();
   const wifi = hooks.useUpdateMachineWifi();
-  await assert.rejects(() =>
-    wifi.mutationFn({ id: "missing", wifiSsid: "Mock" }),
-  );
-  await assert.rejects(() => wifi.mutationFn({ id: "1", wifiSsid: " " }));
+  await expect(
+    (() => wifi.mutationFn({ id: "missing", wifiSsid: "Mock" }))(),
+  ).rejects.toThrow();
+  await expect(
+    (() => wifi.mutationFn({ id: "1", wifiSsid: " " }))(),
+  ).rejects.toThrow();
 });

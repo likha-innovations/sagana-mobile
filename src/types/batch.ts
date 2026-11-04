@@ -43,13 +43,14 @@ export const compostBatchSchema = z.object({
   completionDate: z.string().nullable().optional(),
   totalWeight: z.number().nonnegative(),
   feedstocks: z.array(batchFeedstockSchema),
+  compostingPhases: z.array(z.object({ phaseName: z.string(), status: z.string() })).optional(),
 });
 export type CompostBatch = z.infer<typeof compostBatchSchema>;
 
 export const completedBatchSchema = compostBatchSchema.extend({
   status: z.literal("completed"),
   completionDate: z.string().datetime(),
-  finalWeight: z.number().nonnegative(),
+  finalWeight: z.number().nonnegative().nullable(),
   machineName: z.string(),
 });
 export type CompletedBatch = z.infer<typeof completedBatchSchema>;
@@ -70,7 +71,7 @@ export const createBatchInputSchema = z.object({
 export type CreateBatchInput = z.infer<typeof createBatchInputSchema>;
 
 export const dashboardMetricsSchema = z.object({
-  totalCompost: z.object({ value: z.number(), unit: z.string().default("kg") }),
+  totalCompost: z.object({ value: z.number().nullable(), unit: z.string().default("kg") }),
   totalFeedstock: z.object({
     value: z.number(),
     unit: z.string().default("kg"),

@@ -1,5 +1,3 @@
-const assert = require("node:assert/strict");
-const { test } = require("node:test");
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
@@ -39,20 +37,20 @@ test("totals distinguish input and output weights and exclude removed machines",
     fixtures.active_batches,
     fixtures.machines,
   );
-  assert.equal(metrics.totalCompost.value, 106.2);
-  assert.equal(metrics.totalFeedstock.value, 125.2);
-  assert.equal(metrics.completedBatches, 3);
-  assert.equal(metrics.ongoingBatches, 2);
-  assert.equal(metrics.ownedMachines, 4);
+  expect(metrics.totalCompost.value).toBe(106.2);
+  expect(metrics.totalFeedstock.value).toBe(125.2);
+  expect(metrics.completedBatches).toBe(3);
+  expect(metrics.ongoingBatches).toBe(2);
+  expect(metrics.ownedMachines).toBe(4);
   const empty = helpers.getDashboardMetrics(
     [],
     [],
     [{ removedAt: "2026-01-01" }],
   );
-  assert.equal(empty.totalCompost.value, 0);
-  assert.equal(empty.completedBatches, 0);
-  assert.equal(empty.ongoingBatches, 0);
-  assert.equal(empty.ownedMachines, 0);
+  expect(empty.totalCompost.value).toBe(0);
+  expect(empty.completedBatches).toBe(0);
+  expect(empty.ongoingBatches).toBe(0);
+  expect(empty.ownedMachines).toBe(0);
 });
 
 test("recent batches sort newest first, cap at three, and preserve input order", () => {
@@ -66,14 +64,14 @@ test("recent batches sort newest first, cap at three, and preserve input order",
       completionDate: "2020-01-01T00:00:00Z",
     },
   ]);
-  assert.equal(recent.length, 3);
-  assert.equal(recent[0].id, "completed-1");
-  assert.equal(input.map((batch) => batch.id).join(), originalIds);
+  expect(recent.length).toBe(3);
+  expect(recent[0].id).toBe("completed-1");
+  expect(input.map((batch) => batch.id).join()).toBe(originalIds);
 });
 
-test("local mock creation updates ongoing counts and invalidates dashboard dependencies", async () => {
+test("batch creation calls the API and invalidates dashboard dependencies", async () => {
   const invalidations = [];
-  const statusChanges = [];
+  const createdBatches = [];
   const hooks = loadSource("src/hooks/use-batches.ts", {
     "@tanstack/react-query": {
       useQuery: (options) => options,
@@ -85,6 +83,26 @@ test("local mock creation updates ongoing counts and invalidates dashboard depen
       }),
     },
     "@/types/batch": types,
+    "@/context/auth-context": {
+      useAuthContext: () => ({
+        user: { id: "user" },
+        isLoaded: true,
+        isSignedIn: true,
+      }),
+    },
+    "./use-profile": {
+      useProfile: () => ({ data: { barangayId: "barangay" }, isSuccess: true }),
+    },
+    "@/api/batch.api": {
+      batchApi: {
+        list: async () => createdBatches,
+        create: async (input) => {
+          const batch = { ...input, status: "active" };
+          createdBatches.push(batch);
+          return batch;
+        },
+      },
+    },
     "@/api/feedstock.api": {
       feedstockApi: {
         getFeedstocks: async () => [],
@@ -98,8 +116,6 @@ test("local mock creation updates ongoing counts and invalidates dashboard depen
         detail: (id) => ["machines", id],
         feedstocks: (id) => ["machines", id, "feedstocks"],
       },
-      setMockMachineStatus: (id, status) =>
-        statusChanges.push(`${id}/${status}`),
     },
   });
   const mutation = hooks.useCreateCompostBatch();
@@ -110,18 +126,15 @@ test("local mock creation updates ongoing counts and invalidates dashboard depen
   const created = await mutation.mutationFn(input);
   mutation.onSuccess(created, input);
   const batches = await hooks.useCompostBatches().queryFn();
-  assert.equal(
+  expect(
     helpers.getDashboardMetrics(completed, batches, fixtures.machines)
       .ongoingBatches,
-    1,
-  );
-  assert.equal(
+  ).toBe(1);
+  expect(
     helpers.getDashboardMetrics(completed, batches, fixtures.machines)
       .totalCompost.value,
-    106.2,
-  );
-  assert.equal(statusChanges.join(), "2/active");
-  assert.ok(invalidations.includes("batches"));
-  assert.ok(invalidations.includes("machines"));
-  await assert.rejects(() => mutation.mutationFn({ ...input, feedstocks: [] }));
+  ).toBe(106.2);
+  expect(invalidations.includes("batches")).toBeTruthy();
+  expect(invalidations.includes("machines")).toBeTruthy();
+  expect(() => mutation.mutationFn({ ...input, feedstocks: [] })).toThrow();
 });

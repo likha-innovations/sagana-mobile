@@ -40,6 +40,8 @@ export function useUpdateProfile() {
       logger.info("Profile updated successfully in backend");
       await queryClient.cancelQueries({ queryKey: ["machines"] });
       queryClient.removeQueries({ queryKey: ["machines"] });
+      queryClient.removeQueries({ queryKey: ["batches"] });
+      queryClient.removeQueries({ queryKey: ["history"] });
       queryClient.setQueryData(userKeys.profile(updatedUser.id), updatedUser);
       queryClient.invalidateQueries({
         queryKey: userKeys.profile(updatedUser.id),

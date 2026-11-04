@@ -1,10 +1,12 @@
 # UI & Feature Status
 
-Machine list, detail, registration, settings, and removal use authenticated backend endpoints. The backend scopes machines to the account's barangay and excludes removed machines. Feedstocks use the backend API; batch, sensor-history, and automation data remain local or empty. Batch creation is not persisted.
+Machine list, detail, registration, settings, and removal use authenticated backend endpoints. Batches, completion, and sensor history use barangay-scoped backend endpoints. Automation history remains empty because no event source is available. These integrations require device and live-database verification.
+
+Machine cards show available sensor readings regardless of batch status. Machine details show readings and a sensor history link for active batches. A vacant machine's detail screen links to its latest completed batch when available, and shows a retry state if batch history cannot be fetched. Authentication loading and data-fetch errors use visible loading or retry states.
 
 Machine REST requests use camelCase fields such as `macAddress` and `wifiSsid`. Machine and batch objects use `id`; related records retain fields such as `machineId` and `batchId`. Existing mobile builds using snake_case machine requests require an update alongside the backend.
 
-Source snapshot: `38b132d`, 13 October 2026. **Wired** means the code calls a service or native module; it does not mean this audit tested that service on a device.
+The dated update sections below describe historical snapshots. **Wired** means the code calls a service or native module; it does not mean this audit tested that service on a device.
 
 ## Screen map
 
@@ -16,17 +18,17 @@ Paths below omit `.tsx` and are relative to `app/`.
 | Sign-up · `(auth)/sign-up`                                     | Email → OTP → password → name → birthday/barangay; Google users complete missing profile details; policy and birthday sheets                         | Clerk and barangay lookup wired                                                            |
 | Reset password · `(auth)/forgot-password`                      | Email, OTP/resend, new password, no-email-access and completion states                                                                               | Clerk wired                                                                                |
 | Auth fallback · `(auth)/uh-oh`                                 | Recovery message and return to sign-in                                                                                                               | Navigation only                                                                            |
-| Home · `(app)/(tabs)/index`                                    | Greeting/location, five derived metrics, three recent completed batches, new batch and add-machine actions; non-removed machines sorted oldest first | Profile and barangay-scoped machines wired; batch metrics local                           |
+| Home · `(app)/(tabs)/index`                                    | Greeting/location, five derived metrics, three recent completed batches, new batch and add-machine actions; non-removed machines sorted oldest first | Profile, barangay-scoped machines and batch metrics wired                           |
 | Machines · `(app)/(tabs)/machines/index`                       | Machine cards, loading, pull-to-refresh; add-machine action when empty                                                                               | Barangay-scoped machine list; no backend sensor values                                     |
-| Machine detail · `machines/[id]/index` under tabs              | Vacant/composting state, phase indicator, batch feedstocks, sensor cards, automation display, links to history/settings, Finish Batch confirmation   | Real machine identity; batch and sensor data remain local or empty                         |
+| Machine detail · `machines/[id]/index` under tabs              | Vacant/composting state, phase indicator, batch feedstocks, sensor cards, automation display, links to history/settings, Finish Batch confirmation   | Machine, batch, and sensor data wired; automation status unavailable                         |
 | Machine settings · `machines/[id]/settings` under tabs         | Rename, Wi-Fi form, disabled batch removal, machine removal; Android back returns to the menu                                                                   | In-memory mutations only; Wi-Fi save updates SSID, not the password or hardware            |
 | Automation logs · `machines/[id]/automation-logs` under tabs   | All time by default; Today, last 7/31 days and custom ranges; retry/empty states                                                                     | Shared screen and fixed-timestamp events across all batches for the machine                |
-| Sensor history · `machines/[id]/sensors-history` under tabs    | Latest recorded day; day/week/month/custom ranges and bounded navigation                                                                             | Shared screen; hourly/daily means with missing intervals preserved                         |
-| History · `(app)/(tabs)/history/index`                         | Batch-code search, committed date filters, newest-first completed rows, retry and empty states                                                       | Shared completed-batch fixtures; local calendar boundaries                                 |
+| Sensor history · `machines/[id]/sensors-history` under tabs    | Latest recorded day; day/week/month/custom ranges and bounded navigation                                                                             | Shared screen; latest recorded value per hour/day, with missing intervals preserved                         |
+| History · `(app)/(tabs)/history/index`                         | Batch-code search, committed date filters, newest-first completed rows, retry and empty states                                                       | Completed batches from the backend; local calendar boundaries                                 |
 | Completed batch · `history/[batchId]/index` under tabs         | Completion banner, duration/output, metadata, Figma feedstock artwork, sensor/log links                                                              | Initial feedstock weights sum to input; final compost weight stays separate                |
 | Batch sensors · `history/[batchId]/sensors-history` under tabs | Latest recorded day, day/week/month/custom ranges, bounded date navigation                                                                           | Batch-specific fixed timestamps; hourly/day means; missing intervals remain gaps           |
 | Batch logs · `history/[batchId]/automation-logs` under tabs    | All time/custom ranges; newest-first groups by actual local date                                                                                     | Validated batch-specific mock events                                                       |
-| New batch · `(app)/batch/new`                                  | Select machine → confirm power → feedstock weights → transfer instructions → success; optional preselected machine                                   | Validates input, creates a local batch and marks the mock machine active; no backend write |
+| New batch · `(app)/batch/new`                                  | Select machine → confirm power → feedstock weights → transfer instructions → success; optional preselected machine                                   | Validates input and persists a batch through the backend |
 | Add machine · `(app)/machine-registration/new`                 | Power instructions → BLE selection/connection → Wi-Fi → name → backend registration                                  | Native BLE and backend `POST /machines/register` wired via `useRegisterMachine()`; BLE name write failsafe |
 | Account · `(app)/(tabs)/profile`                               | Profile/location, edit link, password change or Google account label, logout confirmation                                                            | Backend profile with Clerk fallback; Clerk sign-out                                        |
 | Edit profile · `(app)/edit-profile`                            | Read/edit modes, name, birthday sheet, barangay sheet, save and discard confirmation                                                                 | `GET/PATCH /me`; birthday display uses `MMMM d, yyyy`                                      |
@@ -35,7 +37,7 @@ Paths below omit `.tsx` and are relative to `app/`.
 
 ## Shared UI
 
-Sensor history uses React Native Gifted Charts; no backend readings are connected in this phase.
+Sensor history uses React Native Gifted Charts and backend readings for the selected date range. Each point shows the latest actual reading in its hour or day; tap it for its date, time, and value. Date navigation remains visible while readings load, obsolete requests are cancelled, and recently viewed periods are cached briefly.
 
 | Folder                   | Reuse                                                                                                     |
 | ------------------------ | --------------------------------------------------------------------------------------------------------- |
@@ -59,13 +61,13 @@ The route has six internal step values; steps 2 and 3 currently render the same 
 
 ## Known limits for demos and QA
 
-1. Machine list and detail reload from Neon; machine settings and batch edits remain local mocks. Dashboard weight totals and completed counts derive from local completed-batch state.
-2. Finish Batch has no mutation. Machine and batch history share aggregation and preserve missing readings as gaps. Machine history spans batches; batch history requires explicit membership and lifetime bounds.
+1. Machine and batch data use backend endpoints. Total compost is unavailable when a completed batch has no measured output weight.
+2. Finish Batch persists completion without requiring an output weight. Machine and batch sensor history uses recorded sensor readings and preserves missing readings as gaps. The current telemetry ingestion does not write sensor readings.
 3. Socket.IO real-time sync is globally wired at `app/(app)/_layout.tsx` via `useSocket()`, invalidating and patching TanStack query caches on `status`, `machine_added`, `machine_updated`, `machine_removed`, and live sensor `telemetry`. REST actuator commands remain deferred to hardware testing.
 4. Notifications have a dependency/plugin and Android permission, but no runtime notification flow was found in `app/` or `src/`. Camera configuration likewise does not establish a QR-scanning flow.
 5. Power/transfer instructions still include gray illustration placeholders. Machine list, detail and settings now have initial skeletons and retry states, including missing-machine feedback.
 
-For a device handoff, check sign-in/onboarding, all tabs and back navigation, profile saving, keyboard/sheet behavior, mock batch creation, history filters, and BLE permission denial/disconnection. Record outcomes separately from this source audit.
+For a device handoff, check sign-in/onboarding, all tabs and back navigation, profile saving, keyboard/sheet behavior, batch creation and completion, history filters, and BLE permission denial/disconnection. Record outcomes separately from this source audit.
 
 ## Dashboard update · 14 October 2026
 

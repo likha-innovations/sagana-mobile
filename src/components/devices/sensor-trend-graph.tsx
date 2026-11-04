@@ -2,6 +2,7 @@ import { useState } from "react";
 import { View, Text, useWindowDimensions } from "react-native";
 import { type LucideIcon } from "lucide-react-native";
 import { LineChart, type lineDataItem } from "react-native-gifted-charts";
+import { format, parseISO } from "date-fns";
 import type { ChartPoint } from "@/lib/history";
 import { colors } from "@/constants/colors";
 
@@ -33,12 +34,14 @@ export function SensorTrendGraph({
   );
   const formatValue = (value: number) => `${Number(value.toFixed(3))}${unit}`;
   const middle = Math.floor((points.length - 1) / 2);
+  const quarter = Math.floor((points.length - 1) / 4);
+  const threeQuarter = Math.floor(((points.length - 1) * 3) / 4);
   const data: lineDataItem[] = points.map((point, index) => ({
     value: point.value ?? undefined,
     label:
       index === 0 ||
       index === points.length - 1 ||
-      (fontScale <= 1.2 && index === middle)
+      (fontScale <= 1.2 && (index === quarter || index === middle || index === threeQuarter))
         ? point.label
         : "",
   }));
@@ -70,7 +73,7 @@ export function SensorTrendGraph({
               <LineChart
                 data={data}
                 width={chartWidth}
-                height={176}
+                height={120}
                 spacing={spacing}
                 initialSpacing={labelWidth / 2}
                 endSpacing={labelWidth / 2}
@@ -78,7 +81,7 @@ export function SensorTrendGraph({
                 color={iconColor}
                 thickness={2}
                 dataPointsColor={iconColor}
-                dataPointsRadius={2.5}
+                dataPointsRadius={1.5}
                 interpolateMissingValues={false}
                 extrapolateMissingValues={false}
                 maxValue={maxVal}
@@ -111,16 +114,17 @@ export function SensorTrendGraph({
                 rulesColor={colors.semantic.border}
                 rulesThickness={1}
                 pointerConfig={{
-                  activatePointersOnLongPress: true,
-                  activatePointersDelay: 150,
+                  activatePointersOnLongPress: false,
+                  activatePointersInstantlyOnTouch: true,
+                  persistPointer: true,
                   pointerColor: iconColor,
-                  radius: 4,
+                  radius: 3,
                   pointerStripColor: colors.neutral[300],
                   pointerStripWidth: 1,
                   hidePointerForMissingValues: true,
                   autoAdjustPointerLabelPosition: true,
-                  pointerLabelWidth: 120 * fontScale,
-                  pointerLabelHeight: 64 * fontScale,
+                  pointerLabelWidth: 170 * fontScale,
+                  pointerLabelHeight: 72 * fontScale,
                   pointerLabelComponent: (
                     _items: lineDataItem[],
                     _secondary: unknown,
@@ -134,7 +138,7 @@ export function SensorTrendGraph({
                           {formatValue(point.value)}
                         </Text>
                         <Text className="text-xs font-sans text-foreground">
-                          {point.label}
+                          {point.recordedAt ? format(parseISO(point.recordedAt), "MMM d, yyyy · h:mm:ss a") : point.label}
                         </Text>
                       </View>
                     );
@@ -144,7 +148,7 @@ export function SensorTrendGraph({
             )}
           </View>
           <Text className="text-xs font-sans text-foreground">
-            Hold the chart to inspect readings.
+            Tap a point to see its reading and time. Each point is the latest reading in its interval.
           </Text>
         </>
       )}

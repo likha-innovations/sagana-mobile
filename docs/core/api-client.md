@@ -13,7 +13,7 @@ Paths are relative to the configured API base URL.
 | `barangayApi.getBarangays` | `GET /barangays` with `withAuth: false` | Location labels/selectors and signup |
 | `deviceApi.sendCommand` | `POST /telemetry/devices/:deviceId/command` | Helper exists; no current screen calls it |
 
-Machine and batch screens use mock hooks. The registration route's proposed `/api/machines/register` is a TODO, not an implemented client endpoint.
+Batch screens use `GET /batches`, `POST /batches`, and `POST /batches/:id/finish`. Sensor history uses `GET /machines/:id/readings` and `GET /batches/:id/readings`. The backend scopes these requests to the authenticated user's barangay.
 
 ## Request behavior
 

@@ -135,6 +135,7 @@ export interface ChartPoint {
   x: number;
   value: number | null;
   label: string;
+  recordedAt?: string;
 }
 export function aggregateReadings(
   readings: HistoryReading[],
@@ -150,27 +151,32 @@ export function aggregateReadings(
     cursor = hourly ? addHours(cursor, 1) : addDays(cursor, 1)
   )
     slots.push(cursor);
-  const buckets = new Map<number, HistoryReading[]>();
+  const buckets = new Map<number, Partial<Record<SensorKey, HistoryReading>>>();
+  const sensors: SensorKey[] = ["temperature", "moisture", "oxygen", "co2"];
   for (const reading of readings) {
-    if (!isInRange(reading.recordedAt, range)) continue;
     const date = parseISO(reading.recordedAt);
+    if (date < start || date >= endExclusive) continue;
     const key = (hourly ? startOfHour(date) : startOfDay(date)).getTime();
-    buckets.set(key, [...(buckets.get(key) ?? []), reading]);
+    const bucket = buckets.get(key) ?? {};
+    for (const sensor of sensors) {
+      const previous = bucket[sensor];
+      if (reading[sensor] !== null && (!previous || reading.recordedAt > previous.recordedAt)) {
+        bucket[sensor] = reading;
+      }
+    }
+    buckets.set(key, bucket);
   }
   const series = {} as Record<SensorKey, ChartPoint[]>;
-  for (const sensor of ["temperature", "moisture", "oxygen", "co2"] as const) {
+  for (const sensor of sensors) {
     series[sensor] = slots.map((slot) => {
-      const values = (buckets.get(slot.getTime()) ?? [])
-        .map((reading) => reading[sensor])
-        .filter((value): value is number => value !== null);
+      const reading = buckets.get(slot.getTime())?.[sensor];
       return {
         label: format(slot, hourly ? "HH:mm" : "MMM d"),
         x:
           (slot.getTime() - start.getTime()) /
           (endExclusive.getTime() - start.getTime()),
-        value: values.length
-          ? values.reduce((sum, value) => sum + value, 0) / values.length
-          : null,
+        value: reading?.[sensor] ?? null,
+        recordedAt: reading?.recordedAt,
       };
     });
   }

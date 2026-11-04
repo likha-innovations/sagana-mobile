@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { View, ScrollView, useWindowDimensions } from "react-native";
 import { addDays, addWeeks, addMonths, format, parseISO } from "date-fns";
 import { Thermometer, Droplets, Wind, Cloud } from "lucide-react-native";
@@ -15,21 +15,20 @@ import { colors } from "@/constants";
 
 export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
   const { width, fontScale } = useWindowDimensions();
-  const query = useHistory(scope);
-  const { readings } = query;
   const { tabBarHeight } = useDynamicLayout();
   const [period, setPeriod] = useState<SensorPeriod>("Per day");
   const [custom, setCustom] = useState<DateRange>();
   const [anchor, setAnchor] = useState<Date>();
   const [toggleHeight, setToggleHeight] = useState(56);
-  const date =
-    anchor ??
-    parseISO(
-      readings.at(-1)?.recordedAt ?? query.endDate ?? new Date().toISOString(),
-    );
+  const query = useHistory(scope, { period, anchor, custom });
+  const { readings } = query;
+  const date = anchor ?? parseISO(query.endDate ?? new Date().toISOString());
   const range = sensorRange(period, date, custom);
   const bounds = dateBounds(range);
-  const series = aggregateReadings(readings, range, period === "Per day");
+  const series = useMemo(
+    () => aggregateReadings(readings, range, period === "Per day"),
+    [readings, range.startDate, range.endDate, period],
+  );
   const hasData = Object.values(series).some((points) =>
     points.some((point) => point.value !== null),
   );
@@ -161,37 +160,37 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
               })
             )}
           </ScrollView>
-          <View
-            pointerEvents="box-none"
-            onLayout={(event) =>
-              setToggleHeight(event.nativeEvent.layout.height)
-            }
-            style={{
-              position: "absolute",
-              bottom: tabBarHeight,
-              left: 16,
-              right: 16,
-              alignItems: "center",
-            }}
-          >
-            <View
-              style={{ width: width < 360 || fontScale > 1.2 ? "100%" : 296 }}
-            >
-              <DateFilterToggle
-                prominent
-                label={label}
-                previousDisabled={
-                  period === "Custom range" || previousRange.end < minDate
-                }
-                nextDisabled={
-                  period === "Custom range" || nextRange.start > maxDate
-                }
-                onPrev={() => setAnchor(shift(-1))}
-                onNext={() => setAnchor(shift(1))}
-              />
-            </View>
-          </View>
         </>
+      )}
+      {query.exists && (
+        <View
+          pointerEvents="box-none"
+          onLayout={(event) => setToggleHeight(event.nativeEvent.layout.height)}
+          style={{
+            position: "absolute",
+            bottom: tabBarHeight,
+            left: 16,
+            right: 16,
+            alignItems: "center",
+          }}
+        >
+          <View
+            style={{ width: width < 360 || fontScale > 1.2 ? "100%" : 296 }}
+          >
+            <DateFilterToggle
+              prominent
+              label={label}
+              previousDisabled={
+                period === "Custom range" || previousRange.end < minDate
+              }
+              nextDisabled={
+                period === "Custom range" || nextRange.start > maxDate
+              }
+              onPrev={() => setAnchor(shift(-1))}
+              onNext={() => setAnchor(shift(1))}
+            />
+          </View>
+        </View>
       )}
     </View>
   );

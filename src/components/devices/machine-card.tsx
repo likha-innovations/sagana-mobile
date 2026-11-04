@@ -12,7 +12,7 @@ import {
 import { CompostIcon } from "@/components/icons";
 import { colors } from "@/constants";
 import type { CompostBatch } from "@/types/batch";
-import { getMachineState, getMachinePhase } from "@/lib/machine-overview";
+import { getMachineState } from "@/lib/machine-overview";
 import type { Machine } from "@/types/machine";
 import { formatTimeAgo } from "@/lib/utils";
 
@@ -61,25 +61,13 @@ export function MachineCard({
     ? colors.gray.textIcon
     : colors.sensors.carbonDioxide;
 
-  const days = activeBatch
-    ? Math.max(
-        0,
-        Math.floor(
-          (Date.now() - Date.parse(activeBatch.startDate)) / 86400000,
-        ),
-      )
-    : 0;
-  const phase = getMachinePhase(machine.latestReadings?.temperature, days);
+  const phaseName = activeBatch?.compostingPhases?.findLast((item) => item.status === "active")?.phaseName;
   const phaseText = isVacant
     ? "Vacant"
-    : phase === null
-      ? "Composting"
-      : ["Mesophilic Phase", "Thermophilic Phase", "Cooling Phase"][phase];
+    : phaseName || "Composting";
   const phaseColorClass = isVacant ? "text-muted-foreground" : "text-primary";
   const phaseIconColor = isVacant ? colors.gray.textIcon : colors.brand[500];
-  const timeAgo = isVacant
-    ? "--"
-    : formatTimeAgo(machine.latestReadings?.updatedAt);
+  const timeAgo = formatTimeAgo(machine.latestReadings?.updatedAt);
 
   return (
     <Pressable

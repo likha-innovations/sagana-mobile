@@ -5,6 +5,7 @@ import {
   ScrollView,
   Pressable,
   useWindowDimensions,
+  Alert,
 } from "react-native";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -13,29 +14,31 @@ import {
   RadioOff,
   Settings,
   Clock,
+  Fan,
+  ShowerHead,
   Thermometer,
   Droplets,
   Wind,
   Cloud,
-  Fan,
-  ShowerHead,
 } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { format, parseISO } from "date-fns";
 import { useMachine, useMachineOverview } from "@/hooks/use-machines";
-import { useActiveBatch } from "@/hooks/use-batches";
+import { useActiveBatch, useCompletedBatches, useFinishCompostBatch } from "@/hooks/use-batches";
 import { useDynamicLayout } from "@/hooks";
 import { colors } from "@/constants";
 import { formatTimeAgo } from "@/lib/utils";
-import { getMachineState, getMachinePhase } from "@/lib/machine-overview";
+import { getMachineState } from "@/lib/machine-overview";
 import { createLogger } from "@/lib/logger";
 import { CompostIcon } from "@/components/icons";
 import { FeedstockGrid } from "@/components/history/feedstock-grid";
 import { HistoryState } from "@/components/history/history-state";
 import { QuickActionButton } from "@/components/dashboard";
-import { SensorStatCard } from "@/components/devices/sensor-stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { CompletedBatchCard } from "@/components/dashboard/completed-batch-card";
+import { SensorStatCard } from "@/components/devices/sensor-stat-card";
+import { getRecentCompletedBatches } from "@/lib/dashboard";
 
 const logger = createLogger("MachineDetailsScreen");
 
@@ -47,6 +50,7 @@ export default function MachineDetailsDashboard() {
   const stacked = width < 360 || fontScale > 1.2;
   const machineQuery = useMachine(id);
   const batchQuery = useActiveBatch(id);
+  const finishBatch = useFinishCompostBatch();
   const overviewQuery = useMachineOverview(id);
   const [finishVisible, setFinishVisible] = useState(false);
   useFocusEffect(
@@ -56,6 +60,10 @@ export default function MachineDetailsDashboard() {
   );
   const machine = machineQuery.data;
   const batch = batchQuery.data ?? null;
+  const completedQuery = useCompletedBatches(!!machine && !batch && !batchQuery.isPending && !batchQuery.isError);
+  const lastCompleted = completedQuery.data
+    ? getRecentCompletedBatches(completedQuery.data.filter((item) => item.machineId === id))[0]
+    : undefined;
   const overview =
     overviewQuery.data?.batchId === batch?.id
       ? overviewQuery.data
@@ -84,37 +92,9 @@ export default function MachineDetailsDashboard() {
         Math.floor((Date.now() - Date.parse(batch.startDate)) / 86400000),
       )
     : 0;
-  const phase = getMachinePhase(machine?.latestReadings?.temperature, days);
-  const sensors = [
-    {
-      key: "temperature" as const,
-      label: "Temperature",
-      unit: "°C",
-      Icon: Thermometer,
-      color: colors.sensors.temperature,
-    },
-    {
-      key: "moisture" as const,
-      label: "Moisture",
-      unit: "%",
-      Icon: Droplets,
-      color: colors.sensors.moisture,
-    },
-    {
-      key: "oxygen" as const,
-      label: "Oxygen",
-      unit: "%",
-      Icon: Wind,
-      color: colors.sensors.oxygen,
-    },
-    {
-      key: "co2" as const,
-      label: "Carbon Dioxide",
-      unit: "%",
-      Icon: Cloud,
-      color: colors.sensors.carbonDioxide,
-    },
-  ];
+  const phaseName = batch?.compostingPhases?.findLast((item) => item.status === "active")?.phaseName;
+  const phaseIndex = ["mesophilic", "thermophilic", "cooling"].findIndex((name) => phaseName?.toLowerCase().includes(name));
+  const phase = phaseIndex < 0 ? null : phaseIndex;
   return (
     <View className="flex-1 bg-background">
       <View
@@ -183,7 +163,7 @@ export default function MachineDetailsDashboard() {
             onRetry={retry}
           />
         )}
-        {pending ? (
+        {pending && !failed ? (
           <View
             accessible
             accessibilityRole="progressbar"
@@ -203,40 +183,52 @@ export default function MachineDetailsDashboard() {
           machine &&
           batchQuery.data !== undefined &&
           (state.vacant ? (
-            <View className="rounded-[14px] border border-border p-6 gap-5">
-              <View className="flex-row items-center gap-3">
-                <CompostIcon size={24} color={colors.semantic.foreground} />
-                <Text className="flex-1 font-bold text-sm text-foreground">
-                  Machine is vacant
-                </Text>
-              </View>
-              {state.disconnected ? (
-                <View
-                  accessibilityState={{ disabled: true }}
-                  className="rounded-lg bg-secondary p-4"
-                >
-                  <Text className="text-sm font-sans text-foreground">
-                    Connect the machine to start a new compost batch.
+            <>
+              <View className="rounded-[14px] border border-border p-6 gap-5">
+                <View className="flex-row items-center gap-3">
+                  <CompostIcon size={24} color={colors.semantic.foreground} />
+                  <Text className="flex-1 font-bold text-sm text-foreground">
+                    Machine is vacant
                   </Text>
                 </View>
-              ) : (
-                <QuickActionButton
-                  label="Start new compost batch"
-                  icon={
-                    <CompostIcon
-                      size={24}
-                      color={colors.semantic.primaryForeground}
-                    />
-                  }
-                  onPress={() =>
-                    router.push({
-                      pathname: "/(app)/batch/new",
-                      params: { machineId: id },
-                    })
-                  }
-                />
-              )}
-            </View>
+                {state.disconnected ? (
+                  <View
+                    accessibilityState={{ disabled: true }}
+                    className="rounded-lg bg-secondary p-4"
+                  >
+                    <Text className="text-sm font-sans text-foreground">
+                      Connect the machine to start a new compost batch.
+                    </Text>
+                  </View>
+                ) : (
+                  <QuickActionButton
+                    label="Start new compost batch"
+                    icon={
+                      <CompostIcon
+                        size={24}
+                        color={colors.semantic.primaryForeground}
+                      />
+                    }
+                    onPress={() =>
+                      router.push({
+                        pathname: "/(app)/batch/new",
+                        params: { machineId: id },
+                      })
+                    }
+                  />
+                )}
+              </View>
+              {completedQuery.isError ? (
+                <HistoryState message="Could not load the previous batch." onRetry={() => void completedQuery.refetch()} retrying={completedQuery.isFetching} />
+              ) : completedQuery.isPending ? (
+                <Skeleton className="h-24 rounded-[14px]" />
+              ) : lastCompleted ? (
+                <View className="gap-3">
+                  <Text className="text-base font-bold text-foreground">Last completed batch</Text>
+                  <CompletedBatchCard batch={lastCompleted} onPress={() => router.push({ pathname: "/(app)/(tabs)/history/[batchId]", params: { batchId: lastCompleted.id } })} />
+                </View>
+              ) : null}
+            </>
           ) : (
             batch && (
               <>
@@ -363,47 +355,26 @@ export default function MachineDetailsDashboard() {
                 </View>
                 <View className="gap-3">
                   <View className="flex-row flex-wrap items-center justify-between gap-2">
-                    <Text className="text-base font-bold text-foreground">
-                      Live Sensor Readings
-                    </Text>
+                    <Text className="text-base font-bold text-foreground">Live Sensor Readings</Text>
                     <Pressable
                       className="min-h-12 justify-center"
                       accessibilityRole="button"
-                      onPress={() =>
-                        router.push({
-                          pathname:
-                            "/(app)/(tabs)/machines/[id]/sensors-history",
-                          params: { id },
-                        })
-                      }
+                      onPress={() => router.push({ pathname: "/(app)/(tabs)/machines/[id]/sensors-history", params: { id } })}
                     >
-                      <Text className="font-bold text-sm text-primary">
-                        View history
-                      </Text>
+                      <Text className="font-bold text-sm text-primary">View history</Text>
                     </Pressable>
                   </View>
-                  <View
-                    className="flex-row flex-wrap gap-3"
-                    style={{ opacity: state.disconnected ? 0.55 : 1 }}
-                  >
-                    {sensors.map(({ key, label, unit, Icon, color }) => (
-                      <SensorStatCard
-                        key={key}
-                        icon={Icon}
-                        iconColor={color}
-                        label={label}
-                        value={
-                          machine.latestReadings?.[key] == null
-                            ? "--"
-                            : `${machine.latestReadings[key]}${unit}`
-                        }
-                      />
+                  <View className="flex-row flex-wrap gap-3" style={{ opacity: state.disconnected ? 0.55 : 1 }}>
+                    {[
+                      { label: "Temperature", icon: Thermometer, color: colors.sensors.temperature, value: machine.latestReadings?.temperature, unit: "°C" },
+                      { label: "Moisture", icon: Droplets, color: colors.sensors.moisture, value: machine.latestReadings?.moisture, unit: "%" },
+                      { label: "Oxygen", icon: Wind, color: colors.sensors.oxygen, value: machine.latestReadings?.oxygen, unit: "%" },
+                      { label: "Carbon Dioxide", icon: Cloud, color: colors.sensors.carbonDioxide, value: machine.latestReadings?.co2, unit: "%" },
+                    ].map((sensor) => (
+                      <SensorStatCard key={sensor.label} icon={sensor.icon} iconColor={sensor.value == null ? colors.gray.textIcon : sensor.color} value={sensor.value == null ? "--" : `${sensor.value}${sensor.unit}`} label={sensor.label} />
                     ))}
                   </View>
-                  <UpdatedAt
-                    timestamp={machine.latestReadings?.updatedAt}
-                    disconnected={state.disconnected}
-                  />
+                  <UpdatedAt timestamp={machine.latestReadings?.updatedAt} disconnected={state.disconnected} />
                 </View>
                 <View className="gap-3">
                   <View className="flex-row flex-wrap items-center justify-between gap-2">
@@ -426,16 +397,16 @@ export default function MachineDetailsDashboard() {
                       </Text>
                     </Pressable>
                   </View>
-                  {overview?.automations.length ? (
-                    overview.automations.map((automation) => {
+                  {(["aeration", "sprinkler"] as const).map((kind) => {
+                      const automation = overview?.automations.find((item) => item.kind === kind);
                       const Icon =
-                        automation.kind === "aeration" ? Fan : ShowerHead;
-                      const color = automation.enabled
+                        kind === "aeration" ? Fan : ShowerHead;
+                      const color = automation?.enabled
                         ? colors.brand[500]
                         : colors.gray.textIcon;
                       return (
                         <View
-                          key={automation.kind}
+                          key={kind}
                           style={{ opacity: state.disconnected ? 0.55 : 1 }}
                           className={`rounded-[14px] border border-border p-6 gap-4 ${stacked ? "" : "flex-row items-center justify-between"}`}
                         >
@@ -443,7 +414,7 @@ export default function MachineDetailsDashboard() {
                             <Icon size={24} color={color} />
                             <View className="gap-1">
                               <Text className="font-bold text-sm text-foreground">
-                                {automation.kind === "aeration"
+                                {kind === "aeration"
                                   ? "Aeration"
                                   : "Sprinkler"}
                               </Text>
@@ -451,29 +422,24 @@ export default function MachineDetailsDashboard() {
                                 className="font-sans text-xs"
                                 style={{ color }}
                               >
-                                {automation.enabled ? "On" : "Off"}
+                                {automation ? (automation.enabled ? "On" : "Off") : "--"}
                               </Text>
                             </View>
                           </View>
                           <View className="gap-1">
                             <Text className="font-sans text-xs text-foreground">
-                              {automation.enabled ? "On until" : "Off until"}
+                              {automation ? (automation.enabled ? "On until" : "Off until") : "Until"}
                             </Text>
                             <Text
                               className="font-bold text-xl"
                               style={{ color }}
                             >
-                              {automation.until}
+                              {automation?.until ?? "--"}
                             </Text>
                           </View>
                         </View>
                       );
-                    })
-                  ) : (
-                    <Text className="text-sm font-sans text-muted-foreground">
-                      Automation status unavailable.
-                    </Text>
-                  )}
+                    })}
                   <UpdatedAt
                     timestamp={overview?.recordedAt}
                     disconnected={state.disconnected}
@@ -496,11 +462,14 @@ export default function MachineDetailsDashboard() {
         description="Are you sure you want to finish the current composting batch? This action cannot be undone."
         confirmText="Finish Batch"
         isDestructive
+        pending={finishBatch.isPending}
         onCancel={() => setFinishVisible(false)}
         onConfirm={() => {
-          // shortcut: navigation-only mock until the finish mutation exists.
-          setFinishVisible(false);
-          router.replace("/(app)/(tabs)/machines");
+          if (!batch) return;
+          finishBatch.mutate(batch.id, {
+            onSuccess: () => { setFinishVisible(false); router.replace("/(app)/(tabs)/machines"); },
+            onError: (error) => Alert.alert("Could not finish batch", error.message),
+          });
         }}
       />
     </View>

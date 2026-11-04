@@ -1,5 +1,3 @@
-const assert = require("node:assert/strict");
-const { test } = require("node:test");
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
@@ -43,27 +41,87 @@ test("API validates list/detail fields, preserves nulls, and rejects invalid rec
       api: {
         get: async (path) => {
           paths.push(path);
-          return response;
+          return path.includes("/readings?") ? { readings: [] } : response;
         },
       },
     },
     "@/types/machine": load("src/types/machine.ts"),
+    "@/types/history": load("src/types/history.ts"),
   });
   const [machine] = await machineApi.getMachines();
-  assert.equal(machine.id, record.id);
-  assert.equal(machine.barangayId, record.barangayId);
-  assert.equal(machine.macAddress, record.macAddress);
-  assert.equal(machine.name, record.name);
-  assert.equal(machine.status, record.status);
-  assert.equal(machine.createdAt, record.createdAt);
-  assert.equal(machine.latestReadings, undefined);
+  expect(machine.id).toBe(record.id);
+  expect(machine.barangayId).toBe(record.barangayId);
+  expect(machine.macAddress).toBe(record.macAddress);
+  expect(machine.name).toBe(record.name);
+  expect(machine.status).toBe(record.status);
+  expect(machine.createdAt).toBe(record.createdAt);
+  expect(machine.latestReadings).toBe(undefined);
   for (const key of ["wifiSsid", "lastSeen", "removedAt"])
-    assert.equal(machine[key], null);
+    expect(machine[key]).toBe(null);
   response = record;
-  assert.deepEqual(await machineApi.getMachine("neo2"), machine);
-  assert.deepEqual(paths, ["/machines", "/machines/neo2"]);
+  expect(await machineApi.getMachine("neo2")).toEqual(machine);
+  expect(paths).toEqual([
+    "/machines",
+    "/machines/neo2",
+    "/machines/neo2/readings?limit=500",
+  ]);
   response = { ...record, createdAt: "invalid" };
-  await assert.rejects(() => machineApi.getMachine("neo2"));
+  await expect((() => machineApi.getMachine("neo2"))()).rejects.toThrow();
+});
+
+test("machine details survive a readings request failure", async () => {
+  const { machineApi } = load("src/api/machine.api.ts", {
+    "./client": {
+      api: {
+        get: async (path) => {
+          if (path.includes("/readings?"))
+            throw new Error("Readings unavailable");
+          return record;
+        },
+      },
+    },
+    "@/types/machine": load("src/types/machine.ts"),
+    "@/types/history": load("src/types/history.ts"),
+  });
+  expect(await machineApi.getMachine("neo2")).toEqual(record);
+});
+
+test("machine details retain readings and propagate machine request errors", async () => {
+  let failMachine = false;
+  const { machineApi } = load("src/api/machine.api.ts", {
+    "./client": {
+      api: {
+        get: async (path) => {
+          if (!path.includes("/readings?")) {
+            if (failMachine) throw new Error("Machine unavailable");
+            return record;
+          }
+          return {
+            readings: [
+              {
+                machineId: record.id,
+                batchId: null,
+                recordedAt: "2026-10-14T12:00:00.000Z",
+                temperature: 37,
+                moisture: null,
+                oxygen: null,
+                co2: null,
+              },
+            ],
+          };
+        },
+      },
+    },
+    "@/types/machine": load("src/types/machine.ts"),
+    "@/types/history": load("src/types/history.ts"),
+  });
+  const machine = await machineApi.getMachine("neo2");
+  expect(machine.latestReadings.temperature).toBe(37);
+  expect(machine.latestReadings.updatedAt).toBe("2026-10-14T12:00:00.000Z");
+  failMachine = true;
+  await expect(machineApi.getMachine("neo2")).rejects.toThrow(
+    "Machine unavailable",
+  );
 });
 
 test("machine hooks isolate account/barangay caches and hide denied cached data", async () => {
@@ -100,25 +158,23 @@ test("machine hooks isolate account/barangay caches and hide denied cached data"
     },
   });
   const first = useMachines();
-  assert.equal(first.enabled, true);
+  expect(first.enabled).toBe(true);
   await first.queryFn();
   await useMachine("neo2").queryFn();
-  assert.deepEqual(calls, ["list", "neo2"]);
+  expect(calls).toEqual(["list", "neo2"]);
   user = { id: "account-b" };
-  assert.notEqual(
-    JSON.stringify(useMachines().queryKey),
+  expect(JSON.stringify(useMachines().queryKey)).not.toBe(
     JSON.stringify(first.queryKey),
   );
   profile = { ...profile, data: { barangayId: "brgy_177" } };
-  assert.equal(
-    useMachine("neo2").queryKey.join("/"),
+  expect(useMachine("neo2").queryKey.join("/")).toBe(
     "machines/account-b/brgy_177/detail/neo2",
   );
   result = { ...result, isError: true, error: new Error("404") };
-  assert.equal(useMachine("neo2").data, undefined);
+  expect(useMachine("neo2").data).toBe(undefined);
   signedIn = false;
-  assert.equal(useMachines().enabled, false);
-  assert.equal(useMachines().data, undefined);
+  expect(useMachines().enabled).toBe(false);
+  expect(useMachines().data).toBe(undefined);
   signedIn = true;
   profile = {
     isSuccess: false,
@@ -126,10 +182,10 @@ test("machine hooks isolate account/barangay caches and hide denied cached data"
     error: new Error("Profile failed"),
     refetch: () => {},
   };
-  assert.equal(useMachines().isError, true);
-  assert.equal(useMachines().isPending, false);
-  assert.equal(useMachines().refetch, profile.refetch);
-  assert.equal(useMachines(false).enabled, false);
+  expect(useMachines().isError).toBe(true);
+  expect(useMachines().isPending).toBe(false);
+  expect(useMachines().refetch).toBe(profile.refetch);
+  expect(useMachines(false).enabled).toBe(false);
 });
 
 test("profile cache is account-scoped and updates evict old machine results", async () => {
@@ -156,13 +212,15 @@ test("profile cache is account-scoped and updates evict old machine results", as
       }),
     },
   });
-  assert.equal(hooks.useProfile().queryKey.join("/"), "user/account-a/profile");
+  expect(hooks.useProfile().queryKey.join("/")).toBe("user/account-a/profile");
   await hooks
     .useUpdateProfile()
     .onSuccess({ id: "account-a", barangayId: "brgy_177" });
-  assert.deepEqual(events, [
+  expect(events).toEqual([
     "cancel:machines",
     "remove:machines",
+    "remove:batches",
+    "remove:history",
     "user/account-a/profile",
     "invalidate",
   ]);
@@ -200,22 +258,23 @@ test("TanStack cache cannot reuse another account or barangay's machine", async 
   });
   const key = machineKeys.detail(userId, barangayId, "neo2");
   client.setQueryData(key, record);
-  assert.equal(useMachine("neo2").data.name, "Neo2");
+  expect(useMachine("neo2").data.name).toBe("Neo2");
   userId = "account-b";
-  assert.equal(useMachine("neo2").data, undefined);
+  expect(useMachine("neo2").data).toBe(undefined);
   userId = "account-a";
   barangayId = "brgy_177";
-  assert.equal(useMachine("neo2").data, undefined);
+  expect(useMachine("neo2").data).toBe(undefined);
   barangayId = "brgy_176";
-  await assert.rejects(() =>
-    client.fetchQuery({
-      queryKey: key,
-      queryFn: async () => {
-        throw new Error("Machine not found");
-      },
-    }),
-  );
-  assert.equal(client.getQueryData(key).name, "Neo2");
-  assert.equal(useMachine("neo2").data, undefined);
+  await expect(
+    (() =>
+      client.fetchQuery({
+        queryKey: key,
+        queryFn: async () => {
+          throw new Error("Machine not found");
+        },
+      }))(),
+  ).rejects.toThrow();
+  expect(client.getQueryData(key).name).toBe("Neo2");
+  expect(useMachine("neo2").data).toBe(undefined);
   client.clear();
 });

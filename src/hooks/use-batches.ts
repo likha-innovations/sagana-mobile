@@ -1,16 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  type Feedstock,
   type CompostBatch,
   type BatchFeedstock,
   type CreateBatchInput,
   type DashboardMetrics,
   createBatchInputSchema,
-  completedBatchSchema,
 } from "@/types/batch";
 import {
   machineKeys,
-  setMockMachineStatus,
   useMachines,
 } from "@/hooks/use-machines";
 import {
@@ -18,8 +15,9 @@ import {
   getRecentCompletedBatches,
 } from "@/lib/dashboard";
 import { feedstockApi } from "@/api/feedstock.api";
-
-let mockActiveBatches: CompostBatch[] = [];
+import { batchApi } from "@/api/batch.api";
+import { useAuthContext } from "@/context/auth-context";
+import { useProfile } from "./use-profile";
 
 export { type BatchFeedstock, type CompostBatch, type DashboardMetrics };
 
@@ -39,38 +37,33 @@ export function useFeedstocks() {
 }
 
 export function useCompostBatches() {
-  return useQuery({
-    queryKey: batchKeys.all,
-    queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 150));
-      return [...mockActiveBatches];
-    },
+  const { user, isLoaded, isSignedIn } = useAuthContext();
+  const profile = useProfile();
+  const ready = isLoaded && isSignedIn && !!user && profile.isSuccess;
+  const query = useQuery({
+    queryKey: [...batchKeys.all, user?.id, profile.data?.barangayId, "list"],
+    enabled: ready,
+    queryFn: batchApi.list,
   });
+  return { ...query, data: ready && !query.isError ? query.data : undefined, isError: profile.isError || query.isError, isPending: !profile.isError && query.isPending, refetch: profile.isError ? profile.refetch : query.refetch };
 }
 
 // Directly returns active batch DTO with nested feedstocks
 export function useActiveBatch(machineId: string) {
-  return useQuery({
-    queryKey: batchKeys.active(machineId),
-    queryFn: async (): Promise<CompostBatch | null> => {
-      await new Promise((resolve) => setTimeout(resolve, 150));
-      const batch = mockActiveBatches.find(
-        (b) => b.machineId === machineId && b.status === "active",
-      );
-      return batch ? { ...batch } : null;
-    },
-  });
+  const query = useCompostBatches();
+  return { ...query, data: query.data?.find((batch) => batch.machineId === machineId && batch.status === "active") ?? (query.data ? null : undefined) };
 }
 
 export function useCompletedBatches(enabled = true) {
-  return useQuery({
-    queryKey: ["batches", "completed"],
-    enabled,
-    queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 150));
-      return completedBatchSchema.array().parse([]);
-    },
+  const { user, isLoaded, isSignedIn } = useAuthContext();
+  const profile = useProfile();
+  const ready = isLoaded && isSignedIn && !!user && profile.isSuccess;
+  const query = useQuery({
+    queryKey: ["batches", user?.id, profile.data?.barangayId, "completed"],
+    enabled: enabled && ready,
+    queryFn: batchApi.completed,
   });
+  return { ...query, data: ready && !query.isError ? query.data : undefined, isError: profile.isError || query.isError, isPending: !profile.isError && query.isPending, refetch: profile.isError ? profile.refetch : query.refetch };
 }
 
 export function useDashboardMetrics() {
@@ -98,56 +91,23 @@ export function useCreateCompostBatch() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (rawInput: CreateBatchInput) => {
-      const input = createBatchInputSchema.parse(rawInput);
-      await new Promise((resolve) => setTimeout(resolve, 350));
-
-      const totalWeight = Number(
-        input.feedstocks.reduce((acc, f) => acc + f.weight, 0).toFixed(2),
-      );
-      const batchId = `batch-${Date.now()}`;
-      const now = new Date();
-      const codeDate = now.toISOString().slice(0, 10).replace(/-/g, "");
-      const codeRand = Math.floor(100 + Math.random() * 900);
-      const batchCode = `BATCH-${codeDate}-${codeRand}`;
-
-      const cachedFeedstocks =
-        queryClient.getQueryData<Feedstock[]>(batchKeys.feedstocks) ?? [];
-
-      const feedstocks: BatchFeedstock[] = input.feedstocks.map((item, idx) => {
-        const itemId = item.id;
-        const master = cachedFeedstocks.find((f) => f.id === itemId);
-        return {
-          id: `bf-${Date.now()}-${idx}`,
-          feedstockId: itemId,
-          name: master?.name ?? "Feedstock",
-          category: master?.category ?? "green",
-          weightKg: item.weight,
-        };
-      });
-
-      const newBatch: CompostBatch = {
-        id: batchId,
-        machineId: input.machineId,
-        userId: "user_current",
-        totalWeight: totalWeight,
-        batchCode: batchCode,
-        startDate: now.toISOString(),
-        completionDate: null,
-        status: "active",
-        feedstocks,
-      };
-
-      mockActiveBatches.push(newBatch);
-      setMockMachineStatus(input.machineId, "active");
-
-      return newBatch;
-    },
-    onSuccess: (data, variables) => {
+    mutationFn: (input: CreateBatchInput) => batchApi.create(createBatchInputSchema.parse(input)),
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: batchKeys.all });
       queryClient.invalidateQueries({
         queryKey: batchKeys.active(variables.machineId),
       });
+      queryClient.invalidateQueries({ queryKey: machineKeys.all });
+    },
+  });
+}
+
+export function useFinishCompostBatch() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: batchApi.finish,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: batchKeys.all });
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
     },
   });

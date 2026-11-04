@@ -12,9 +12,9 @@ export function getDashboardMetrics(
 ): DashboardMetrics {
   return {
     totalCompost: {
-      value: Number(
+      value: completed.some((batch) => batch.finalWeight == null) ? null : Number(
         completed
-          .reduce((sum, batch) => sum + batch.finalWeight, 0)
+          .reduce((sum, batch) => sum + (batch.finalWeight ?? 0), 0)
           .toFixed(2),
       ),
       unit: "kg",

@@ -9,6 +9,10 @@ export default [
   eslint.configs.recommended,
   eslintPluginPrettierRecommended,
   {
+    files: ["tests/**/*.test.js"],
+    languageOptions: { globals: globals.jest },
+  },
+  {
     languageOptions: {
       globals: {
         ...globals.node,

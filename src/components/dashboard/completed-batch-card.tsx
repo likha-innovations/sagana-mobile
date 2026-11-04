@@ -34,7 +34,7 @@ export function CompletedBatchCard({
         <View className="flex-row flex-wrap gap-x-4 gap-y-2">
           {[
             { Icon: Calendar, text: `${days} ${days === 1 ? "Day" : "Days"}` },
-            { Icon: Weight, text: `${batch.finalWeight} kg` },
+            { Icon: Weight, text: batch.finalWeight == null ? "Weight unavailable" : `${batch.finalWeight} kg` },
             { Icon: Box, text: batch.machineName },
           ].map(({ Icon, text }) => (
             <View key={text} className="flex-row items-center gap-1.5">

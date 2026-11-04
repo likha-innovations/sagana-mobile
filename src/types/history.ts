@@ -5,9 +5,9 @@ export const historyReadingSchema = z.object({
   batchId: z.string().nullable(),
   recordedAt: z.string().datetime(),
   temperature: z.number().finite().nullable(),
-  moisture: z.number().min(0).max(100).nullable(),
-  oxygen: z.number().min(0).max(100).nullable(),
-  co2: z.number().min(0).max(100).nullable(),
+  moisture: z.number().finite().nullable(),
+  oxygen: z.number().finite().nullable(),
+  co2: z.number().finite().nullable(),
 });
 export type HistoryReading = z.infer<typeof historyReadingSchema>;
 export type SensorKey = "temperature" | "moisture" | "oxygen" | "co2";

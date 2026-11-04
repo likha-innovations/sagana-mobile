@@ -89,7 +89,7 @@ export default function CompletedBatchScreen() {
                     label: "Composting duration",
                   },
                   {
-                    value: `${batch.finalWeight} kg`,
+                    value: batch.finalWeight == null ? "Unavailable" : `${batch.finalWeight} kg`,
                     label: "Final batch weight",
                   },
                 ].map((item) => (
