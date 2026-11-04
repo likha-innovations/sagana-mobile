@@ -6,7 +6,7 @@ export const machineOverviewSchema = z.object({
   machine_id: z.string(),
   batch_id: z.string(),
   current_weight: z.number().nonnegative().nullable(),
-  recorded_at: z.string().datetime(),
+  recorded_at: z.string(),
   automations: z.array(
     z.object({
       kind: z.enum(["aeration", "sprinkler"]),

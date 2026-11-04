@@ -3,11 +3,11 @@ import { z } from "zod";
 export const historyReadingSchema = z.object({
   machine_id: z.string(),
   batch_id: z.string().nullable(),
-  recorded_at: z.string().datetime(),
+  recorded_at: z.string(),
   temperature: z.number().finite().nullable(),
   moisture: z.number().min(0).max(100).nullable(),
   oxygen: z.number().min(0).max(100).nullable(),
-  co2: z.number().min(0).max(100).nullable(),
+  co2: z.number().nonnegative().nullable(),
 });
 export type HistoryReading = z.infer<typeof historyReadingSchema>;
 export type SensorKey = "temperature" | "moisture" | "oxygen" | "co2";
@@ -16,7 +16,7 @@ export const historyEventSchema = z.object({
   id: z.string(),
   machine_id: z.string(),
   batch_id: z.string().nullable(),
-  created_at: z.string().datetime(),
+  created_at: z.string(),
   type: z.enum([
     "blower_on",
     "blower_off",

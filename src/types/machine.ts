@@ -7,16 +7,16 @@ export const machineSchema = z.object({
   name: z.string(),
   status: z.enum(["active", "maintenance", "offline", "available"]),
   wifi_ssid: z.string().nullable(),
-  last_seen: z.string().datetime().nullable(),
-  created_at: z.string().datetime(),
-  removed_at: z.string().datetime().nullable().optional(),
+  last_seen: z.string().nullable(),
+  created_at: z.string(),
+  removed_at: z.string().nullable().optional(),
   latest_readings: z
     .object({
       temperature: z.number(),
       moisture: z.number(),
       oxygen: z.number(),
       co2: z.number(),
-      updated_at: z.string().datetime(),
+      updated_at: z.string(),
     })
     .optional(),
 });
