@@ -91,14 +91,26 @@ export function useBluetooth(): BluetoothState {
   }, []);
 
   const startScan = useCallback(async () => {
+    bleManager.stopDeviceScan();
+    if (deviceRef.current) {
+      try {
+        await deviceRef.current.cancelConnection();
+      } catch {
+        // already disconnected
+      }
+      deviceRef.current = null;
+    }
+
+    cleanupNotificationSubscription();
+    clearProvisioningTimeout();
+    stopScanPruneInterval();
+
     setStatus('requesting-permission');
     setErrorMessage(null);
     setDevices([]);
     setConnectedDevice(null);
     setHardwareMac(null);
-    deviceRef.current = null;
     devicesSeenAtRef.current.clear();
-    stopScanPruneInterval();
 
     const hasPermission = await requestBluetoothPermissions();
     if (!hasPermission) {
@@ -145,7 +157,7 @@ export function useBluetooth(): BluetoothState {
         });
       }
     });
-  }, [stopScanPruneInterval]);
+  }, [clearProvisioningTimeout, cleanupNotificationSubscription, stopScanPruneInterval]);
 
   const handleNotificationPayload = useCallback((payload: string) => {
     const parts = payload.split(',');

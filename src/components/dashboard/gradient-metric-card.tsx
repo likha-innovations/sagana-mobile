@@ -1,6 +1,4 @@
 import { View, Text } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { colors } from "@/constants";
 
 export interface GradientMetricCardProps {
   value: string | number;
@@ -14,12 +12,8 @@ export function GradientMetricCard({
   label,
 }: GradientMetricCardProps) {
   return (
-    <LinearGradient
-      colors={colors.gradient.statCard.colors}
-      locations={colors.gradient.statCard.locations}
-      start={colors.gradient.statCard.start}
-      end={colors.gradient.statCard.end}
-      style={{ borderRadius: 14, flexGrow: 1 }}
+    <View
+      style={{ borderRadius: 14, flexGrow: 1, backgroundColor: "#718619" }}
       className="justify-end gap-1 px-4 py-3.5"
     >
       <View className="flex-row flex-wrap items-baseline gap-1.5">
@@ -41,6 +35,6 @@ export function GradientMetricCard({
       <Text className="text-[12px] font-sans text-primary-foreground">
         {label}
       </Text>
-    </LinearGradient>
+    </View>
   );
 }

@@ -49,7 +49,7 @@ export type CompostBatch = z.infer<typeof compostBatchSchema>;
 
 export const completedBatchSchema = compostBatchSchema.extend({
   status: z.literal("completed"),
-  completionDate: z.string().datetime(),
+  completionDate: z.string(),
   finalWeight: z.number().nonnegative().nullable(),
   machineName: z.string(),
 });

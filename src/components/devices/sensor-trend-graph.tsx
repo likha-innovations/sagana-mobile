@@ -32,7 +32,7 @@ export function SensorTrendGraph({
   const values = points.flatMap((point) =>
     point.value === null ? [] : [point.value],
   );
-  const formatValue = (value: number) => `${Number(value.toFixed(3))}${unit}`;
+  const formatValue = (value: number) => `${Number(value.toFixed(1))}${unit === "°C" || unit === "%" ? unit : ` ${unit}`}`;
   const middle = Math.floor((points.length - 1) / 2);
   const quarter = Math.floor((points.length - 1) / 4);
   const threeQuarter = Math.floor(((points.length - 1) * 3) / 4);

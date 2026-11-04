@@ -131,7 +131,7 @@ export default function DashboardScreen() {
                 icon={
                   <CompostIcon
                     size={24}
-                    color={colors.semantic.primaryForeground}
+                    color={colors.semantic.foreground}
                   />
                 }
                 onPress={() => router.push("/(app)/batch/new")}
@@ -139,7 +139,7 @@ export default function DashboardScreen() {
               <QuickActionButton
                 label="Add new SAGANA Machine"
                 icon={
-                  <Box size={24} color={colors.semantic.primaryForeground} />
+                  <Box size={24} color={colors.semantic.foreground} />
                 }
                 onPress={() => router.push("/(app)/machine-registration/new")}
               />
@@ -239,7 +239,7 @@ export default function DashboardScreen() {
               </View>
             ) : (
               <Text className="text-sm font-sans text-foreground">
-                No machines yet. Use “Add new SAGANA Machine” to get started.
+                No machines yet. Use "Add new SAGANA Machine" to get started.
               </Text>
             )}
           </View>

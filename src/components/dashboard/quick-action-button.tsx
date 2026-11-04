@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
-import { Text, TouchableOpacity } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { colors } from "@/constants";
+import { View, Text, Pressable } from "react-native";
 
 export interface QuickActionButtonProps {
   label: string;
@@ -15,24 +13,15 @@ export function QuickActionButton({
   onPress,
 }: QuickActionButtonProps) {
   return (
-    <TouchableOpacity
-      activeOpacity={0.85}
+    <Pressable
       onPress={onPress}
       accessibilityRole="button"
+      className="min-h-[60px] flex-row items-center gap-4 px-4 py-3.5 rounded-[8px] bg-card border border-border active:opacity-80"
     >
-      <LinearGradient
-        colors={colors.gradient.actionButton.colors}
-        locations={colors.gradient.actionButton.locations}
-        start={colors.gradient.actionButton.start}
-        end={colors.gradient.actionButton.end}
-        style={{ borderRadius: 8 }}
-        className="min-h-[60px] flex-row items-center gap-4 px-4 py-3.5"
-      >
-        {icon}
-        <Text className="flex-1 text-[14px] font-sans text-primary-foreground">
-          {label}
-        </Text>
-      </LinearGradient>
-    </TouchableOpacity>
+      <View>{icon}</View>
+      <Text className="flex-1 text-[14px] font-sans text-foreground">
+        {label}
+      </Text>
+    </Pressable>
   );
 }
