@@ -65,3 +65,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Authentication**: Multi-step registration, email verification code input, password reset, and Clerk authentication integration.
 - **Networking**: Typed `apiFetch` wrapper with automatic Clerk JWT injection, structured `ApiError` handling, and response unwrapping.
 - **Logging**: Scoped `createLogger` utility with timestamps formatted in `Asia/Manila` timezone.
+
