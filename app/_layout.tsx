@@ -4,7 +4,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
-import { ClerkProvider, ClerkLoaded } from '@clerk/expo';
+import { ClerkProvider, ClerkLoaded, ClerkLoading } from '@clerk/expo';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { tokenCache } from '@/lib/token-cache';
@@ -12,6 +12,7 @@ import { AuthProvider, useAuthContext } from '@/context/auth-context';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { Toast } from '@/components/ui/toast';
 import { createLogger } from '@/lib/logger';
+import { LoadingScreen } from '@/components/ui/loading-screen';
 
 const logger = createLogger('RootLayout');
 const authGateLogger = createLogger('AuthGate');
@@ -120,6 +121,7 @@ export default function RootLayout() {
         publishableKey={publishableKey ?? ''}
         tokenCache={tokenCache}
       >
+        <ClerkLoading><LoadingScreen /></ClerkLoading>
         <ClerkLoaded>
           <AuthProvider>
             <QueryClientProvider client={queryClient}>

@@ -1,12 +1,13 @@
 import { Stack, Redirect } from 'expo-router';
 import { useAuthContext } from '@/context/auth-context';
 import { useSocket } from '@/hooks/use-socket';
+import { LoadingScreen } from '@/components/ui/loading-screen';
 
 export default function AppLayout() {
   const { isSignedIn, isLoaded, user } = useAuthContext();
   useSocket();
 
-  if (!isLoaded) return null;
+  if (!isLoaded) return <LoadingScreen />;
 
   if (!isSignedIn || !user?.birthday) {
     return <Redirect href="/(auth)/sign-in" />;
