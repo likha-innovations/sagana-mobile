@@ -64,7 +64,7 @@ export function MachineCard({
   const phaseName = activeBatch?.compostingPhases?.findLast((item) => item.status === "active")?.phaseName;
   const phaseText = isVacant
     ? "Vacant"
-    : phaseName ?? "Composting";
+    : phaseName || "Composting";
   const phaseColorClass = isVacant ? "text-muted-foreground" : "text-primary";
   const phaseIconColor = isVacant ? colors.gray.textIcon : colors.brand[500];
   const timeAgo = formatTimeAgo(machine.latestReadings?.updatedAt);

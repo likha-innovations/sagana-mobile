@@ -226,7 +226,7 @@ test("an offline active machine keeps readings and automation cards without inve
   ).toBe(false);
 });
 
-test("vacant machine cards show sensor readings", () => {
+test("machine cards show sensor readings and a fallback for an empty phase", () => {
   const { MachineCard } = load("src/components/devices/machine-card.tsx", {
     "react-native": {
       View: "View",
@@ -248,6 +248,16 @@ test("vacant machine cards show sensor readings", () => {
   );
   expect(tree.some((node) => node.props?.children === "37°C")).toBe(true);
   expect(tree.some((node) => node.props?.children === "Vacant")).toBe(true);
+  const active = nodes(
+    MachineCard({
+      machine,
+      activeBatch: { compostingPhases: [{ status: "active", phaseName: "" }] },
+      onPress: jestMock.fn(),
+    }),
+  );
+  expect(active.some((node) => node.props?.children === "Composting")).toBe(
+    true,
+  );
 });
 
 test("data errors show a retry action and disable it while retrying", () => {
