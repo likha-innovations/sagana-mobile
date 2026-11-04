@@ -81,8 +81,8 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
       title: "Carbon Dioxide Trend",
       icon: Cloud,
       color: colors.brand[500],
-      unit: "%",
-      minimumMax: 0.1,
+      unit: "ppm",
+      minimumMax: 2000,
     },
   ];
   return (
