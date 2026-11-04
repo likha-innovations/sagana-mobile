@@ -35,7 +35,7 @@ const record = {
   removedAt: null,
 };
 
-test("API maps list/detail fields, preserves nulls, and rejects invalid records", async () => {
+test("API validates list/detail fields, preserves nulls, and rejects invalid records", async () => {
   let response = [record];
   const paths = [];
   const { machineApi } = load("src/api/machine.api.ts", {
@@ -51,13 +51,13 @@ test("API maps list/detail fields, preserves nulls, and rejects invalid records"
   });
   const [machine] = await machineApi.getMachines();
   assert.equal(machine.id, record.id);
-  assert.equal(machine.barangay_id, record.barangayId);
-  assert.equal(machine.mac_address, record.macAddress);
+  assert.equal(machine.barangayId, record.barangayId);
+  assert.equal(machine.macAddress, record.macAddress);
   assert.equal(machine.name, record.name);
   assert.equal(machine.status, record.status);
-  assert.equal(machine.created_at, record.createdAt);
-  assert.equal(machine.latest_readings, undefined);
-  for (const key of ["wifi_ssid", "last_seen", "removed_at"])
+  assert.equal(machine.createdAt, record.createdAt);
+  assert.equal(machine.latestReadings, undefined);
+  for (const key of ["wifiSsid", "lastSeen", "removedAt"])
     assert.equal(machine[key], null);
   response = record;
   assert.deepEqual(await machineApi.getMachine("neo2"), machine);

@@ -3,10 +3,10 @@ import type { Machine } from "@/types/machine";
 import type { CompostBatch } from "@/types/batch";
 
 export const machineOverviewSchema = z.object({
-  machine_id: z.string(),
-  batch_id: z.string(),
-  current_weight: z.number().nonnegative().nullable(),
-  recorded_at: z.string().datetime(),
+  machineId: z.string(),
+  batchId: z.string(),
+  currentWeight: z.number().nonnegative().nullable(),
+  recordedAt: z.string().datetime(),
   automations: z.array(
     z.object({
       kind: z.enum(["aeration", "sprinkler"]),
@@ -18,7 +18,7 @@ export const machineOverviewSchema = z.object({
 
 export function getMachineState(machine: Machine, batch: CompostBatch | null) {
   const occupied =
-    batch?.status === "active" && batch.machine_id === machine.id;
+    batch?.status === "active" && batch.machineId === machine.id;
   return { vacant: !occupied, disconnected: machine.status === "offline" };
 }
 

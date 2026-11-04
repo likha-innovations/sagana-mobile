@@ -74,7 +74,7 @@ export default function HistoryScreen() {
       />
       <FlatList
         data={query.isError || query.isPending ? [] : batches}
-        keyExtractor={(batch) => batch.batch_id}
+        keyExtractor={(batch) => batch.id}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         contentContainerStyle={{
@@ -108,7 +108,7 @@ export default function HistoryScreen() {
             onPress={() =>
               router.push({
                 pathname: "/(app)/(tabs)/history/[batchId]",
-                params: { batchId: item.batch_id },
+                params: { batchId: item.id },
               })
             }
           />

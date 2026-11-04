@@ -30,7 +30,7 @@ test("occupancy follows active batch membership, independently of connectivity a
   const base = fixtures.machines[0];
   const batch = fixtures.active_batches[0];
   for (const status of ["active", "available", "maintenance", "offline"]) {
-    const machine = { ...base, status, latest_readings: undefined };
+    const machine = { ...base, status, latestReadings: undefined };
     assert.equal(logic.getMachineState(machine, batch).vacant, false);
     assert.equal(
       logic.getMachineState(machine, batch).disconnected,
@@ -39,7 +39,7 @@ test("occupancy follows active batch membership, independently of connectivity a
     assert.equal(logic.getMachineState(machine, null).vacant, true);
   }
   assert.equal(
-    logic.getMachineState(base, { ...batch, machine_id: "another" }).vacant,
+    logic.getMachineState(base, { ...batch, machineId: "another" }).vacant,
     true,
   );
   assert.equal(
@@ -57,29 +57,29 @@ test("overview fixtures are valid, keyed to active batches, and separate current
     .parse(fixtures.machine_overviews);
   for (const record of records) {
     const batch = fixtures.active_batches.find(
-      (item) => item.batch_id === record.batch_id,
+      (item) => item.id === record.batchId,
     );
-    assert.equal(record.machine_id, batch.machine_id);
+    assert.equal(record.machineId, batch.machineId);
     assert.ok(
-      record.current_weight >= 0 && record.current_weight < batch.total_weight,
+      record.currentWeight >= 0 && record.currentWeight < batch.totalWeight,
     );
-    assert.ok(Date.parse(record.recorded_at) >= Date.parse(batch.start_date));
+    assert.ok(Date.parse(record.recordedAt) >= Date.parse(batch.startDate));
     assert.equal(record.automations.length, 2);
   }
   assert.equal(
-    logic.machineOverviewSchema.safeParse({ ...records[0], current_weight: -1 })
+    logic.machineOverviewSchema.safeParse({ ...records[0], currentWeight: -1 })
       .success,
     false,
   );
   assert.equal(
-    logic.machineOverviewSchema.safeParse({ ...records[0], recorded_at: "bad" })
+    logic.machineOverviewSchema.safeParse({ ...records[0], recordedAt: "bad" })
       .success,
     false,
   );
   assert.equal(
     logic.machineOverviewSchema.safeParse({
       ...records[0],
-      current_weight: null,
+      currentWeight: null,
     }).success,
     true,
   );
@@ -101,8 +101,9 @@ test("settings validate required values and preserve data when a machine is miss
       useQuery: (options) => options,
       useMutation: (options) => options,
       useQueryClient: () => ({
-        invalidateQueries: ({ queryKey }) =>
-          invalidations.push(queryKey.join("/")),
+        invalidateQueries: ({ queryKey }) => {
+          if (queryKey) invalidations.push(queryKey.join("/"));
+        },
       }),
     },
   });
@@ -114,7 +115,7 @@ test("settings validate required values and preserve data when a machine is miss
   assert.ok(invalidations.includes("machines"));
   const wifi = hooks.useUpdateMachineWifi();
   await assert.rejects(() =>
-    wifi.mutationFn({ id: "missing", wifi_ssid: "Mock" }),
+    wifi.mutationFn({ id: "missing", wifiSsid: "Mock" }),
   );
-  await assert.rejects(() => wifi.mutationFn({ id: "1", wifi_ssid: " " }));
+  await assert.rejects(() => wifi.mutationFn({ id: "1", wifiSsid: " " }));
 });

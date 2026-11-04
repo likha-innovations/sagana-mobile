@@ -26,31 +26,31 @@ export const batchFeedstockSchema = z.object({
   feedstockId: z.string().optional(),
   name: z.string(),
   category: feedstockCategorySchema,
-  weight_kg: z.number().positive(),
+  weightKg: z.number().positive(),
 });
 export type BatchFeedstock = z.infer<typeof batchFeedstockSchema>;
 
 // Backend-aligned domain model: CompostBatch with embedded feedstocks
 export const compostBatchSchema = z.object({
-  batch_id: z.string(),
-  machine_id: z.string(),
-  user_id: z.string().optional(),
-  batch_code: z.string(),
+  id: z.string(),
+  machineId: z.string(),
+  userId: z.string().optional(),
+  batchCode: z.string(),
   status: z
     .enum(["active", "completed", "failed", "cancelled"])
     .default("active"),
-  start_date: z.string(),
-  completion_date: z.string().nullable().optional(),
-  total_weight: z.number().nonnegative(),
+  startDate: z.string(),
+  completionDate: z.string().nullable().optional(),
+  totalWeight: z.number().nonnegative(),
   feedstocks: z.array(batchFeedstockSchema),
 });
 export type CompostBatch = z.infer<typeof compostBatchSchema>;
 
 export const completedBatchSchema = compostBatchSchema.extend({
   status: z.literal("completed"),
-  completion_date: z.string().datetime(),
-  final_weight: z.number().nonnegative(),
-  machine_name: z.string(),
+  completionDate: z.string().datetime(),
+  finalWeight: z.number().nonnegative(),
+  machineName: z.string(),
 });
 export type CompletedBatch = z.infer<typeof completedBatchSchema>;
 
@@ -62,7 +62,7 @@ export const createBatchItemInputSchema = z.object({
 export type CreateBatchItemInput = z.infer<typeof createBatchItemInputSchema>;
 
 export const createBatchInputSchema = z.object({
-  machine_id: z.string().min(1, "Please select a machine"),
+  machineId: z.string().min(1, "Please select a machine"),
   feedstocks: z
     .array(createBatchItemInputSchema)
     .min(1, "Please select at least one feedstock"),

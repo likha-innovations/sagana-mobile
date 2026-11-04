@@ -86,7 +86,7 @@ export default function MachinesListScreen() {
                   activeBatch={
                     batches.data.find(
                       (batch) =>
-                        batch.machine_id === machine.id &&
+                        batch.machineId === machine.id &&
                         batch.status === "active",
                     ) ?? null
                   }

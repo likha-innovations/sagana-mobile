@@ -103,13 +103,13 @@ export function useUpdateMachineWifi() {
   return useMutation({
     mutationFn: async ({
       id,
-      wifi_ssid,
+      wifiSsid,
     }: {
       id: string;
-      wifi_ssid: string;
+      wifiSsid: string;
     }) => {
-      const validSsid = machineSsidSchema.parse(wifi_ssid);
-      return machineApi.updateMachine(id, { wifi_ssid: validSsid });
+      const validSsid = machineSsidSchema.parse(wifiSsid);
+      return machineApi.updateMachine(id, { wifiSsid: validSsid });
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
@@ -155,7 +155,7 @@ export function useMachineOverview(id: string) {
     queryKey: ["machine-overview", id],
     queryFn: async () => {
       const records = machineOverviewSchema.array().parse([]);
-      return records.find((record) => record.machine_id === id) ?? null;
+      return records.find((record) => record.machineId === id) ?? null;
     },
   });
 }

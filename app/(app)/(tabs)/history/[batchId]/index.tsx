@@ -30,7 +30,7 @@ export default function CompletedBatchScreen() {
   );
   const router = useRouter();
   const query = useCompletedBatches();
-  const batch = query.data?.find((item) => item.batch_id === batchId);
+  const batch = query.data?.find((item) => item.id === batchId);
   const { scrollPaddingBottom } = useDynamicLayout();
   const { width, fontScale } = useWindowDimensions();
   return (
@@ -38,7 +38,7 @@ export default function CompletedBatchScreen() {
       <HistoryHeader
         title={
           batch
-            ? format(parseISO(batch.completion_date), "MMMM d, yyyy")
+            ? format(parseISO(batch.completionDate), "MMMM d, yyyy")
             : "Completed Batch"
         }
       />
@@ -85,11 +85,11 @@ export default function CompletedBatchScreen() {
               >
                 {[
                   {
-                    value: `${differenceInCalendarDays(parseISO(batch.completion_date), parseISO(batch.start_date))} Days`,
+                    value: `${differenceInCalendarDays(parseISO(batch.completionDate), parseISO(batch.startDate))} Days`,
                     label: "Composting duration",
                   },
                   {
-                    value: `${batch.final_weight} kg`,
+                    value: `${batch.finalWeight} kg`,
                     label: "Final batch weight",
                   },
                 ].map((item) => (
@@ -108,16 +108,16 @@ export default function CompletedBatchScreen() {
               </View>
               <View className="gap-3 rounded-[14px] border border-border p-6">
                 {[
-                  ["Batch ID", batch.batch_code],
-                  ["Machine used", batch.machine_name],
-                  ["Initial feedstock weight", `${batch.total_weight} kg`],
+                  ["Batch ID", batch.batchCode],
+                  ["Machine used", batch.machineName],
+                  ["Initial feedstock weight", `${batch.totalWeight} kg`],
                   [
                     "Started on",
-                    format(parseISO(batch.start_date), "MMMM d, yyyy"),
+                    format(parseISO(batch.startDate), "MMMM d, yyyy"),
                   ],
                   [
                     "Ended on",
-                    format(parseISO(batch.completion_date), "MMMM d, yyyy"),
+                    format(parseISO(batch.completionDate), "MMMM d, yyyy"),
                   ],
                 ].map(([label, value]) => (
                   <View

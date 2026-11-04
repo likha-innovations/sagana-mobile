@@ -14,7 +14,7 @@ export function getDashboardMetrics(
     totalCompost: {
       value: Number(
         completed
-          .reduce((sum, batch) => sum + batch.final_weight, 0)
+          .reduce((sum, batch) => sum + batch.finalWeight, 0)
           .toFixed(2),
       ),
       unit: "kg",
@@ -22,21 +22,21 @@ export function getDashboardMetrics(
     totalFeedstock: {
       value: Number(
         completed
-          .reduce((sum, batch) => sum + batch.total_weight, 0)
+          .reduce((sum, batch) => sum + batch.totalWeight, 0)
           .toFixed(2),
       ),
       unit: "kg",
     },
     completedBatches: completed.length,
     ongoingBatches: batches.filter((batch) => batch.status === "active").length,
-    ownedMachines: machines.filter((machine) => !machine.removed_at).length,
+    ownedMachines: machines.filter((machine) => !machine.removedAt).length,
   };
 }
 
 export function getRecentCompletedBatches(batches: CompletedBatch[]) {
   return [...batches]
     .sort(
-      (a, b) => Date.parse(b.completion_date) - Date.parse(a.completion_date),
+      (a, b) => Date.parse(b.completionDate) - Date.parse(a.completionDate),
     )
     .slice(0, 3);
 }

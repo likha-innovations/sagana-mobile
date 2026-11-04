@@ -34,21 +34,21 @@ export function MachineCard({
     activeBatch,
   );
   const temp =
-    machine.latest_readings?.temperature == null
+    machine.latestReadings?.temperature == null
       ? "--"
-      : `${machine.latest_readings.temperature}°C`;
+      : `${machine.latestReadings.temperature}°C`;
   const moisture =
-    machine.latest_readings?.moisture == null
+    machine.latestReadings?.moisture == null
       ? "--"
-      : `${machine.latest_readings.moisture}%`;
+      : `${machine.latestReadings.moisture}%`;
   const o2 =
-    machine.latest_readings?.oxygen == null
+    machine.latestReadings?.oxygen == null
       ? "--"
-      : `${machine.latest_readings.oxygen}%`;
+      : `${machine.latestReadings.oxygen}%`;
   const co2 =
-    machine.latest_readings?.co2 == null
+    machine.latestReadings?.co2 == null
       ? "--"
-      : `${machine.latest_readings.co2}%`;
+      : `${machine.latestReadings.co2}%`;
 
   const tempColor = temp === "--"
     ? colors.gray.textIcon
@@ -65,11 +65,11 @@ export function MachineCard({
     ? Math.max(
         0,
         Math.floor(
-          (Date.now() - Date.parse(activeBatch.start_date)) / 86400000,
+          (Date.now() - Date.parse(activeBatch.startDate)) / 86400000,
         ),
       )
     : 0;
-  const phase = getMachinePhase(machine.latest_readings?.temperature, days);
+  const phase = getMachinePhase(machine.latestReadings?.temperature, days);
   const phaseText = isVacant
     ? "Vacant"
     : phase === null
@@ -79,7 +79,7 @@ export function MachineCard({
   const phaseIconColor = isVacant ? colors.gray.textIcon : colors.brand[500];
   const timeAgo = isVacant
     ? "--"
-    : formatTimeAgo(machine.latest_readings?.updated_at);
+    : formatTimeAgo(machine.latestReadings?.updatedAt);
 
   return (
     <Pressable

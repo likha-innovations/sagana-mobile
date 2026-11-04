@@ -33,24 +33,24 @@ const stamp = (day, hour = 0, minute = 0) =>
 
 test("search combines trimmed case-insensitive codes with inclusive local dates", () => {
   const batches = [
-    { batch_id: "a", batch_code: "SG-Alpha", completion_date: stamp(2) },
+    { id: "a", batchCode: "SG-Alpha", completionDate: stamp(2) },
     {
-      batch_id: "b",
-      batch_code: "sg-alpha-2",
-      completion_date: stamp(2, 23, 59),
+      id: "b",
+      batchCode: "sg-alpha-2",
+      completionDate: stamp(2, 23, 59),
     },
-    { batch_id: "c", batch_code: "SG-Alpha", completion_date: stamp(3) },
-    { batch_id: "d", batch_code: "SG-Beta", completion_date: stamp(2) },
+    { id: "c", batchCode: "SG-Alpha", completionDate: stamp(3) },
+    { id: "d", batchCode: "SG-Beta", completionDate: stamp(2) },
   ];
   const range = { startDate: "2026-01-02", endDate: "2026-01-02" };
   assert.equal(
     h
       .filterCompletedBatches(batches, "  ALPHA ", range)
-      .map((b) => b.batch_id)
+      .map((b) => b.id)
       .join(),
     "b,a",
   );
-  assert.equal(batches[0].batch_id, "a");
+  assert.equal(batches[0].id, "a");
   assert.equal(h.isInRange(stamp(1, 23, 59), range), false);
   assert.equal(h.filterCompletedBatches(batches, "missing", range).length, 0);
 });
@@ -93,10 +93,10 @@ test("range selection supports same-day, reversed and incomplete ranges", () => 
 });
 
 test("hourly and daily means isolate batches and preserve missing sensor intervals", () => {
-  const reading = (batch_id, recorded_at, temperature, moisture = null) => ({
-    batch_id,
-    machine_id: batch_id,
-    recorded_at,
+  const reading = (batchId, recordedAt, temperature, moisture = null) => ({
+    batchId,
+    machineId: batchId,
+    recordedAt,
     temperature,
     moisture,
     oxygen: null,
@@ -143,30 +143,30 @@ test("fixtures validate, stay inside their batches and preserve initial feedstoc
   for (const batch of fixtures.completed_batches) {
     assert.equal(
       Number(
-        batch.feedstocks.reduce((sum, f) => sum + f.weight_kg, 0).toFixed(2),
+        batch.feedstocks.reduce((sum, f) => sum + f.weightKg, 0).toFixed(2),
       ),
-      batch.total_weight,
+      batch.totalWeight,
     );
-    assert.notEqual(batch.total_weight, batch.final_weight);
-    assert.ok(readings.some((r) => r.batch_id === batch.batch_id));
-    assert.ok(logs.some((r) => r.batch_id === batch.batch_id));
+    assert.notEqual(batch.totalWeight, batch.finalWeight);
+    assert.ok(readings.some((r) => r.batchId === batch.id));
+    assert.ok(logs.some((r) => r.batchId === batch.id));
   }
   for (const event of [...readings, ...logs]) {
-    const machine = fixtures.machines.find((m) => m.id === event.machine_id);
+    const machine = fixtures.machines.find((m) => m.id === event.machineId);
     assert.ok(machine);
     assert.ok(
-      Date.parse(event.recorded_at ?? event.created_at) >=
-        Date.parse(machine.created_at),
+      Date.parse(event.recordedAt ?? event.createdAt) >=
+        Date.parse(machine.createdAt),
     );
-    if (event.batch_id === null) continue;
+    if (event.batchId === null) continue;
     const batch = fixtures.completed_batches.find(
-      (b) => b.batch_id === event.batch_id,
+      (b) => b.id === event.batchId,
     );
     assert.ok(batch);
-    const time = Date.parse(event.recorded_at ?? event.created_at);
+    const time = Date.parse(event.recordedAt ?? event.createdAt);
     assert.ok(
-      time >= Date.parse(batch.start_date) &&
-        time <= Date.parse(batch.completion_date),
+      time >= Date.parse(batch.startDate) &&
+        time <= Date.parse(batch.completionDate),
     );
   }
   assert.equal(
@@ -311,55 +311,55 @@ test("machine scope includes multiple batches and unassigned records without cro
     fixtures.history_events,
     { kind: "machine", machineId: "1" },
   );
-  assert.ok(result.readings.every((r) => r.machine_id === "1"));
-  assert.ok(result.logs.every((r) => r.machine_id === "1"));
-  assert.ok(result.readings.some((r) => r.batch_id === "completed-1"));
-  assert.ok(result.readings.some((r) => r.batch_id === "completed-3"));
-  assert.ok(result.readings.some((r) => r.batch_id === null));
-  assert.ok(result.logs.some((r) => r.batch_id === null));
+  assert.ok(result.readings.every((r) => r.machineId === "1"));
+  assert.ok(result.logs.every((r) => r.machineId === "1"));
+  assert.ok(result.readings.some((r) => r.batchId === "completed-1"));
+  assert.ok(result.readings.some((r) => r.batchId === "completed-3"));
+  assert.ok(result.readings.some((r) => r.batchId === null));
+  assert.ok(result.logs.some((r) => r.batchId === null));
 });
 
 test("batch scope requires membership, matching machine and inclusive lifetime boundaries", () => {
   const batch = fixtures.completed_batches[0];
   const original = fixtures.history_readings.find(
-    (r) => r.batch_id === batch.batch_id,
+    (r) => r.batchId === batch.id,
   );
   const samples = [
-    { ...original, recorded_at: batch.start_date },
-    { ...original, recorded_at: batch.completion_date },
+    { ...original, recordedAt: batch.startDate },
+    { ...original, recordedAt: batch.completionDate },
     {
       ...original,
-      recorded_at: new Date(Date.parse(batch.start_date) - 1).toISOString(),
+      recordedAt: new Date(Date.parse(batch.startDate) - 1).toISOString(),
     },
     {
       ...original,
-      recorded_at: new Date(
-        Date.parse(batch.completion_date) + 1,
+      recordedAt: new Date(
+        Date.parse(batch.completionDate) + 1,
       ).toISOString(),
     },
-    { ...original, batch_id: null },
-    { ...original, batch_id: "another-batch" },
-    { ...original, machine_id: "another-machine" },
+    { ...original, batchId: null },
+    { ...original, batchId: "another-batch" },
+    { ...original, machineId: "another-machine" },
   ];
   const events = samples.map((r, i) => ({
     ...r,
     id: String(i),
-    created_at: r.recorded_at,
+    createdAt: r.recordedAt,
     type: "blower_on",
     message: "Recorded",
   }));
-  const scope = { kind: "batch", batchId: batch.batch_id };
+  const scope = { kind: "batch", batchId: batch.id };
   const selected = h.selectHistory(samples, events, scope, batch);
   assert.equal(selected.readings.length, 2);
   assert.equal(selected.logs.length, 2);
-  assert.equal(selected.readings[0].recorded_at, batch.start_date);
-  assert.equal(selected.logs[0].created_at, batch.completion_date);
+  assert.equal(selected.readings[0].recordedAt, batch.startDate);
+  assert.equal(selected.logs[0].createdAt, batch.completionDate);
   assert.equal(h.selectHistory(samples, events, scope).readings.length, 0);
 });
 
 test("automation grouping sorts actual local dates and preserves input order and timestamps", () => {
   const logs = [stamp(2), stamp(1, 23, 59), stamp(2, 23, 59)].map(
-    (created_at, id) => ({ id: String(id), created_at }),
+    (createdAt, id) => ({ id: String(id), createdAt }),
   );
   const before = JSON.stringify(logs);
   const groups = h.groupHistoryEvents(logs);
@@ -394,15 +394,15 @@ test("machine presets use inclusive local calendar days across year boundaries",
 
 test("migrated machine samples retain values with explicit daily positions and no inferred batch", () => {
   const samples = fixtures.history_readings.filter(
-    (r) => r.machine_id === "1" && r.batch_id === null,
+    (r) => r.machineId === "1" && r.batchId === null,
   );
   assert.equal(
     samples.map((r) => r.temperature).join(),
     "20,30,45,55,60,45,40",
   );
-  assert.equal(samples[0].recorded_at, "2026-09-29T16:00:00.000Z");
+  assert.equal(samples[0].recordedAt, "2026-09-29T16:00:00.000Z");
   assert.equal(
-    Date.parse(samples.at(-1).recorded_at) - Date.parse(samples[0].recorded_at),
+    Date.parse(samples.at(-1).recordedAt) - Date.parse(samples[0].recordedAt),
     86400000,
   );
   assert.equal(

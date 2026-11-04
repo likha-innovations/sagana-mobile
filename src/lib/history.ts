@@ -99,11 +99,11 @@ export function filterCompletedBatches(
   return batches
     .filter(
       (batch) =>
-        batch.batch_code.toLowerCase().includes(term) &&
-        isInRange(batch.completion_date, range),
+        batch.batchCode.toLowerCase().includes(term) &&
+        isInRange(batch.completionDate, range),
     )
     .sort(
-      (a, b) => Date.parse(b.completion_date) - Date.parse(a.completion_date),
+      (a, b) => Date.parse(b.completionDate) - Date.parse(a.completionDate),
     );
 }
 
@@ -152,8 +152,8 @@ export function aggregateReadings(
     slots.push(cursor);
   const buckets = new Map<number, HistoryReading[]>();
   for (const reading of readings) {
-    if (!isInRange(reading.recorded_at, range)) continue;
-    const date = parseISO(reading.recorded_at);
+    if (!isInRange(reading.recordedAt, range)) continue;
+    const date = parseISO(reading.recordedAt);
     const key = (hourly ? startOfHour(date) : startOfDay(date)).getTime();
     buckets.set(key, [...(buckets.get(key) ?? []), reading]);
   }
@@ -184,36 +184,36 @@ export function selectHistory(
   batch?: CompletedBatch,
 ) {
   const matches = (
-    item: { machine_id: string; batch_id: string | null },
+    item: { machineId: string; batchId: string | null },
     timestamp: string,
   ) => {
-    if (scope.kind === "machine") return item.machine_id === scope.machineId;
+    if (scope.kind === "machine") return item.machineId === scope.machineId;
     return (
       !!batch &&
-      batch.batch_id === scope.batchId &&
-      item.batch_id === scope.batchId &&
-      item.machine_id === batch.machine_id &&
-      Date.parse(timestamp) >= Date.parse(batch.start_date) &&
-      Date.parse(timestamp) <= Date.parse(batch.completion_date)
+      batch.id === scope.batchId &&
+      item.batchId === scope.batchId &&
+      item.machineId === batch.machineId &&
+      Date.parse(timestamp) >= Date.parse(batch.startDate) &&
+      Date.parse(timestamp) <= Date.parse(batch.completionDate)
     );
   };
   return {
     readings: readings
-      .filter((item) => matches(item, item.recorded_at))
-      .sort((a, b) => Date.parse(a.recorded_at) - Date.parse(b.recorded_at)),
+      .filter((item) => matches(item, item.recordedAt))
+      .sort((a, b) => Date.parse(a.recordedAt) - Date.parse(b.recordedAt)),
     logs: events
-      .filter((item) => matches(item, item.created_at))
-      .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)),
+      .filter((item) => matches(item, item.createdAt))
+      .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)),
   };
 }
 
 export function groupHistoryEvents(events: HistoryEvent[], range?: DateRange) {
   const groups = new Map<string, HistoryEvent[]>();
   const filtered = events
-    .filter((event) => isInRange(event.created_at, range))
-    .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
+    .filter((event) => isInRange(event.createdAt, range))
+    .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
   for (const event of filtered) {
-    const date = format(parseISO(event.created_at), "yyyy-MM-dd");
+    const date = format(parseISO(event.createdAt), "yyyy-MM-dd");
     const group = groups.get(date);
     if (group) group.push(event);
     else groups.set(date, [event]);

@@ -1,6 +1,8 @@
 # UI & Feature Status
 
-Machine list and detail use authenticated NestJS endpoints backed by Neon development. The backend filters them by the account's saved barangay and excludes removed machines. Batch, feedstock, sensor-history, and automation reads remain local mock or empty states; machine settings and batch creation are not persisted to Neon.
+Machine list, detail, registration, settings, and removal use authenticated backend endpoints. The backend scopes machines to the account's barangay and excludes removed machines. Feedstocks use the backend API; batch, sensor-history, and automation data remain local or empty. Batch creation is not persisted.
+
+Machine REST requests use camelCase fields such as `macAddress` and `wifiSsid`. Machine and batch objects use `id`; related records retain fields such as `machineId` and `batchId`. Existing mobile builds using snake_case machine requests require an update alongside the backend.
 
 Source snapshot: `38b132d`, 13 October 2026. **Wired** means the code calls a service or native module; it does not mean this audit tested that service on a device.
 

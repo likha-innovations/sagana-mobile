@@ -1,5 +1,10 @@
 # Sagana Mobile Agent Instructions
 
+## Property naming
+
+- Use camelCase for properties in application-owned models, schemas, fixtures, and REST contracts.
+- Preserve required external contract keys and existing MQTT/WebSocket payloads.
+
 ## Scope and privacy
 
 - Implement only the requested change. Inspect the affected routes, components, hooks and callers before editing; avoid whole-repository scans for a local UI task.

@@ -25,7 +25,7 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
   const date =
     anchor ??
     parseISO(
-      readings.at(-1)?.recorded_at ?? query.endDate ?? new Date().toISOString(),
+      readings.at(-1)?.recordedAt ?? query.endDate ?? new Date().toISOString(),
     );
   const range = sensorRange(period, date, custom);
   const bounds = dateBounds(range);
