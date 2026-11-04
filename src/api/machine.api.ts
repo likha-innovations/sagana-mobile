@@ -9,9 +9,10 @@ export const machineApi = {
   getMachine: async (id: string): Promise<Machine> => {
     const path = `/machines/${encodeURIComponent(id)}`;
     const [rawMachine, rawHistory] = await Promise.all([
-      api.get<unknown>(path), api.get<unknown>(`${path}/readings?limit=500`),
+      api.get<unknown>(path), api.get<unknown>(`${path}/readings?limit=500`).catch(() => undefined),
     ]);
     const machine = machineSchema.parse(rawMachine);
+    if (rawHistory === undefined) return machine;
     const { readings, sensors } = z.object({ readings: historyReadingSchema.array(), sensors: machineSchema.shape.sensors }).parse(rawHistory);
     if (!readings.length) return sensors ? { ...machine, sensors } : machine;
     const latest = (key: "temperature" | "moisture" | "oxygen" | "co2") => readings.find((reading) => reading[key] !== null)?.[key] ?? null;

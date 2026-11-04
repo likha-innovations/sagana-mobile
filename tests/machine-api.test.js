@@ -69,6 +69,61 @@ test("API validates list/detail fields, preserves nulls, and rejects invalid rec
   await expect((() => machineApi.getMachine("neo2"))()).rejects.toThrow();
 });
 
+test("machine details survive a readings request failure", async () => {
+  const { machineApi } = load("src/api/machine.api.ts", {
+    "./client": {
+      api: {
+        get: async (path) => {
+          if (path.includes("/readings?"))
+            throw new Error("Readings unavailable");
+          return record;
+        },
+      },
+    },
+    "@/types/machine": load("src/types/machine.ts"),
+    "@/types/history": load("src/types/history.ts"),
+  });
+  expect(await machineApi.getMachine("neo2")).toEqual(record);
+});
+
+test("machine details retain readings and propagate machine request errors", async () => {
+  let failMachine = false;
+  const { machineApi } = load("src/api/machine.api.ts", {
+    "./client": {
+      api: {
+        get: async (path) => {
+          if (!path.includes("/readings?")) {
+            if (failMachine) throw new Error("Machine unavailable");
+            return record;
+          }
+          return {
+            readings: [
+              {
+                machineId: record.id,
+                batchId: null,
+                recordedAt: "2026-10-14T12:00:00.000Z",
+                temperature: 37,
+                moisture: null,
+                oxygen: null,
+                co2: null,
+              },
+            ],
+          };
+        },
+      },
+    },
+    "@/types/machine": load("src/types/machine.ts"),
+    "@/types/history": load("src/types/history.ts"),
+  });
+  const machine = await machineApi.getMachine("neo2");
+  expect(machine.latestReadings.temperature).toBe(37);
+  expect(machine.latestReadings.updatedAt).toBe("2026-10-14T12:00:00.000Z");
+  failMachine = true;
+  await expect(machineApi.getMachine("neo2")).rejects.toThrow(
+    "Machine unavailable",
+  );
+});
+
 test("machine hooks isolate account/barangay caches and hide denied cached data", async () => {
   let user = { id: "account-a" };
   let signedIn = true;
