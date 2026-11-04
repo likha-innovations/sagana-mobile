@@ -1,9 +1,7 @@
-import {
-  View,
-  Text,
-  useWindowDimensions,
-} from "react-native";
+import { View, Text, useWindowDimensions } from "react-native";
 import { Image } from "expo-image";
+import { Sprout } from "lucide-react-native";
+import { colors } from "@/constants";
 import type { BatchFeedstock } from "@/types/batch";
 import { getFeedstockImage } from "@/constants/feedstocks";
 
@@ -24,13 +22,17 @@ export function FeedstockGrid({
             style={{ width: `${100 / columns}%` }}
             className="items-center gap-2 px-2 py-5"
           >
-            {imageSource && (
+            {imageSource ? (
               <Image
                 source={imageSource}
                 style={{ width: 74, height: 60 }}
                 contentFit="contain"
                 accessible={false}
               />
+            ) : (
+              <View className="h-[60px] w-[74px] items-center justify-center">
+                <Sprout size={24} color={colors.brand[700]} />
+              </View>
             )}
             <View className="gap-1">
               <Text className="text-center text-[12px] font-sans text-foreground">
