@@ -38,6 +38,7 @@ import { useAuthContext } from '@/context/auth-context';
 import { useBarangays } from '@/hooks';
 import { createLogger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
+import { changeOtpCode } from '@/lib/otp-input';
 
 const logger = createLogger('SignUpScreen');
 
@@ -246,16 +247,13 @@ function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupPr
 
   const handleCharChange = (text: string, index: number) => {
     const cleaned = text.replace(/[^0-9]/g, '');
-    const codeArr = code.padEnd(6, ' ').split('');
-
     if (cleaned.length > 0) {
-      codeArr[index] = cleaned[cleaned.length - 1];
-      const newCode = codeArr.join('').trimEnd();
-      onChangeCode(newCode);
+      onChangeCode(changeOtpCode(code, text, index));
 
-      if (index < 5) {
-        inputRefs.current[index + 1]?.focus();
-      }
+      const previous = code[index]?.trim();
+      const replacing = previous && cleaned.length > 1 &&
+        (cleaned.startsWith(previous) || cleaned.endsWith(previous));
+      inputRefs.current[cleaned.length >= 6 ? 5 : Math.min(index + cleaned.length - (replacing ? 1 : 0), 5)]?.focus();
     }
   };
 
@@ -288,7 +286,7 @@ function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupPr
             onChangeText={(text) => handleCharChange(text, index)}
             onKeyPress={(e) => handleKeyPress(e, index)}
             keyboardType="number-pad"
-            maxLength={1}
+            accessibilityLabel={`One-time code digit ${index + 1} of 6`}
             textAlign="center"
             className={cn(
               'flex-1 max-w-[50px] aspect-[50/58] rounded-2xl border-[1.5px] bg-background text-[22px] font-bold text-foreground p-0',
