@@ -77,23 +77,29 @@ function AuthProtectedNavigation() {
     }
   }, [isSignedIn, isLoaded, user, segments, router, queryClient, profile.data, profile.isLoading, profile.isError, signupBarangay]);
 
-  if (isSignedIn && (!user || profile.isLoading) && segments[0] !== '(auth)') return <LoadingScreen />;
-  if (isSignedIn && profile.isError) return (
-    <View className="flex-1 justify-center px-6 bg-background gap-4">
-      <Text className="text-foreground text-lg font-bold">Unable to load your profile</Text>
-      <Text className="text-muted-foreground">Check your connection and try again.</Text>
-      <Pressable accessibilityRole="button" onPress={() => void profile.refetch()}><Text className="text-primary font-bold">Try again</Text></Pressable>
-      <Pressable accessibilityRole="button" onPress={() => void signOut()}><Text className="text-foreground">Sign out</Text></Pressable>
-    </View>
-  );
-  if (isSignedIn && !profile.data?.barangayId && segments[0] !== '(auth)') return <LoadingScreen />;
+  const showLoading = isSignedIn && (!user || profile.isLoading || !profile.data?.barangayId) && segments[0] !== '(auth)';
+  const showError = isSignedIn && profile.isError;
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="(app)" options={{ headerShown: false }} />
-      <Stack.Screen name="+not-found" options={{ title: 'Oops!' }} />
-    </Stack>
+    <View className="flex-1">
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(app)" options={{ headerShown: false }} />
+        <Stack.Screen name="+not-found" options={{ title: 'Oops!' }} />
+      </Stack>
+      {(showLoading || showError) && (
+        <View className="absolute inset-0 bg-background">
+          {showError ? (
+            <View className="flex-1 justify-center px-6 gap-4">
+              <Text className="text-foreground text-lg font-bold">Unable to load your profile</Text>
+              <Text className="text-muted-foreground">Check your connection and try again.</Text>
+              <Pressable accessibilityRole="button" onPress={() => void profile.refetch()}><Text className="text-primary font-bold">Try again</Text></Pressable>
+              <Pressable accessibilityRole="button" onPress={() => void signOut()}><Text className="text-foreground">Sign out</Text></Pressable>
+            </View>
+          ) : <LoadingScreen />}
+        </View>
+      )}
+    </View>
   );
 }
 
