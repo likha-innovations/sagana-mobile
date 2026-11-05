@@ -347,7 +347,7 @@ export default function SignInScreen() {
   };
 
   const handleRequestAccountPress = () => {
-    router.push('/(auth)/sign-up');
+    router.push('/(auth)/barangay-code');
   };
 
   return (

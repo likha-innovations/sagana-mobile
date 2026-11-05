@@ -1,5 +1,5 @@
-import { createContext, useContext, useCallback, useMemo, useEffect, type ReactNode } from 'react';
-import { useAuth, useUser, useSSO } from '@clerk/expo';
+import { createContext, useContext, useCallback, useMemo, useEffect, useState, type ReactNode } from 'react';
+import { useAuth, useClerk, useUser, useSSO } from '@clerk/expo';
 import { useSignIn, useSignUp } from '@clerk/expo/legacy';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
@@ -14,6 +14,7 @@ import {
 import { setAuthTokenGetter } from '@/lib/auth-token';
 import { disconnectSocket } from '@/lib/socket';
 import { createLogger } from '@/lib/logger';
+import { userApi } from '@/api/user.api';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -30,12 +31,14 @@ interface AuthContextType {
   isLoaded: boolean;
   user: User | null;
   clerkUser: any;
+  signupBarangay: { id: string; name: string; code: string } | null;
+  setSignupBarangay: (value: { id: string; name: string; code: string } | null) => void;
   getToken: () => Promise<string | null>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<GoogleAuthResult>;
   signUp: (email: string) => Promise<void>;
   verifyEmail: (code: string) => Promise<void>;
-  completeSignUp: (firstName: string, lastName: string, birthday: string, barangayId: string, barangayName: string, password?: string) => Promise<void>;
+  completeSignUp: (firstName: string, lastName: string, birthday: string, barangayId: string, barangayName: string, password?: string) => Promise<boolean>;
   requestPasswordReset: (email: string) => Promise<void>;
   verifyPasswordResetCode: (code: string) => Promise<void>;
   resetPassword: (codeOrNewPassword: string, maybeNewPassword?: string) => Promise<void>;
@@ -47,11 +50,13 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const clerk = useClerk();
   const { isSignedIn, isLoaded: authLoaded, signOut: clerkSignOut, getToken } = useAuth();
   const { user: clerkUser, isLoaded: userLoaded } = useUser();
   const { signIn: clerkSignIn, setActive: setSignInActive, isLoaded: signInLoaded } = useSignIn();
   const { signUp: clerkSignUp, setActive: setSignUpActive, isLoaded: signUpLoaded } = useSignUp();
   const { startSSOFlow } = useSSO();
+  const [signupBarangay, setSignupBarangay] = useState<{ id: string; name: string; code: string } | null>(null);
 
   // Warm up browser engine for fast OAuth presentation
   useEffect(() => {
@@ -286,6 +291,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const completeSignUp = useCallback(
     async (firstName: string, lastName: string, birthday: string, barangayId: string, barangayName: string, password?: string) => {
+      if (signupBarangay && signupBarangay.id !== barangayId) throw new Error('Barangay code required');
       const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
       const trimmedBirthday = birthday.trim();
       const trimmedBarangayId = barangayId.trim();
@@ -306,14 +312,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           },
         });
         logger.info('Profile confirmed and updated for', fullName);
-        router.replace('/(app)/(tabs)');
-        return;
+        if (signupBarangay) await userApi.assignBarangay(signupBarangay.code);
+        await userApi.updateProfile({ firstName: firstName.trim(), lastName: lastName.trim(), birthday: trimmedBirthday });
+        return true;
       }
 
       // If user is in standard sign-up flow before session is active
       if (clerkSignUp) {
-        try {
-          await clerkSignUp.update({
+        if (!signupBarangay) throw new Error('Barangay code required');
+        const attempt = await clerkSignUp.update({
             ...(password ? { password } : {}),
             firstName: firstName.trim(),
             lastName: lastName.trim(),
@@ -324,23 +331,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               barangayName: trimmedBarangayName,
             },
           });
-        } catch (e) {
-          logger.warn('Metadata update notice', e);
-        }
 
-        if (clerkSignUp.createdSessionId) {
-          await setSignUpActive({ session: clerkSignUp.createdSessionId });
-          router.replace('/(app)/(tabs)');
+        if (attempt.createdSessionId) {
+          await setSignUpActive({ session: attempt.createdSessionId });
+          const session = clerk.client?.sessions.find((item) => item.id === attempt.createdSessionId);
+          const token = await session?.getToken();
+          if (!token) throw new Error('Sign-in session is not ready');
+          await userApi.assignBarangay(signupBarangay.code, token);
+          await userApi.updateProfile({ firstName: firstName.trim(), lastName: lastName.trim(), birthday: trimmedBirthday }, token);
+          return true;
         } else {
+          setSignupBarangay(null);
           router.replace('/(auth)/sign-in');
+          return false;
         }
-        logger.info('Sign up completed for', fullName);
-        return;
       }
 
       throw new Error('No active user or sign-up flow found');
     },
-    [clerkUser, clerkSignUp, setSignUpActive, router]
+    [clerk, clerkUser, clerkSignUp, setSignUpActive, router, signupBarangay]
   );
 
   const signOut = useCallback(async () => {
@@ -348,6 +357,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logger.info('Signing out user');
       disconnectSocket();
       await clerkSignOut();
+      setSignupBarangay(null);
       router.replace('/(auth)/sign-in');
     } catch (err: unknown) {
       logger.error('Sign out error', err);
@@ -361,6 +371,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoaded,
       user,
       clerkUser,
+      signupBarangay,
+      setSignupBarangay,
       getToken,
       signIn,
       signInWithGoogle,
@@ -378,6 +390,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoaded,
       user,
       clerkUser,
+      signupBarangay,
       getToken,
       signIn,
       signInWithGoogle,

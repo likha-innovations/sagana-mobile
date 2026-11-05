@@ -10,13 +10,15 @@ import {
   Keyboard,
   TextInput,
   ActivityIndicator,
+  BackHandler,
   useWindowDimensions,
   type TextInputProps,
   type NativeSyntheticEvent,
   type TextInputKeyPressEventData,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import Animated, {
   useSharedValue,
@@ -25,17 +27,19 @@ import Animated, {
   interpolate,
   Easing,
 } from 'react-native-reanimated';
-import { BottomSheetModal, BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { ChevronLeft, Eye, EyeOff, X, Calendar } from 'lucide-react-native';
 import { GoogleIcon } from '@/components/icons';
 import { ErrorModal } from '@/components/ui/error-modal';
+import { ConfirmModal } from '@/components/ui/confirm-modal';
 import {
   PolicyBottomSheet,
   BirthdayBottomSheet,
   type BirthdayBottomSheetRef,
 } from '@/components/auth';
 import { useAuthContext } from '@/context/auth-context';
-import { useBarangays } from '@/hooks';
+import { userApi } from '@/api/user.api';
+import { ApiError } from '@/types';
 import { createLogger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 import { changeOtpCode } from '@/lib/otp-input';
@@ -316,6 +320,7 @@ type SignUpStep = 'email' | 'otp' | 'password' | 'name' | 'location';
 export default function SignUpScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { height: screenHeight } = useWindowDimensions();
   const isCompact = screenHeight < 720;
   const {
@@ -328,6 +333,8 @@ export default function SignUpScreen() {
     clerkUser,
     user,
     signOut,
+    signupBarangay,
+    setSignupBarangay,
   } = useAuthContext();
 
   const [step, setStep] = useState<SignUpStep>('email');
@@ -374,14 +381,11 @@ export default function SignUpScreen() {
     birthdaySheetRef.current?.present();
   }, []);
 
-  const [barangay, setBarangay] = useState('');
   const [barangayError, setBarangayError] = useState(false);
   const [barangayErrorMessage, setBarangayErrorMessage] = useState<string | null>(null);
-  const barangaySheetRef = useRef<BottomSheetModal>(null);
-
-  const { data: barangays = [], isLoading: isLoadingBarangays, isError: isErrorBarangays, refetch: refetchBarangays } = useBarangays();
-  const selectedBarangay = barangays.find(b => b.id === barangay);
-  const selectedBarangayName = selectedBarangay ? selectedBarangay.name : '';
+  const { data: profile } = useQuery({ queryKey: ['signup-profile', user?.id], queryFn: userApi.getProfile, enabled: !!isSignedIn && !!user?.id });
+  const barangay = signupBarangay?.id || profile?.barangayId || '';
+  const selectedBarangayName = signupBarangay?.name || (typeof profile?.barangay === 'object' ? profile.barangay?.name : profile?.barangay) || '';
 
   // Modals
   const [loading, setLoading] = useState(false);
@@ -389,6 +393,7 @@ export default function SignUpScreen() {
   const [policyType, setPolicyType] = useState<'tos' | 'privacy' | null>(null);
   const [emailTakenModal, setEmailTakenModal] = useState(false);
   const [generalErrorModal, setGeneralErrorModal] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
 
   // Prefill Google SSO user names and advance to 'name' step if birthday is not yet set
   useEffect(() => {
@@ -433,17 +438,21 @@ export default function SignUpScreen() {
     return () => clearInterval(timer);
   }, [step, resendCooldown]);
 
-  const handleBack = async () => {
+  const confirmExit = useCallback(() => setShowExitModal(true), []);
+
+  const returnToLogin = () => {
+    setShowExitModal(false);
+    setSignupBarangay(null);
+    if (isSignedIn) void signOut();
+    else router.replace('/(auth)/sign-in');
+  };
+
+  const handleBack = useCallback(async () => {
     if (step === 'location') {
       setStep('name');
     } else if (step === 'name') {
       if (isSignedIn) {
-        try {
-          await signOut();
-        } catch (e) {
-          logger.warn('Sign out on back press notice', e);
-        }
-        setStep('email');
+        confirmExit();
       } else {
         setStep('password');
       }
@@ -452,9 +461,14 @@ export default function SignUpScreen() {
     } else if (step === 'otp') {
       setStep('email');
     } else {
-      router.replace('/(auth)/sign-in');
+      confirmExit();
     }
-  };
+  }, [step, isSignedIn, confirmExit]);
+
+  useFocusEffect(useCallback(() => {
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => { void handleBack(); return true; });
+    return () => subscription.remove();
+  }, [handleBack]));
 
   // --- Step 1: Submit Email ---
   const handleNextEmail = async () => {
@@ -591,9 +605,9 @@ export default function SignUpScreen() {
     const trimmedFirst = firstName.trim();
     const trimmedLast = lastName.trim();
 
-    if (!trimmedFirst || !trimmedLast) {
+    if (trimmedFirst.length < 2 || trimmedLast.length < 2) {
       setNameError(true);
-      setNameErrorMessage('Please enter your full name');
+      setNameErrorMessage('Enter at least two characters for each name');
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
@@ -675,7 +689,7 @@ export default function SignUpScreen() {
 
     if (!barangay) {
       setBarangayError(true);
-      setBarangayErrorMessage('Please select your barangay');
+      setBarangayErrorMessage('Enter your barangay code to continue');
       hasErr = true;
     } else {
       setBarangayError(false);
@@ -693,12 +707,22 @@ export default function SignUpScreen() {
 
     try {
       if (isLoaded) {
-        await completeSignUp(firstName, lastName, formattedBirthday, barangay, selectedBarangayName, password || undefined);
+        const completed = await completeSignUp(firstName, lastName, formattedBirthday, barangay, selectedBarangayName, password || undefined);
+        if (completed) {
+          await queryClient.invalidateQueries({ queryKey: ['signup-profile'] });
+          setSignupBarangay(null);
+          router.replace('/(app)/(tabs)');
+        }
       } else {
         router.replace('/(auth)/sign-in');
       }
-    } catch {
-      setGeneralErrorModal(true);
+    } catch (error) {
+      if (error instanceof ApiError && error.statusCode === 400 && error.message.toLowerCase().includes('barangay code')) {
+        setSignupBarangay(null);
+        router.replace({ pathname: '/(auth)/barangay-code', params: { invalid: '1' } });
+      } else {
+        setGeneralErrorModal(true);
+      }
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setLoading(false);
@@ -1086,12 +1110,7 @@ export default function SignUpScreen() {
 
                   <View className="w-full gap-y-4">
                     <View className="w-full">
-                      <Pressable
-                        onPress={() => {
-                          Keyboard.dismiss();
-                          barangaySheetRef.current?.present();
-                        }}
-                      >
+                      <Pressable disabled>
                         <View pointerEvents="none">
                           <FloatingInputField
                             label="Barangay"
@@ -1194,68 +1213,6 @@ export default function SignUpScreen() {
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>
 
-      {/* Barangay Selection Bottom Sheet Modal */}
-      <BottomSheetModal
-        ref={barangaySheetRef}
-        snapPoints={['50%']}
-        enablePanDownToClose
-        backdropComponent={(props) => (
-          <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} pressBehavior="close" />
-        )}
-        backgroundStyle={{ backgroundColor: '#FAF9EE' }}
-        handleIndicatorStyle={{ backgroundColor: '#C8C7BE', width: 40 }}
-      >
-        <BottomSheetScrollView
-          contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
-          className="flex-1 pt-2"
-        >
-          {isLoadingBarangays ? (
-            <View className="py-8">
-              <ActivityIndicator size="small" color="#718619" />
-            </View>
-          ) : isErrorBarangays ? (
-            <View className="py-8 px-6 items-center">
-              <Text className="text-destructive font-sans text-center mb-4">
-                Failed to load barangays. Please check your connection.
-              </Text>
-              <Pressable
-                onPress={() => refetchBarangays()}
-                className="bg-primary px-6 py-2 rounded-full"
-              >
-                <Text className="text-primary-foreground font-semibold">Retry</Text>
-              </Pressable>
-            </View>
-          ) : barangays.length === 0 ? (
-            <View className="py-8 px-6 items-center">
-              <Text className="text-muted-foreground font-sans text-center">
-                No barangays found.
-              </Text>
-            </View>
-          ) : (
-            barangays.map((brgy) => {
-              const isSelected = barangay === brgy.id;
-              return (
-                <Pressable
-                  key={brgy.id}
-                  onPress={() => {
-                    setBarangay(brgy.id);
-                    setBarangayError(false);
-                    setBarangayErrorMessage(null);
-                    barangaySheetRef.current?.dismiss();
-                  }}
-                  className={cn(
-                    'py-3.5 px-6 w-full flex-row items-center',
-                    isSelected ? 'bg-[#EAE8DD]' : 'bg-transparent active:bg-secondary/20'
-                  )}
-                >
-                  <Text className="text-[14px] font-sans text-foreground">{brgy.name}</Text>
-                </Pressable>
-              );
-            })
-          )}
-        </BottomSheetScrollView>
-      </BottomSheetModal>
-
       {/* Terms of Service / Privacy Policy Gorhom Bottom Sheet Modal */}
       <PolicyBottomSheet
         ref={policySheetRef}
@@ -1274,6 +1231,16 @@ export default function SignUpScreen() {
         }}
       />
 
+
+      <ConfirmModal
+        visible={showExitModal}
+        title="Return to login?"
+        description="You will need to enter your barangay code again."
+        cancelText="Cancel"
+        confirmText="Go back"
+        onCancel={() => setShowExitModal(false)}
+        onConfirm={returnToLogin}
+      />
 
       {/* Duplicate Email Modal */}
       <ErrorModal
