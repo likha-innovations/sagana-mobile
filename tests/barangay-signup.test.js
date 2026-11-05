@@ -3,6 +3,13 @@ const path = require("node:path");
 const vm = require("node:vm");
 const ts = require("typescript");
 
+class ApiError extends Error {
+  constructor(statusCode, message) {
+    super(message);
+    this.statusCode = statusCode;
+  }
+}
+
 function setup({
   google = false,
   sessionId = "session-1",
@@ -13,6 +20,7 @@ function setup({
     .fn()
     .mockResolvedValue({ createdSessionId: sessionId });
   const setActive = jest.fn().mockResolvedValue(undefined);
+  const getSessionToken = jest.fn().mockResolvedValue("session-token");
   const setBarangay = jest.fn();
   const router = { replace: jest.fn() };
   const userApi = {
@@ -52,7 +60,7 @@ function setup({
           sessions: [
             {
               id: "session-1",
-              getToken: jest.fn().mockResolvedValue("session-token"),
+              getToken: getSessionToken,
             },
           ],
         },
@@ -69,7 +77,7 @@ function setup({
     "expo-web-browser": { maybeCompleteAuthSession: jest.fn() },
     "expo-linking": {},
     "expo-router": { useRouter: () => router },
-    "@/types": {},
+    "@/types": { ApiError },
     "@/lib/auth-token": { setAuthTokenGetter: jest.fn() },
     "@/lib/socket": { disconnectSocket: jest.fn() },
     "@/lib/logger": {
@@ -108,6 +116,10 @@ function setup({
     setActive,
     setBarangay,
     router,
+    getSessionToken,
+    InvalidBarangayCodeError: moduleRef.exports.InvalidBarangayCodeError,
+    MissingSignupRequirementsError:
+      moduleRef.exports.MissingSignupRequirementsError,
   };
 }
 
@@ -167,4 +179,116 @@ test("an incomplete email session clears the code before returning to login", as
   expect(setBarangay).toHaveBeenCalledWith(null);
   expect(router.replace).toHaveBeenCalledWith("/(auth)/sign-in");
   expect(userApi.assignBarangay).not.toHaveBeenCalled();
+});
+
+test("missing requirements preserve the signup and validated barangay", async () => {
+  const {
+    context,
+    updateSignUp,
+    setBarangay,
+    router,
+    MissingSignupRequirementsError,
+  } = setup();
+  updateSignUp.mockResolvedValue({
+    status: "missing_requirements",
+    createdSessionId: null,
+    missingFields: ["phone_number"],
+    unverifiedFields: [],
+  });
+  await expect(
+    context.completeSignUp(
+      "Juan",
+      "Cruz",
+      "01/01/2000",
+      "b1",
+      "Barangay 1",
+      "password",
+    ),
+  ).rejects.toBeInstanceOf(MissingSignupRequirementsError);
+  expect(setBarangay).not.toHaveBeenCalled();
+  expect(router.replace).not.toHaveBeenCalled();
+});
+
+test.each(["assignBarangay", "updateProfile"])(
+  "refreshes the same session once after a 401 on %s",
+  async (method) => {
+    const { context, userApi, getSessionToken } = setup();
+    getSessionToken
+      .mockResolvedValueOnce("session-token")
+      .mockResolvedValueOnce("fresh-token");
+    userApi[method]
+      .mockRejectedValueOnce(new ApiError(401, "expired"))
+      .mockResolvedValueOnce({});
+    await expect(
+      context.completeSignUp(
+        "Juan",
+        "Cruz",
+        "01/01/2000",
+        "b1",
+        "Barangay 1",
+        "password",
+      ),
+    ).resolves.toBe(true);
+    expect(getSessionToken).toHaveBeenLastCalledWith({ skipCache: true });
+    expect(userApi[method].mock.calls[1][1]).toBe("fresh-token");
+  },
+);
+
+test("does not retry non-401 writes or a failed refresh", async () => {
+  const first = setup();
+  first.userApi.assignBarangay.mockRejectedValue(new ApiError(500, "server"));
+  await expect(
+    first.context.completeSignUp(
+      "Juan",
+      "Cruz",
+      "01/01/2000",
+      "b1",
+      "Barangay 1",
+    ),
+  ).rejects.toThrow("server");
+  expect(first.getSessionToken).toHaveBeenCalledTimes(1);
+  const second = setup();
+  second.userApi.assignBarangay.mockRejectedValue(new ApiError(401, "expired"));
+  second.getSessionToken
+    .mockResolvedValueOnce("session-token")
+    .mockResolvedValueOnce(null);
+  await expect(
+    second.context.completeSignUp(
+      "Juan",
+      "Cruz",
+      "01/01/2000",
+      "b1",
+      "Barangay 1",
+    ),
+  ).rejects.toThrow("expired");
+  expect(second.userApi.assignBarangay).toHaveBeenCalledTimes(1);
+});
+
+test("only an assignment 400 is identified as an invalid code", async () => {
+  const flow = setup();
+  flow.userApi.assignBarangay.mockRejectedValue(
+    new ApiError(400, "changed wording"),
+  );
+  await expect(
+    flow.context.completeSignUp(
+      "Juan",
+      "Cruz",
+      "01/01/2000",
+      "b1",
+      "Barangay 1",
+    ),
+  ).rejects.toBeInstanceOf(flow.InvalidBarangayCodeError);
+  const other = setup();
+  other.userApi.updateProfile.mockRejectedValue(
+    new ApiError(400, "bad profile"),
+  );
+  await expect(
+    other.context.completeSignUp(
+      "Juan",
+      "Cruz",
+      "01/01/2000",
+      "b1",
+      "Barangay 1",
+    ),
+  ).rejects.toThrow("bad profile");
 });

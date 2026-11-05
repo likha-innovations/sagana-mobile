@@ -65,7 +65,7 @@ export default function EditProfileScreen() {
   const initialLastName = parts.length > 1 ? parts.slice(1).join(' ') : '';
   
   // Resolve barangay ID from potentially complex object
-  let initialBarangayId = '';
+  let initialBarangayId = profile?.barangayId || '';
   if (profile?.barangay) {
     if (typeof profile.barangay === 'object' && profile.barangay.id) {
       initialBarangayId = profile.barangay.id;
@@ -103,7 +103,7 @@ export default function EditProfileScreen() {
             ? profile.barangay.id
             : typeof profile.barangay === 'string'
               ? profile.barangay
-              : '',
+              : profile.barangayId || '',
       });
     }
   }, [profile, reset]);

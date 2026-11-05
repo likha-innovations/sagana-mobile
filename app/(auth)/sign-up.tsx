@@ -37,9 +37,9 @@ import {
   BirthdayBottomSheet,
   type BirthdayBottomSheetRef,
 } from '@/components/auth';
-import { useAuthContext } from '@/context/auth-context';
+import { useAuthContext, InvalidBarangayCodeError, MissingSignupRequirementsError } from '@/context/auth-context';
+import { barangayApi } from '@/api/barangays.api';
 import { userApi } from '@/api/user.api';
-import { ApiError } from '@/types';
 import { createLogger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
 import { changeOtpCode } from '@/lib/otp-input';
@@ -388,7 +388,9 @@ export default function SignUpScreen() {
   const [barangayErrorMessage, setBarangayErrorMessage] = useState<string | null>(null);
   const { data: profile } = useQuery({ queryKey: ['signup-profile', user?.id], queryFn: userApi.getProfile, enabled: !!isSignedIn && !!user?.id });
   const barangay = signupBarangay?.id || profile?.barangayId || '';
-  const selectedBarangayName = signupBarangay?.name || (typeof profile?.barangay === 'object' ? profile.barangay?.name : profile?.barangay) || '';
+  const profileBarangayName = typeof profile?.barangay === 'object' ? profile.barangay?.name : profile?.barangay;
+  const barangayLookup = useQuery({ queryKey: ['barangays'], queryFn: barangayApi.getBarangays, enabled: !!profile?.barangayId && !signupBarangay && !profileBarangayName, retry: 1 });
+  const selectedBarangayName = signupBarangay?.name || profileBarangayName || barangayLookup.data?.find((item) => item.id === profile?.barangayId)?.name || '';
 
   // Modals
   const [loading, setLoading] = useState(false);
@@ -699,6 +701,12 @@ export default function SignUpScreen() {
       setBarangayErrorMessage(null);
     }
 
+    if (barangay && !selectedBarangayName) {
+      setBarangayError(true);
+      setBarangayErrorMessage(barangayLookup.isLoading ? 'Loading your barangay. Please wait.' : 'Unable to load your barangay. Try again.');
+      if (barangayLookup.isError) void barangayLookup.refetch();
+      hasErr = true;
+    }
     if (hasErr) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
@@ -720,9 +728,13 @@ export default function SignUpScreen() {
         router.replace('/(auth)/sign-in');
       }
     } catch (error) {
-      if (error instanceof ApiError && error.statusCode === 400 && error.message.toLowerCase().includes('barangay code')) {
+      if (error instanceof InvalidBarangayCodeError) {
         setSignupBarangay(null);
         router.replace({ pathname: '/(auth)/barangay-code', params: { invalid: '1' } });
+      } else if (error instanceof MissingSignupRequirementsError) {
+        const fields = [...error.missingFields, ...error.unverifiedFields].map((field) => field.replace(/_/g, ' '));
+        setBarangayError(true);
+        setBarangayErrorMessage(fields.length ? `Account requires: ${fields.join(', ')}. Contact support to finish signup.` : 'Account setup is incomplete. Contact support to finish signup.');
       } else {
         setGeneralErrorModal(true);
       }

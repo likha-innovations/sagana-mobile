@@ -6,6 +6,7 @@ import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import {
   User,
+  ApiError,
   signInSchema,
   verifyCodeSchema,
   resetPasswordRequestSchema,
@@ -24,6 +25,13 @@ export interface GoogleAuthResult {
   isNewUserOrIncomplete: boolean;
   firstName?: string;
   lastName?: string;
+}
+
+export class InvalidBarangayCodeError extends Error {}
+export class MissingSignupRequirementsError extends Error {
+  constructor(readonly missingFields: string[], readonly unverifiedFields: string[]) {
+    super('Additional signup requirements must be completed');
+  }
 }
 
 interface AuthContextType {
@@ -312,7 +320,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           },
         });
         logger.info('Profile confirmed and updated for', fullName);
-        if (signupBarangay) await userApi.assignBarangay(signupBarangay.code);
+        if (signupBarangay) {
+          try { await userApi.assignBarangay(signupBarangay.code); }
+          catch (error) {
+            if (error instanceof ApiError && error.statusCode === 400) throw new InvalidBarangayCodeError();
+            throw error;
+          }
+        }
         await userApi.updateProfile({ firstName: firstName.trim(), lastName: lastName.trim(), birthday: trimmedBirthday });
         return true;
       }
@@ -337,10 +351,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const session = clerk.client?.sessions.find((item) => item.id === attempt.createdSessionId);
           const token = await session?.getToken();
           if (!token) throw new Error('Sign-in session is not ready');
-          await userApi.assignBarangay(signupBarangay.code, token);
-          await userApi.updateProfile({ firstName: firstName.trim(), lastName: lastName.trim(), birthday: trimmedBirthday }, token);
+          const withSessionRetry = async <T,>(write: (sessionToken: string) => Promise<T>) => {
+            try { return await write(token); }
+            catch (error) {
+              if (!(error instanceof ApiError) || error.statusCode !== 401) throw error;
+              const freshToken = await session?.getToken({ skipCache: true });
+              if (!freshToken) throw error;
+              return write(freshToken);
+            }
+          };
+          try { await withSessionRetry((sessionToken) => userApi.assignBarangay(signupBarangay.code, sessionToken)); }
+          catch (error) {
+            if (error instanceof ApiError && error.statusCode === 400) throw new InvalidBarangayCodeError();
+            throw error;
+          }
+          await withSessionRetry((sessionToken) => userApi.updateProfile({ firstName: firstName.trim(), lastName: lastName.trim(), birthday: trimmedBirthday }, sessionToken));
           return true;
         } else {
+          if (attempt.status === 'missing_requirements') {
+            throw new MissingSignupRequirementsError(attempt.missingFields, attempt.unverifiedFields);
+          }
           setSignupBarangay(null);
           router.replace('/(auth)/sign-in');
           return false;
