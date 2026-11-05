@@ -3,10 +3,9 @@ const path = require("node:path");
 const vm = require("node:vm");
 const ts = require("typescript");
 
-function setup(signedIn = false) {
-  const states = ["ABC123"];
+function setup(signedIn = false, code = "ABC123") {
+  const states = [code];
   let stateIndex = 0;
-  const effects = [];
   const router = { replace: jest.fn() };
   const setSignupBarangay = jest.fn();
   const assignBarangay = jest.fn().mockResolvedValue({});
@@ -27,7 +26,6 @@ function setup(signedIn = false) {
         },
       ];
     },
-    useEffect: (callback) => effects.push(callback),
     useCallback: (callback) => callback,
     useRef: (value) => ({ current: value }),
   };
@@ -44,8 +42,11 @@ function setup(signedIn = false) {
       useLocalSearchParams: () => ({}),
       useRouter: () => router,
     },
-    "react-native-safe-area-context": {
-      useSafeAreaInsets: () => ({ top: 0, bottom: 0 }),
+    "@/hooks/use-layout": {
+      useDynamicLayout: () => ({
+        insets: { top: 0, bottom: 0 },
+        stackScrollPadding: 40,
+      }),
     },
     "@tanstack/react-query": {
       useQueryClient: () => ({
@@ -84,18 +85,27 @@ function setup(signedIn = false) {
       require: (name) => deps[name],
     },
   );
-  function render() {
+  function renderRoot() {
     stateIndex = 0;
-    const root = moduleRef.exports.default();
+    return moduleRef.exports.default();
+  }
+  function render() {
+    const root = renderRoot();
     return root.props.children.find(
       (child) =>
         child?.type === confirmModal &&
         child.props.title === "Barangay confirmed",
     ).props;
   }
+  function action() {
+    const children = renderRoot().props.children[0].props.children;
+    return children.find((child) => child?.props?.className === "mt-auto pt-6")
+      .props.children.props;
+  }
   return {
     render,
-    effects,
+    renderRoot,
+    action,
     router,
     setSignupBarangay,
     assignBarangay,
@@ -107,8 +117,8 @@ test.each([false, true])(
   "valid code requires confirmation before continuing (signed in: %s)",
   async (signedIn) => {
     const flow = setup(signedIn);
-    flow.render();
-    flow.effects[0]();
+    expect(flow.validateCode).not.toHaveBeenCalled();
+    flow.action().onPress();
     await new Promise(setImmediate);
     expect(flow.validateCode).toHaveBeenCalledWith("ABC123");
     expect(flow.router.replace).not.toHaveBeenCalled();
@@ -133,11 +143,48 @@ test.each([false, true])(
 
 test("changing the code dismisses the confirmation without proceeding", async () => {
   const flow = setup();
-  flow.render();
-  flow.effects[0]();
+  flow.action().onPress();
   await new Promise(setImmediate);
   flow.render().onCancel();
   expect(flow.render().visible).toBe(false);
   expect(flow.router.replace).not.toHaveBeenCalled();
   expect(flow.setSignupBarangay).not.toHaveBeenCalled();
+});
+
+test("a failed code check can be retried without changing the code", async () => {
+  const flow = setup();
+  flow.validateCode.mockRejectedValueOnce(new Error("offline"));
+  expect(flow.action().children.props.children).toBe("Next");
+  flow.action().onPress();
+  await new Promise(setImmediate);
+  expect(flow.action().children.props.children).toBe("Try again");
+  flow.action().onPress();
+  await new Promise(setImmediate);
+  expect(flow.validateCode).toHaveBeenCalledTimes(2);
+  expect(flow.validateCode).toHaveBeenLastCalledWith("ABC123");
+  expect(flow.render().visible).toBe(true);
+});
+
+test("incomplete codes cannot be submitted", () => {
+  const flow = setup(false, "ABC");
+  expect(flow.action().disabled).toBe(true);
+  flow.action().onPress();
+  expect(flow.validateCode).not.toHaveBeenCalled();
+});
+
+test("the action remains disabled while validation is pending", async () => {
+  const flow = setup();
+  let finish;
+  flow.validateCode.mockReturnValueOnce(
+    new Promise((resolve) => {
+      finish = resolve;
+    }),
+  );
+  flow.action().onPress();
+  expect(flow.action().disabled).toBe(true);
+  flow.action().onPress();
+  expect(flow.validateCode).toHaveBeenCalledTimes(1);
+  finish({ id: "b1", name: "Barangay One" });
+  await new Promise(setImmediate);
+  expect(flow.render().visible).toBe(true);
 });

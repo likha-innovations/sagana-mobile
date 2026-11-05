@@ -1,7 +1,7 @@
-export function changeOtpCode(code: string, text: string, index: number): string {
+export function changeOtpCode(code: string, text: string, index: number, selection?: { start: number; end: number }): string {
   let digits = text.replace(/[^0-9]/g, '');
   const previous = code[index]?.trim();
-  if (previous && digits.length > 1 && digits.length !== 6) {
+  if (previous && digits.length > 1 && digits.length !== 6 && !(selection && selection.start !== selection.end)) {
     if (digits.startsWith(previous)) digits = digits.slice(1);
     else if (digits.endsWith(previous)) digits = digits.slice(0, -1);
   }

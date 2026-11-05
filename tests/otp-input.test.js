@@ -20,3 +20,8 @@ test("pastes numeric codes across fields and filters non-digits", () => {
   expect(changeOtpCode("", "01a2 345", 0)).toBe("012345");
   expect(changeOtpCode("123456", "89", 1)).toBe("189456");
 });
+
+test("preserves repeated digits pasted over a selected digit", () => {
+  expect(changeOtpCode("1", "11", 0, { start: 0, end: 1 })).toBe("11");
+  expect(changeOtpCode("1", "11", 0, { start: 1, end: 1 })).toBe("1");
+});

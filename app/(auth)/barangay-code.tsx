@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
   BackHandler,
@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useDynamicLayout } from "@/hooks/use-layout";
 import { useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft } from "lucide-react-native";
 import {
@@ -35,7 +35,7 @@ import {
 export default function BarangayCodeScreen() {
   const router = useRouter();
   const { invalid } = useLocalSearchParams<{ invalid?: string }>();
-  const insets = useSafeAreaInsets();
+  const { insets, stackScrollPadding } = useDynamicLayout();
   const { height } = useWindowDimensions();
   const queryClient = useQueryClient();
   const { isSignedIn, user, signOut, setSignupBarangay } = useAuthContext();
@@ -48,6 +48,7 @@ export default function BarangayCodeScreen() {
   const [whyOpen, setWhyOpen] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
   const inputs = useRef<(TextInput | null)[]>([]);
+  const selections = useRef<({ start: number; end: number } | undefined)[]>([]);
   const whySheet = useRef<BottomSheetModal>(null);
   const renderBackdrop = useCallback(
     (props: BottomSheetBackdropProps) => (
@@ -88,35 +89,26 @@ export default function BarangayCodeScreen() {
     }, [exit, whyOpen]),
   );
 
-  useEffect(() => {
-    if (!isCompleteBarangayCode(code)) return;
-    let active = true;
+  const validateCode = async () => {
+    if (!isCompleteBarangayCode(code) || loading) return;
     setLoading(true);
     setError("");
-    void (async () => {
-      try {
-        const barangay = await barangayApi.validateCode(code);
-        if (!active) return;
-        Keyboard.dismiss();
-        setMatchedBarangay(barangay);
-      } catch (error) {
-        if (active) {
-          setError(
-            error instanceof ApiError && error.statusCode === 400
-              ? "The code is not recognized"
-              : error instanceof ApiError && error.statusCode === 429
-                ? "Too many attempts. Please wait and try again."
-                : "Unable to check the code. Check your connection and try again.",
-          );
-        }
-      } finally {
-        if (active) setLoading(false);
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [code]);
+    try {
+      const barangay = await barangayApi.validateCode(code);
+      Keyboard.dismiss();
+      setMatchedBarangay(barangay);
+    } catch (error) {
+      setError(
+        error instanceof ApiError && error.statusCode === 400
+          ? "The code is not recognized"
+          : error instanceof ApiError && error.statusCode === 429
+            ? "Too many attempts. Please wait and try again."
+            : "Unable to check the code. Check your connection and try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const continueWithBarangay = async () => {
     if (!matchedBarangay || loading) return;
@@ -148,13 +140,14 @@ export default function BarangayCodeScreen() {
 
   const changeCharacter = (text: string, index: number) => {
     const cleaned = text.toUpperCase().replace(/[^A-Z0-9]/g, "");
-    const nextCode = changeBarangayCode(code, text, index);
+    const nextCode = changeBarangayCode(code, text, index, selections.current[index]);
     setError("");
     setCode(nextCode);
     if (cleaned.length >= 6) inputs.current[5]?.focus();
     else if (cleaned && index < 5) {
       const previous = code[index]?.trim();
-      const replacing = previous && cleaned.length > 1 &&
+      const selection = selections.current[index];
+      const replacing = previous && cleaned.length > 1 && !(selection && selection.start !== selection.end) &&
         (cleaned.startsWith(previous) || cleaned.endsWith(previous));
       inputs.current[
         Math.min(index + cleaned.length - (replacing ? 1 : 0), 5)
@@ -166,7 +159,7 @@ export default function BarangayCodeScreen() {
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       className="flex-1 bg-background"
-      style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+      style={{ paddingTop: insets.top }}
     >
       <View className="flex-1 px-6 pt-5">
         <Pressable
@@ -188,7 +181,7 @@ export default function BarangayCodeScreen() {
           {Array.from({ length: 6 }, (_, index) => (
             <View
               key={index}
-              className={`flex-1 h-14 rounded-xl border bg-card ${error === "The code is not recognized" ? "border-destructive" : "border-border"}`}
+              className={`flex-1 h-14 rounded-xl border bg-card ${error === "The code is not recognized" ? "border-destructive" : code[index]?.trim() ? "border-foreground/50" : "border-input"}`}
             >
             <TextInput
               ref={(ref) => {
@@ -196,6 +189,7 @@ export default function BarangayCodeScreen() {
               }}
               value={code[index]?.trim() ?? ""}
               onChangeText={(text) => changeCharacter(text, index)}
+              onSelectionChange={(event) => { selections.current[index] = event.nativeEvent.selection; }}
               onKeyPress={(event) => {
                 if (
                   event.nativeEvent.key === "Backspace" &&
@@ -210,10 +204,10 @@ export default function BarangayCodeScreen() {
               autoCapitalize="characters"
               autoCorrect={false}
               style={{ color: "transparent" }}
-              caretHidden
+              caretHidden={Platform.OS !== "android"}
               editable={!loading}
               accessibilityLabel={`Barangay code character ${index + 1} of 6`}
-              className="h-full w-full text-center text-xl font-bold"
+              className="h-full w-full text-center text-xl font-bold text-foreground"
             />
             <View pointerEvents="none" className="absolute inset-0 items-center justify-center">
               <Text accessible={false} className="text-xl font-bold text-foreground">
@@ -231,7 +225,6 @@ export default function BarangayCodeScreen() {
             {error}
           </Text>
         )}
-        {loading && <ActivityIndicator className="mt-3" />}
         <Pressable
           accessibilityRole="button"
           onPress={() => {
@@ -245,6 +238,23 @@ export default function BarangayCodeScreen() {
             Why do we do this?
           </Text>
         </Pressable>
+        <View className="mt-auto pt-6" style={{ paddingBottom: stackScrollPadding }}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: loading || !isCompleteBarangayCode(code), busy: loading }}
+            onPress={() => void validateCode()}
+            disabled={loading || !isCompleteBarangayCode(code)}
+            className="w-full h-[50px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+          >
+            {loading ? (
+              <ActivityIndicator color="#FAF9EE" size="small" />
+            ) : (
+              <Text className="text-[15px] font-bold text-primary-foreground">
+                {error ? "Try again" : "Next"}
+              </Text>
+            )}
+          </Pressable>
+        </View>
       </View>
       <ConfirmModal
         visible={!!matchedBarangay}

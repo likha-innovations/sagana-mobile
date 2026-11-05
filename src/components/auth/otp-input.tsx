@@ -11,15 +11,17 @@ interface OtpInputGroupProps {
 
 export function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupProps) {
   const inputRefs = useRef<(TextInput | null)[]>([]);
+  const selections = useRef<({ start: number; end: number } | undefined)[]>([]);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
   const handleCharChange = (text: string, index: number) => {
     const cleaned = text.replace(/[^0-9]/g, '');
     if (cleaned.length > 0) {
-      onChangeCode(changeOtpCode(code, text, index));
+      onChangeCode(changeOtpCode(code, text, index, selections.current[index]));
 
       const previous = code[index]?.trim();
-      const replacing = previous && cleaned.length > 1 &&
+      const selection = selections.current[index];
+      const replacing = previous && cleaned.length > 1 && !(selection && selection.start !== selection.end) &&
         (cleaned.startsWith(previous) || cleaned.endsWith(previous));
       inputRefs.current[cleaned.length >= 6 ? 5 : Math.min(index + cleaned.length - (replacing ? 1 : 0), 5)]?.focus();
     }
@@ -53,6 +55,7 @@ export function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInput
             }}
             value={digit}
             onChangeText={(text) => handleCharChange(text, index)}
+            onSelectionChange={(event) => { selections.current[index] = event.nativeEvent.selection; }}
             onKeyPress={(e) => handleKeyPress(e, index)}
             onFocus={() => setFocusedIndex(index)}
             onBlur={() => setFocusedIndex(null)}

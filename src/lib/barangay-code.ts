@@ -6,10 +6,11 @@ export function changeBarangayCode(
   code: string,
   text: string,
   index: number,
+  selection?: { start: number; end: number },
 ): string {
   let cleaned = text.toUpperCase().replace(/[^A-Z0-9]/g, "");
   const previous = code[index]?.trim();
-  if (previous && cleaned.length > 1 && cleaned.length !== 6) {
+  if (previous && cleaned.length > 1 && cleaned.length !== 6 && !(selection && selection.start !== selection.end)) {
     if (cleaned.startsWith(previous)) cleaned = cleaned.slice(1);
     else if (cleaned.endsWith(previous)) cleaned = cleaned.slice(0, -1);
   }

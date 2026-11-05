@@ -248,14 +248,16 @@ interface OtpInputGroupProps {
 
 function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupProps) {
   const inputRefs = useRef<(TextInput | null)[]>([]);
+  const selections = useRef<({ start: number; end: number } | undefined)[]>([]);
 
   const handleCharChange = (text: string, index: number) => {
     const cleaned = text.replace(/[^0-9]/g, '');
     if (cleaned.length > 0) {
-      onChangeCode(changeOtpCode(code, text, index));
+      onChangeCode(changeOtpCode(code, text, index, selections.current[index]));
 
       const previous = code[index]?.trim();
-      const replacing = previous && cleaned.length > 1 &&
+      const selection = selections.current[index];
+      const replacing = previous && cleaned.length > 1 && !(selection && selection.start !== selection.end) &&
         (cleaned.startsWith(previous) || cleaned.endsWith(previous));
       inputRefs.current[cleaned.length >= 6 ? 5 : Math.min(index + cleaned.length - (replacing ? 1 : 0), 5)]?.focus();
     }
@@ -288,6 +290,7 @@ function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupPr
             }}
             value={digit}
             onChangeText={(text) => handleCharChange(text, index)}
+            onSelectionChange={(event) => { selections.current[index] = event.nativeEvent.selection; }}
             onKeyPress={(e) => handleKeyPress(e, index)}
             keyboardType="number-pad"
             accessibilityLabel={`One-time code digit ${index + 1} of 6`}
