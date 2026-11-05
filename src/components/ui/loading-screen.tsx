@@ -1,30 +1,45 @@
-import { ActivityIndicator, Image, Text, View } from "react-native";
-import { colors } from "@/constants";
+import { useEffect } from "react";
+import { View } from "react-native";
+import Animated, {
+  cancelAnimation,
+  Easing,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 
 export function LoadingScreen() {
+  const scale = useSharedValue(1);
+  const reduceMotion = useReducedMotion();
+  const animatedStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+
+  useEffect(() => {
+    if (!reduceMotion) {
+      scale.value = withRepeat(
+        withTiming(1.08, { duration: 900, easing: Easing.inOut(Easing.ease) }),
+        -1,
+        true,
+      );
+    }
+    return () => cancelAnimation(scale);
+  }, [reduceMotion, scale]);
+
   return (
-    <View className="flex-1 items-center justify-center bg-background px-8">
-      <View
-        accessibilityRole="progressbar"
-        accessibilityLabel="Connecting to Sagana"
-        accessibilityState={{ busy: true }}
-        className="w-full max-w-[320px] items-center gap-3 rounded-[14px] bg-brand-50 px-6 py-8"
-      >
-        <Image
-          source={require("../../../assets/sagana_logo.png")}
-          accessibilityIgnoresInvertColors
-          accessible={false}
-          resizeMode="contain"
-          style={{ width: 76, height: 76 }}
-        />
-        <Text className="text-lg font-bold text-foreground text-center">
-          Connecting to Sagana
-        </Text>
-        <Text className="text-sm font-sans text-foreground text-center">
-          This may take a moment.
-        </Text>
-        <ActivityIndicator color={colors.brand[700]} />
-      </View>
+    <View
+      className="flex-1 items-center justify-center bg-background"
+      accessibilityRole="progressbar"
+      accessibilityLabel="Loading Sagana"
+      accessibilityState={{ busy: true }}
+    >
+      <Animated.Image
+        source={require("../../../assets/sagana_logo.png")}
+        accessibilityIgnoresInvertColors
+        accessible={false}
+        resizeMode="contain"
+        style={[{ width: 96, height: 96 }, animatedStyle]}
+      />
     </View>
   );
 }
