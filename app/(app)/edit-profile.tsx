@@ -12,7 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, Calendar, Check, Pencil, ChevronDown } from 'lucide-react-native';
+import { ChevronLeft, Calendar, Check, Pencil } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import {
   BottomSheetModal,
@@ -111,11 +111,6 @@ export default function EditProfileScreen() {
   const selectedBarangayId = watch('barangayId');
   const selectedBarangay = barangays.find((b) => b.id === selectedBarangayId);
   const selectedBarangayName = selectedBarangay?.name || '';
-
-  const handlePresentModalPress = useCallback(() => {
-    Keyboard.dismiss();
-    bottomSheetModalRef.current?.present();
-  }, []);
 
   const handleCloseModal = useCallback(() => {
     bottomSheetModalRef.current?.dismiss();
@@ -290,8 +285,8 @@ export default function EditProfileScreen() {
                 name="barangayId"
                 render={({ field: { value } }) => (
                   <TouchableOpacity
-                    activeOpacity={isEditing ? 0.8 : 1}
-                    onPress={isEditing ? handlePresentModalPress : undefined}
+                    disabled
+                    activeOpacity={1}
                   >
                     <View pointerEvents="none">
                       <Input
@@ -299,7 +294,6 @@ export default function EditProfileScreen() {
                         placeholder="Select barangay"
                         value={selectedBarangayName}
                         error={errors.barangayId?.message}
-                        trailingIcon={<ChevronDown size={20} color="#AFAEA7" />}
                         editable={false}
                       />
                     </View>
