@@ -5,7 +5,10 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
 import { ClerkProvider, ClerkLoaded, ClerkLoading } from '@clerk/expo';
-import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
+import { View, Text, Pressable } from 'react-native';
+import { userApi } from '@/api/user.api';
+import { signupDestination } from '@/lib/barangay-code';
 import { useFonts } from 'expo-font';
 import { tokenCache } from '@/lib/token-cache';
 import { AuthProvider, useAuthContext } from '@/context/auth-context';
@@ -29,10 +32,11 @@ if (!publishableKey) {
 }
 
 function AuthProtectedNavigation() {
-  const { isSignedIn, isLoaded, user } = useAuthContext();
+  const { isSignedIn, isLoaded, user, signupBarangay, signOut } = useAuthContext();
   const segments = useSegments();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const profile = useQuery({ queryKey: ['signup-profile', user?.id], queryFn: userApi.getProfile, enabled: !!isSignedIn && !!user?.id, retry: 1 });
 
   useEffect(() => {
     if (segments.length > 0) {
@@ -45,35 +49,57 @@ function AuthProtectedNavigation() {
     
     // Clerk updates `isSignedIn` immediately, but `user` (clerkUser) might take a tick to fetch.
     // Wait until the user object is fully loaded before making routing decisions.
-    if (isSignedIn && !user) return;
+    if (isSignedIn && (!user || profile.isLoading || profile.isError)) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    const hasCompleteProfile = Boolean(user?.birthday);
+    const destination = signupDestination(Boolean(profile.data?.barangayId), Boolean(user?.birthday), Boolean(signupBarangay));
 
-    if (!isSignedIn && !inAuthGroup) {
-      authGateLogger.info('Unauthenticated user redirected to sign-in');
-      queryClient.clear();
-      router.replace('/(auth)/sign-in');
-    } else if (isSignedIn && hasCompleteProfile) {
+    if (!isSignedIn) {
+      queryClient.removeQueries({ queryKey: ['signup-profile'] });
+      if (!inAuthGroup) {
+        authGateLogger.info('Unauthenticated user redirected to sign-in');
+        queryClient.clear();
+        router.replace('/(auth)/sign-in');
+      }
+    } else if (isSignedIn && destination === 'code') {
+      if (!inAuthGroup || segments.at(1) !== 'barangay-code') router.replace('/(auth)/barangay-code');
+    } else if (isSignedIn && destination === 'app') {
       if (inAuthGroup) {
         authGateLogger.info('Authenticated user with complete profile redirected to app tabs');
         router.replace('/(app)/(tabs)');
       }
-    } else if (isSignedIn && !hasCompleteProfile) {
+    } else if (isSignedIn && destination === 'signup') {
       const isAlreadyOnSignUp = segments[0] === '(auth)' && segments.at(1) === 'sign-up';
       if (!isAlreadyOnSignUp) {
         authGateLogger.info('Authenticated user without complete profile redirected to sign-up to complete onboarding');
         router.replace('/(auth)/sign-up');
       }
     }
-  }, [isSignedIn, isLoaded, user, segments, router, queryClient]);
+  }, [isSignedIn, isLoaded, user, segments, router, queryClient, profile.data, profile.isLoading, profile.isError, signupBarangay]);
+
+  const showLoading = isSignedIn && (!user || profile.isLoading || !profile.data?.barangayId) && segments[0] !== '(auth)';
+  const showError = isSignedIn && profile.isError;
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="(app)" options={{ headerShown: false }} />
-      <Stack.Screen name="+not-found" options={{ title: 'Oops!' }} />
-    </Stack>
+    <View className="flex-1">
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(app)" options={{ headerShown: false }} />
+        <Stack.Screen name="+not-found" options={{ title: 'Oops!' }} />
+      </Stack>
+      {(showLoading || showError) && (
+        <View className="absolute inset-0 bg-background">
+          {showError ? (
+            <View className="flex-1 justify-center px-6 gap-4">
+              <Text className="text-foreground text-lg font-bold">Unable to load your profile</Text>
+              <Text className="text-muted-foreground">Check your connection and try again.</Text>
+              <Pressable accessibilityRole="button" onPress={() => void profile.refetch()}><Text className="text-primary font-bold">Try again</Text></Pressable>
+              <Pressable accessibilityRole="button" onPress={() => void signOut()}><Text className="text-foreground">Sign out</Text></Pressable>
+            </View>
+          ) : <LoadingScreen />}
+        </View>
+      )}
+    </View>
   );
 }
 

@@ -10,6 +10,7 @@ export const userSchema = z.object({
   email: z.string().email('Invalid email address'),
   contactNumber: z.string().nullable().optional(),
   barangayId: z.string().nullable().optional(),
+  verificationStatus: z.enum(['verified', 'unverified', 'rejected']).optional(),
   barangay: z.union([
     z.string(),
     z.object({ id: z.string(), name: z.string() })
