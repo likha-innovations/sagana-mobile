@@ -1,4 +1,4 @@
-import { createContext, useContext, useCallback, useMemo, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useCallback, useMemo, useEffect, useState, useRef, type ReactNode } from 'react';
 import { useAuth, useClerk, useUser, useSSO } from '@clerk/expo';
 import { useSignIn, useSignUp } from '@clerk/expo/legacy';
 import * as WebBrowser from 'expo-web-browser';
@@ -13,6 +13,7 @@ import {
   resetPasswordConfirmSchema,
 } from '@/types';
 import { setAuthTokenGetter } from '@/lib/auth-token';
+import { setUnauthorizedHandler } from '@/api/client';
 import { disconnectSocket } from '@/lib/socket';
 import { createLogger } from '@/lib/logger';
 import { userApi } from '@/api/user.api';
@@ -382,7 +383,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [clerk, clerkUser, clerkSignUp, setSignUpActive, router, signupBarangay]
   );
 
+  const isSigningOutRef = useRef(false);
+
   const signOut = useCallback(async () => {
+    if (isSigningOutRef.current) return;
+    isSigningOutRef.current = true;
     try {
       logger.info('Signing out user');
       disconnectSocket();
@@ -392,8 +397,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (err: unknown) {
       logger.error('Sign out error', err);
       throw err;
+    } finally {
+      isSigningOutRef.current = false;
     }
   }, [clerkSignOut, router]);
+
+  // Handle genuine 401 Unauthorized responses across all background/foreground queries
+  useEffect(() => {
+    setUnauthorizedHandler(async () => {
+      logger.warn('Session expired or revoked on backend (401). Signing out user.');
+      await signOut();
+    });
+    return () => {
+      setUnauthorizedHandler(null);
+    };
+  }, [signOut]);
 
   const value = useMemo<AuthContextType>(
     () => ({
