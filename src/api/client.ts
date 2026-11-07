@@ -43,11 +43,17 @@ export interface FetchOptions extends RequestInit {
   timeoutMs?: number;
 }
 
+export type UnauthorizedHandler = () => void | Promise<void>;
+let onUnauthorizedCallback: UnauthorizedHandler | null = null;
+
+export function setUnauthorizedHandler(handler: UnauthorizedHandler | null): void {
+  onUnauthorizedCallback = handler;
+}
+
 // Typed Native Fetch Wrapper for Sagana Backend with auto JWT injection
 export async function apiFetch<T>(
   endpoint: string,
-  options: FetchOptions = {},
-  isRetry = false
+  options: FetchOptions = {}
 ): Promise<T> {
   const { withAuth = true, headers, signal, timeoutMs, ...restOptions } = options;
 
@@ -61,8 +67,7 @@ export async function apiFetch<T>(
   };
 
   if (withAuth) {
-    // If it's a retry, we force Clerk to bypass its cache and fetch a fresh token
-    const token = await getAuthToken(isRetry);
+    const token = await getAuthToken();
 
     if (!token) {
       logger.warn(`Missing token for protected endpoint: ${normalizedEndpoint}`);
@@ -72,7 +77,7 @@ export async function apiFetch<T>(
     requestHeaders['Authorization'] = `Bearer ${token}`;
   }
 
-  logger.debug(`${options.method || 'GET'} -> ${url}${isRetry ? ' (RETRY)' : ''}`);
+  logger.debug(`${options.method || 'GET'} -> ${url}`);
 
   const timeout = timeoutMs || 10000;
   const controller = new AbortController();
@@ -88,15 +93,14 @@ export async function apiFetch<T>(
       signal: controller.signal,
     });
 
-    // Intercept 401 Unauthorized errors
-    if (response.status === 401 && withAuth && !isRetry) {
-      logger.warn(`401 Unauthorized -> ${url}. Forcing token refresh and retrying...`);
-      return apiFetch<T>(endpoint, options, true);
-    }
-
     const json = await response.json().catch(() => null);
 
     if (!response.ok) {
+      if (response.status === 401 && withAuth) {
+        logger.warn(`401 Unauthorized -> ${url}. Session is invalid or revoked.`);
+        void onUnauthorizedCallback?.();
+      }
+
       const errorData = json as ApiErrorResponse | null;
       let message = `Request failed with status code ${response.status}`;
 
