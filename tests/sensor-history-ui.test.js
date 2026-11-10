@@ -44,6 +44,7 @@ function render(query) {
       react: {
         useState: (value) => [value, () => {}],
         useMemo: (fn) => fn(),
+        useRef: () => ({ current: null }),
         useEffect: (fn) => {
           const cleanup = fn();
           if (typeof cleanup === "function") cleanup();
@@ -54,13 +55,13 @@ function render(query) {
         View: "View",
         Text: "Text",
         ScrollView: "ScrollView",
-        Modal: "Modal",
-        Pressable: "Pressable",
-        Platform: { OS: "android" },
         useWindowDimensions: () => ({ width: 390, fontScale: 1 }),
       },
-      "@react-native-community/datetimepicker": "DateTimePicker",
       "lucide-react-native": {},
+      "@gorhom/bottom-sheet": {},
+      "@/components/ui/single-date-picker": {
+        SingleDatePicker: "SingleDatePicker",
+      },
       "@/hooks/use-history": {
         useHistory: () => ({
           exists: true,
@@ -282,4 +283,58 @@ test("DateFilterToggle supports label press to open datepicker", () => {
   expect(labelPressable).toBeDefined();
   labelPressable.props.onPress();
   expect(opened).toBe(true);
+});
+
+test("SingleDatePicker enforces minimum machine creation date bounds and triggers selection", () => {
+  const { SingleDatePicker } = load("src/components/ui/single-date-picker.tsx", {
+    react: {
+      useState: (value) => [value, () => {}],
+      useMemo: (fn) => fn(),
+      useRef: () => ({ current: null }),
+      useEffect: () => {},
+      useCallback: (fn) => fn,
+      forwardRef: (component) => component,
+    },
+    "react/jsx-runtime": require("react/jsx-runtime"),
+    "react-native": {
+      View: "View",
+      Text: "Text",
+      BackHandler: { addEventListener: () => ({ remove() {} }) },
+      useWindowDimensions: () => ({ height: 800 }),
+    },
+    "@gorhom/bottom-sheet": {
+      BottomSheetModal: "BottomSheetModal",
+      BottomSheetBackdrop: "BottomSheetBackdrop",
+      BottomSheetScrollView: "BottomSheetScrollView",
+    },
+    "react-native-calendars": {
+      Calendar: "Calendar",
+    },
+    "date-fns": require("date-fns"),
+    "@/hooks/use-layout": {
+      useDynamicLayout: () => ({ stackScrollPadding: 16, headerPaddingTop: 40 }),
+    },
+    "@/constants": {
+      colors: {
+        semantic: { background: "white", primaryForeground: "white", foreground: "black" },
+        gray: { textIcon: "gray", border: "gray" },
+        brand: { 500: "green" },
+      },
+    },
+    "./button": {
+      Button: "Button",
+    },
+  });
+
+  const calendarNode = nodes(
+    SingleDatePicker({
+      minDate: "2026-10-27T00:00:00Z",
+      maxDate: "2026-11-10T00:00:00Z",
+      onSelect: () => {},
+    }),
+  ).find((n) => n.type === "Calendar");
+
+  expect(calendarNode).toBeDefined();
+  expect(calendarNode.props.minDate).toBe("2026-10-27");
+  expect(calendarNode.props.maxDate).toBe("2026-11-10");
 });

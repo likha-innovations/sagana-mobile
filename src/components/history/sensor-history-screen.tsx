@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { View, ScrollView, useWindowDimensions, Platform, Modal, Pressable, Text } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { View, ScrollView, useWindowDimensions } from "react-native";
 import { addDays, addWeeks, addMonths, format, parseISO } from "date-fns";
 import { Thermometer, Droplets, Wind, Cloud } from "lucide-react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import { type BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useHistory } from "@/hooks/use-history";
 import { useDynamicLayout } from "@/hooks/use-layout";
 import { aggregateReadings, dateBounds, sensorRange } from "@/lib/history";
@@ -12,6 +12,7 @@ import { HistoryDateFilter } from "@/components/history/history-date-filter";
 import { HistoryState } from "@/components/history/history-state";
 import { SensorTrendGraph } from "@/components/devices/sensor-trend-graph";
 import { DateFilterToggle } from "@/components/ui/date-filter-toggle";
+import { SingleDatePicker } from "@/components/ui/single-date-picker";
 import { colors } from "@/constants";
 
 export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
@@ -21,8 +22,8 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
   const [custom, setCustom] = useState<DateRange>();
   const [anchor, setAnchor] = useState<Date>();
   const [debouncedAnchor, setDebouncedAnchor] = useState<Date>();
-  const [showPicker, setShowPicker] = useState(false);
   const [toggleHeight, setToggleHeight] = useState(56);
+  const singleDatePicker = useRef<BottomSheetModal>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -186,7 +187,7 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
             <DateFilterToggle
               prominent
               label={label}
-              onPressLabel={() => setShowPicker(true)}
+              onPressLabel={() => singleDatePicker.current?.present()}
               previousDisabled={
                 period === "Custom range" || previousRange.end < minDate
               }
@@ -199,58 +200,13 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
           </View>
         </View>
       )}
-      {showPicker &&
-        (Platform.OS === "ios" ? (
-          <Modal transparent animationType="fade" visible={showPicker}>
-            <Pressable
-              className="flex-1 bg-black/50 justify-end"
-              onPress={() => setShowPicker(false)}
-            >
-              <View className="bg-card p-4 rounded-t-[14px]">
-                <View className="flex-row justify-between items-center mb-2">
-                  <Pressable
-                    onPress={() => setShowPicker(false)}
-                    className="py-2 px-3"
-                  >
-                    <Text className="text-sm font-sans text-muted-foreground">
-                      Cancel
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => setShowPicker(false)}
-                    className="py-2 px-3"
-                  >
-                    <Text className="text-sm font-bold text-primary">Done</Text>
-                  </Pressable>
-                </View>
-                <DateTimePicker
-                  value={date}
-                  mode="date"
-                  display="spinner"
-                  minimumDate={minDate}
-                  maximumDate={maxDate}
-                  onChange={(_, selectedDate) => {
-                    if (selectedDate) setAnchor(selectedDate);
-                  }}
-                />
-              </View>
-            </Pressable>
-          </Modal>
-        ) : (
-          <DateTimePicker
-            value={date}
-            mode="date"
-            display="default"
-            minimumDate={minDate}
-            maximumDate={maxDate}
-            onChange={(event, selectedDate) => {
-              setShowPicker(false);
-              if (event.type !== "dismissed" && selectedDate) {
-                setAnchor(selectedDate);
-              }
-            }}
-          />
-        ))}
+      <SingleDatePicker
+        ref={singleDatePicker}
+        initialDate={date}
+        minDate={query.startDate}
+        maxDate={query.endDate}
+        onSelect={(selectedDate) => setAnchor(selectedDate)}
+      />
     </View>
   );
 }
