@@ -33,12 +33,20 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
 
   const query = useHistory(scope, { period, anchor: debouncedAnchor, custom });
   const { readings } = query;
+  const isAnchorPending = Boolean(
+    anchor && anchor.getTime() !== debouncedAnchor?.getTime(),
+  );
   const date = anchor ?? parseISO(query.endDate ?? new Date().toISOString());
   const range = sensorRange(period, date, custom);
   const bounds = dateBounds(range);
   const series = useMemo(
-    () => aggregateReadings(readings, range, period === "Per day"),
-    [readings, range.startDate, range.endDate, period],
+    () =>
+      aggregateReadings(
+        isAnchorPending ? [] : readings,
+        range,
+        period === "Per day",
+      ),
+    [readings, range.startDate, range.endDate, period, isAnchorPending],
   );
   const shift = (amount: number) =>
     period === "Per month"

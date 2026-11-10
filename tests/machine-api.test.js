@@ -113,6 +113,7 @@ test("machine hooks isolate account/barangay caches and hide denied cached data"
     "@/lib/machine-overview": {},
     "@tanstack/react-query": {
       useQuery: (options) => ({ ...options, ...result }),
+      useQueryClient: () => ({ getQueryData: () => undefined }),
     },
   });
   const first = useMachines();
@@ -212,6 +213,7 @@ test("TanStack cache cannot reuse another account or barangay's machine", async 
     "@tanstack/react-query": {
       useQuery: (options) =>
         new QueryObserver(client, options).getOptimisticResult(options),
+      useQueryClient: () => client,
     },
   });
   const key = machineKeys.detail(userId, barangayId, "neo2");
@@ -235,4 +237,71 @@ test("TanStack cache cannot reuse another account or barangay's machine", async 
   expect(client.getQueryData(key).name).toBe("Neo2");
   expect(useMachine("neo2").data).toBe(undefined);
   client.clear();
+});
+
+test("preserves newer cached latestReadings when fetching machines or machine detail", async () => {
+  const cachedReadings = {
+    temperature: 45.2,
+    moisture: 55,
+    oxygen: 19.1,
+    co2: 800,
+    updatedAt: "2026-11-10T12:00:00.000Z",
+  };
+  const olderRemoteRecord = {
+    ...record,
+    latestReadings: {
+      temperature: 30,
+      moisture: 40,
+      oxygen: 15,
+      co2: 600,
+      updatedAt: "2026-11-10T10:00:00.000Z",
+    },
+  };
+  const listKey = ["machines", "u1", "b1", "list"];
+  const detailKey = ["machines", "u1", "b1", "detail", "neo2"];
+  const mockCache = new Map();
+  mockCache.set(JSON.stringify(listKey), [
+    { ...record, latestReadings: cachedReadings },
+  ]);
+  mockCache.set(JSON.stringify(detailKey), {
+    ...record,
+    latestReadings: cachedReadings,
+  });
+
+  const { useMachines, useMachine } = load("src/hooks/use-machines.ts", {
+    "@/api/device.api": {},
+    "@/api/machine.api": {
+      machineApi: {
+        getMachines: async () => [olderRemoteRecord],
+        getMachine: async () => olderRemoteRecord,
+      },
+    },
+    "@/context/auth-context": {
+      useAuthContext: () => ({
+        user: { id: "u1" },
+        isLoaded: true,
+        isSignedIn: true,
+      }),
+    },
+    "./use-profile": {
+      useProfile: () => ({
+        data: { barangayId: "b1" },
+        isSuccess: true,
+        isError: false,
+      }),
+    },
+    "@/lib/machine-overview": {},
+    "@tanstack/react-query": {
+      useQuery: (options) => options,
+      useQueryClient: () => ({
+        getQueryData: (k) => mockCache.get(JSON.stringify(k)),
+      }),
+    },
+  });
+
+  const listResult = await useMachines().queryFn();
+  expect(listResult[0].latestReadings).toEqual(cachedReadings);
+
+  const detailResult = await useMachine("neo2").queryFn();
+  expect(detailResult.latestReadings).toEqual(cachedReadings);
 });

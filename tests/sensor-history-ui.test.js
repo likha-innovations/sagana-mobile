@@ -338,3 +338,79 @@ test("SingleDatePicker enforces minimum machine creation date bounds and trigger
   expect(calendarNode.props.minDate).toBe("2026-10-27");
   expect(calendarNode.props.maxDate).toBe("2026-11-10");
 });
+
+test("gates sensor readings when anchor differs from debouncedAnchor", () => {
+  let aggregatedWith = null;
+  const stateValues = [
+    ["Per day", () => {}],
+    [undefined, () => {}],
+    [new Date("2026-11-05"), () => {}],
+    [new Date("2026-11-04"), () => {}],
+    [56, () => {}],
+    [false, () => {}],
+  ];
+  let stateIndex = 0;
+
+  const { SensorHistoryScreen } = load(
+    "src/components/history/sensor-history-screen.tsx",
+    {
+      react: {
+        useState: () => stateValues[stateIndex++ % stateValues.length],
+        useMemo: (fn) => fn(),
+        useRef: () => ({ current: null }),
+        useEffect: () => {},
+      },
+      "react/jsx-runtime": require("react/jsx-runtime"),
+      "react-native": {
+        View: "View",
+        Text: "Text",
+        ScrollView: "ScrollView",
+        useWindowDimensions: () => ({ width: 390, fontScale: 1 }),
+      },
+      "lucide-react-native": {},
+      "@/components/ui/single-date-picker": {
+        SingleDatePicker: "SingleDatePicker",
+      },
+      "@/hooks/use-history": {
+        useHistory: () => ({
+          exists: true,
+          readings: [{ id: "r1", recordedAt: "2026-11-04T10:00:00Z" }],
+        }),
+      },
+      "@/hooks/use-layout": { useDynamicLayout: () => ({ tabBarHeight: 60 }) },
+      "@/lib/history": {
+        sensorRange: () => ({ startDate: "2026-11-05", endDate: "2026-11-05" }),
+        dateBounds: () => ({
+          start: new Date("2026-11-05"),
+          end: new Date("2026-11-05"),
+        }),
+        aggregateReadings: (readings) => {
+          aggregatedWith = readings;
+          return { temperature: [], moisture: [], oxygen: [], co2: [] };
+        },
+      },
+      "@/components/history/history-header": { HistoryHeader: "HistoryHeader" },
+      "@/components/history/history-date-filter": {
+        HistoryDateFilter: "HistoryDateFilter",
+      },
+      "@/components/history/history-state": { HistoryState: "HistoryState" },
+      "@/components/devices/sensor-trend-graph": {
+        SensorTrendGraph: "SensorTrendGraph",
+      },
+      "@/components/ui/date-filter-toggle": {
+        DateFilterToggle: "DateFilterToggle",
+      },
+      "@/constants": {
+        colors: {
+          red: { 500: "red" },
+          teal: { 700: "teal" },
+          yellow: { 700: "yellow" },
+          brand: { 500: "green" },
+        },
+      },
+    },
+  );
+
+  SensorHistoryScreen({ scope: { kind: "machine", machineId: "m1" } });
+  expect(aggregatedWith).toEqual([]);
+});
