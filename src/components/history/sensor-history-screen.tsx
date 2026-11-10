@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View, ScrollView, useWindowDimensions } from "react-native";
 import { addDays, addWeeks, addMonths, format, parseISO } from "date-fns";
 import { Thermometer, Droplets, Wind, Cloud } from "lucide-react-native";
-import { type BottomSheetModal } from "@gorhom/bottom-sheet";
 import { useHistory } from "@/hooks/use-history";
 import { useDynamicLayout } from "@/hooks/use-layout";
 import { aggregateReadings, dateBounds, sensorRange } from "@/lib/history";
@@ -23,7 +22,7 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
   const [anchor, setAnchor] = useState<Date>();
   const [debouncedAnchor, setDebouncedAnchor] = useState<Date>();
   const [toggleHeight, setToggleHeight] = useState(56);
-  const singleDatePicker = useRef<BottomSheetModal>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -187,7 +186,7 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
             <DateFilterToggle
               prominent
               label={label}
-              onPressLabel={() => singleDatePicker.current?.present()}
+              onPressLabel={() => setShowDatePicker(true)}
               previousDisabled={
                 period === "Custom range" || previousRange.end < minDate
               }
@@ -201,7 +200,8 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
         </View>
       )}
       <SingleDatePicker
-        ref={singleDatePicker}
+        visible={showDatePicker}
+        onClose={() => setShowDatePicker(false)}
         initialDate={date}
         minDate={query.startDate}
         maxDate={query.endDate}

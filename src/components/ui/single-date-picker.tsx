@@ -1,41 +1,29 @@
-import {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { BackHandler, Text, View, useWindowDimensions } from "react-native";
-import {
-  BottomSheetModal,
-  BottomSheetBackdrop,
-  BottomSheetScrollView,
-  type BottomSheetBackdropProps,
-} from "@gorhom/bottom-sheet";
+import { useEffect, useMemo, useState } from "react";
+import { Modal, Pressable, View, Text } from "react-native";
 import { Calendar, type DateData } from "react-native-calendars";
 import { format, parseISO } from "date-fns";
-import { useDynamicLayout } from "@/hooks/use-layout";
 import { colors } from "@/constants";
 import { Button } from "./button";
 
 interface SingleDatePickerProps {
+  visible: boolean;
+  onClose: () => void;
   onSelect: (date: Date) => void;
   initialDate?: Date;
   minDate?: string;
   maxDate?: string;
 }
 
-export const SingleDatePicker = forwardRef<
-  BottomSheetModal,
-  SingleDatePickerProps
->(({ onSelect, initialDate, minDate, maxDate }, ref) => {
-  const modal = useRef<BottomSheetModal>(null);
+export function SingleDatePicker({
+  visible,
+  onClose,
+  onSelect,
+  initialDate,
+  minDate,
+  maxDate,
+}: SingleDatePickerProps) {
   const initial = initialDate ? format(initialDate, "yyyy-MM-dd") : undefined;
   const [selected, setSelected] = useState<string | undefined>(initial);
-  const [open, setOpen] = useState(false);
-  const { stackScrollPadding, headerPaddingTop } = useDynamicLayout();
-  const { height } = useWindowDimensions();
 
   const lower = minDate ? format(parseISO(minDate), "yyyy-MM-dd") : undefined;
   const upper = maxDate
@@ -48,29 +36,10 @@ export const SingleDatePicker = forwardRef<
     selected <= upper;
 
   useEffect(() => {
-    if (!open) return;
-    const subscription = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => {
-        modal.current?.dismiss();
-        return true;
-      },
-    );
-    return () => subscription.remove();
-  }, [open]);
-
-  const backdrop = useCallback(
-    (props: BottomSheetBackdropProps) => (
-      <BottomSheetBackdrop
-        {...props}
-        disappearsOnIndex={-1}
-        appearsOnIndex={0}
-        pressBehavior="close"
-        opacity={0.4}
-      />
-    ),
-    [],
-  );
+    if (visible && initialDate) {
+      setSelected(format(initialDate, "yyyy-MM-dd"));
+    }
+  }, [visible, initialDate]);
 
   const markedDates = useMemo(() => {
     if (!selected) return {};
@@ -89,86 +58,76 @@ export const SingleDatePicker = forwardRef<
   };
 
   return (
-    <BottomSheetModal
-      ref={(value) => {
-        modal.current = value;
-        if (typeof ref === "function") ref(value);
-        else if (ref) ref.current = value;
-      }}
-      enableDynamicSizing
-      maxDynamicContentSize={height - headerPaddingTop}
-      onChange={(index) => {
-        setOpen(index >= 0);
-        if (index >= 0 && initialDate) {
-          setSelected(format(initialDate, "yyyy-MM-dd"));
-        }
-      }}
-      onDismiss={() => setOpen(false)}
-      backdropComponent={backdrop}
-      enablePanDownToClose
-      backgroundStyle={{
-        backgroundColor: colors.semantic.background,
-        borderRadius: 32,
-      }}
-      handleIndicatorStyle={{ backgroundColor: colors.gray.border, width: 40 }}
+    <Modal
+      transparent
+      animationType="fade"
+      visible={visible}
+      onRequestClose={onClose}
     >
-      <BottomSheetScrollView
-        contentContainerStyle={{
-          padding: 16,
-          paddingBottom: stackScrollPadding,
-        }}
+      <Pressable
+        className="flex-1 bg-black/50 justify-center items-center px-4"
+        onPress={onClose}
       >
-        <Text className="mb-4 text-lg font-bold text-foreground">
-          Select Date
-        </Text>
-        <Calendar
-          key={open ? "open" : "closed"}
-          current={selected ?? lower ?? format(new Date(), "yyyy-MM-dd")}
-          markedDates={markedDates}
-          onDayPress={selectDay}
-          minDate={lower}
-          maxDate={upper}
-          theme={{
-            calendarBackground: colors.semantic.background,
-            textSectionTitleColor: colors.gray.textIcon,
-            selectedDayBackgroundColor: colors.brand[500],
-            selectedDayTextColor: colors.semantic.primaryForeground,
-            todayTextColor: colors.brand[500],
-            dayTextColor: colors.semantic.foreground,
-            textDisabledColor: colors.gray.textIcon,
-            arrowColor: colors.semantic.foreground,
-            monthTextColor: colors.semantic.foreground,
-            textDayFontFamily: "SpotifyMix-Regular",
-            textMonthFontFamily: "SpotifyMix-Bold",
-            textDayHeaderFontFamily: "SpotifyMix-Regular",
-            textDayFontSize: 14,
-            textMonthFontSize: 16,
-            textDayHeaderFontSize: 13,
-          }}
-        />
-        <View className="mt-4">
-          <Button
-            disabled={!valid}
-            size="lg"
-            onPress={() => {
-              if (!valid || !selected) return;
-              onSelect(parseISO(selected));
-              modal.current?.dismiss();
+        <Pressable
+          className="w-full max-w-sm rounded-[24px] bg-card p-5 border border-border shadow-lg"
+          onPress={(e) => e.stopPropagation()}
+        >
+          <Text className="mb-3 text-lg font-bold text-foreground">
+            Select Date
+          </Text>
+          <Calendar
+            key={visible ? "open" : "closed"}
+            current={selected ?? lower ?? format(new Date(), "yyyy-MM-dd")}
+            markedDates={markedDates}
+            onDayPress={selectDay}
+            minDate={lower}
+            maxDate={upper}
+            theme={{
+              calendarBackground: colors.semantic.background,
+              textSectionTitleColor: colors.gray.textIcon,
+              selectedDayBackgroundColor: colors.brand[500],
+              selectedDayTextColor: colors.semantic.primaryForeground,
+              todayTextColor: colors.brand[500],
+              dayTextColor: colors.semantic.foreground,
+              textDisabledColor: colors.gray.textIcon,
+              arrowColor: colors.semantic.foreground,
+              monthTextColor: colors.semantic.foreground,
+              textDayFontFamily: "SpotifyMix-Regular",
+              textMonthFontFamily: "SpotifyMix-Bold",
+              textDayHeaderFontFamily: "SpotifyMix-Regular",
+              textDayFontSize: 14,
+              textMonthFontSize: 16,
+              textDayHeaderFontSize: 13,
             }}
-          >
-            <Text
-              className={
-                valid
-                  ? "text-[14px] font-bold text-primary-foreground"
-                  : "text-[14px] font-bold text-muted-foreground"
-              }
+          />
+          <View className="mt-4 flex-row justify-end gap-2">
+            <Button variant="ghost" size="sm" onPress={onClose}>
+              <Text className="text-sm font-sans text-muted-foreground">
+                Cancel
+              </Text>
+            </Button>
+            <Button
+              disabled={!valid}
+              size="sm"
+              onPress={() => {
+                if (!valid || !selected) return;
+                onSelect(parseISO(selected));
+                onClose();
+              }}
             >
-              Select Date
-            </Text>
-          </Button>
-        </View>
-      </BottomSheetScrollView>
-    </BottomSheetModal>
+              <Text
+                className={
+                  valid
+                    ? "text-sm font-bold text-primary-foreground"
+                    : "text-sm font-bold text-muted-foreground"
+                }
+              >
+                Select
+              </Text>
+            </Button>
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
   );
-});
-SingleDatePicker.displayName = "SingleDatePicker";
+}

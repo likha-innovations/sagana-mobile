@@ -286,48 +286,48 @@ test("DateFilterToggle supports label press to open datepicker", () => {
 });
 
 test("SingleDatePicker enforces minimum machine creation date bounds and triggers selection", () => {
-  const { SingleDatePicker } = load("src/components/ui/single-date-picker.tsx", {
-    react: {
-      useState: (value) => [value, () => {}],
-      useMemo: (fn) => fn(),
-      useRef: () => ({ current: null }),
-      useEffect: () => {},
-      useCallback: (fn) => fn,
-      forwardRef: (component) => component,
-    },
-    "react/jsx-runtime": require("react/jsx-runtime"),
-    "react-native": {
-      View: "View",
-      Text: "Text",
-      BackHandler: { addEventListener: () => ({ remove() {} }) },
-      useWindowDimensions: () => ({ height: 800 }),
-    },
-    "@gorhom/bottom-sheet": {
-      BottomSheetModal: "BottomSheetModal",
-      BottomSheetBackdrop: "BottomSheetBackdrop",
-      BottomSheetScrollView: "BottomSheetScrollView",
-    },
-    "react-native-calendars": {
-      Calendar: "Calendar",
-    },
-    "date-fns": require("date-fns"),
-    "@/hooks/use-layout": {
-      useDynamicLayout: () => ({ stackScrollPadding: 16, headerPaddingTop: 40 }),
-    },
-    "@/constants": {
-      colors: {
-        semantic: { background: "white", primaryForeground: "white", foreground: "black" },
-        gray: { textIcon: "gray", border: "gray" },
-        brand: { 500: "green" },
+  const { SingleDatePicker } = load(
+    "src/components/ui/single-date-picker.tsx",
+    {
+      react: {
+        useState: (value) => [value, () => {}],
+        useMemo: (fn) => fn(),
+        useRef: () => ({ current: null }),
+        useEffect: () => {},
+        useCallback: (fn) => fn,
+      },
+      "react/jsx-runtime": require("react/jsx-runtime"),
+      "react-native": {
+        Modal: "Modal",
+        Pressable: "Pressable",
+        View: "View",
+        Text: "Text",
+      },
+      "react-native-calendars": {
+        Calendar: "Calendar",
+      },
+      "date-fns": require("date-fns"),
+      "@/constants": {
+        colors: {
+          semantic: {
+            background: "white",
+            primaryForeground: "white",
+            foreground: "black",
+          },
+          gray: { textIcon: "gray", border: "gray" },
+          brand: { 500: "green" },
+        },
+      },
+      "./button": {
+        Button: "Button",
       },
     },
-    "./button": {
-      Button: "Button",
-    },
-  });
+  );
 
   const calendarNode = nodes(
     SingleDatePicker({
+      visible: true,
+      onClose: () => {},
       minDate: "2026-10-27T00:00:00Z",
       maxDate: "2026-11-10T00:00:00Z",
       onSelect: () => {},
