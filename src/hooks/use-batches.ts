@@ -48,6 +48,30 @@ export function useCompostBatches() {
   return { ...query, data: ready && !query.isError ? query.data : undefined, isError: profile.isError || query.isError, isPending: !profile.isError && query.isPending, refetch: profile.isError ? profile.refetch : query.refetch };
 }
 
+export function useBatch(id: string, enabled = true) {
+  const { user, isLoaded, isSignedIn } = useAuthContext();
+  const profile = useProfile();
+  const ready = isLoaded && isSignedIn && !!user && profile.isSuccess;
+  const query = useQuery({
+    queryKey: [...batchKeys.all, user?.id, profile.data?.barangayId, "detail", id],
+    enabled: enabled && ready && !!id,
+    staleTime: 0,
+    retry: false,
+    queryFn: async () => {
+      if (!ready) throw new Error("User profile is not ready");
+      return batchApi.get(id);
+    },
+  });
+  return {
+    ...query,
+    data: ready && !query.isError ? query.data : undefined,
+    isError: profile.isError || query.isError,
+    isPending: !profile.isError && query.isPending,
+    error: profile.error ?? query.error,
+    refetch: profile.isError ? profile.refetch : query.refetch,
+  };
+}
+
 // Directly returns active batch DTO with nested feedstocks
 export function useActiveBatch(machineId: string) {
   const query = useCompostBatches();

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View, ScrollView, useWindowDimensions } from "react-native";
 import { addDays, addWeeks, addMonths, format, parseISO } from "date-fns";
 import { Thermometer, Droplets, Wind, Cloud } from "lucide-react-native";
@@ -19,8 +19,17 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
   const [period, setPeriod] = useState<SensorPeriod>("Per day");
   const [custom, setCustom] = useState<DateRange>();
   const [anchor, setAnchor] = useState<Date>();
+  const [debouncedAnchor, setDebouncedAnchor] = useState<Date>();
   const [toggleHeight, setToggleHeight] = useState(56);
-  const query = useHistory(scope, { period, anchor, custom });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedAnchor(anchor);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [anchor]);
+
+  const query = useHistory(scope, { period, anchor: debouncedAnchor, custom });
   const { readings } = query;
   const date = anchor ?? parseISO(query.endDate ?? new Date().toISOString());
   const range = sensorRange(period, date, custom);
@@ -51,13 +60,19 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
     period === "Per day"
       ? format(date, "MMMM d, yyyy")
       : `${format(bounds.start, "MMM d")} – ${format(bounds.end, "MMM d, yyyy")}`;
+  const getUnit = (type: string, fallback: string) => {
+    const match = query.sensors?.find(
+      (s) => s.sensorType === type || (type === "oxygen" && s.sensorType === "o2"),
+    );
+    return match?.unit || fallback;
+  };
   const sensors = [
     {
       key: "temperature" as const,
       title: "Temperature Trend",
       icon: Thermometer,
       color: colors.red[500],
-      unit: "°C",
+      unit: getUnit("temperature", "°C"),
       minimumMax: 60,
     },
     {
@@ -65,7 +80,7 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
       title: "Moisture Trend",
       icon: Droplets,
       color: colors.teal[700],
-      unit: "%",
+      unit: getUnit("moisture", "%"),
       minimumMax: 100,
     },
     {
@@ -73,7 +88,7 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
       title: "Oxygen Trend",
       icon: Wind,
       color: colors.yellow[700],
-      unit: "%",
+      unit: getUnit("oxygen", "%"),
       minimumMax: 25,
     },
     {
@@ -81,7 +96,7 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
       title: "Carbon Dioxide Trend",
       icon: Cloud,
       color: colors.brand[500],
-      unit: "ppm",
+      unit: getUnit("co2", "ppm"),
       minimumMax: 2000,
     },
   ];

@@ -45,13 +45,13 @@ export function useMachines(enabled = true) {
   };
 }
 
-export function useMachine(id: string) {
+export function useMachine(id: string, enabled = true) {
   const { user, isLoaded, isSignedIn } = useAuthContext();
   const profile = useProfile();
   const ready = isLoaded && isSignedIn && !!user && profile.isSuccess;
   const query = useQuery({
     queryKey: machineKeys.detail(user?.id, profile.data?.barangayId, id),
-    enabled: ready && !!id,
+    enabled: enabled && ready && !!id,
     staleTime: 0,
     retry: false,
     queryFn: async () => {
