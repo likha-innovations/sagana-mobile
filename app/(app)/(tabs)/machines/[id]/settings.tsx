@@ -397,8 +397,8 @@ export default function MachineSettingsScreen() {
                   <View className="p-4 mb-4 bg-brand-50 border border-brand-200 rounded-2xl flex-row items-center gap-3">
                     <Info size={20} color="#718619" style={{ flexShrink: 0 }} />
                     <Text className="text-xs text-foreground flex-1 leading-relaxed">
-                      Ensure your machine is nearby and in BLE provisioning mode
-                      (hold BOOT button on ESP32 for 3s if not broadcasting).
+                      Ensure your machine is nearby and in pairing mode
+                      (press and hold the button on the machine for 3 seconds if not broadcasting).
                     </Text>
                   </View>
 
@@ -434,7 +434,7 @@ export default function MachineSettingsScreen() {
                           Testing & connecting machine to Wi-Fi...
                         </Text>
                         <Text className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                          Sending credentials to ESP32 over Bluetooth. This may
+                          Sending Wi-Fi credentials to your machine. This may
                           take 10-20 seconds.
                         </Text>
                       </View>
