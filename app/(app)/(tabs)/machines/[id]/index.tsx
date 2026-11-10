@@ -369,7 +369,7 @@ export default function MachineDetailsDashboard() {
                       { label: "Temperature", icon: Thermometer, color: colors.sensors.temperature, value: machine.latestReadings?.temperature, unit: "°C" },
                       { label: "Moisture", icon: Droplets, color: colors.sensors.moisture, value: machine.latestReadings?.moisture, unit: "%" },
                       { label: "Oxygen", icon: Wind, color: colors.sensors.oxygen, value: machine.latestReadings?.oxygen, unit: "%" },
-                      { label: "Carbon Dioxide", icon: Cloud, color: colors.sensors.carbonDioxide, value: machine.latestReadings?.co2, unit: "%" },
+                      { label: "Carbon Dioxide", icon: Cloud, color: colors.sensors.carbonDioxide, value: machine.latestReadings?.co2, unit: " ppm" },
                     ].map((sensor) => (
                       <SensorStatCard key={sensor.label} icon={sensor.icon} iconColor={sensor.value == null ? colors.gray.textIcon : sensor.color} value={sensor.value == null ? "--" : `${sensor.value}${sensor.unit}`} label={sensor.label} />
                     ))}

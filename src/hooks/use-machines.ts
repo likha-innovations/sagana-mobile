@@ -1,4 +1,4 @@
-﻿import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Machine } from "@/types/machine";
 import type { RegisterMachinePayload } from "@/types/device";
 import { deviceApi } from "@/api/device.api";
@@ -22,17 +22,43 @@ export const machineKeys = {
   ) => ["machines", userId, barangayId, "detail", id] as const,
 };
 
+function mergeReadings(
+  remote?: Machine["latestReadings"],
+  cached?: Machine["latestReadings"],
+): Machine["latestReadings"] | undefined {
+  if (!cached) return remote;
+  if (!remote) return cached;
+  const remoteTime = Date.parse(remote.updatedAt);
+  const cachedTime = Date.parse(cached.updatedAt);
+  if (cachedTime > remoteTime) {
+    return cached;
+  }
+  return remote;
+}
+
 export function useMachines(enabled = true) {
+  const queryClient =
+    typeof useQueryClient === "function" ? useQueryClient() : undefined;
   const { user, isLoaded, isSignedIn } = useAuthContext();
   const profile = useProfile();
   const ready = isLoaded && isSignedIn && !!user && profile.isSuccess;
+  const listKey = machineKeys.list(user?.id, profile.data?.barangayId);
   const query = useQuery({
-    queryKey: machineKeys.list(user?.id, profile.data?.barangayId),
+    queryKey: listKey,
     enabled: enabled && ready,
     staleTime: 0,
     queryFn: async () => {
       if (!ready) throw new Error("User profile is not ready");
-      return machineApi.getMachines();
+      const remote = await machineApi.getMachines();
+      const cached = queryClient?.getQueryData<Machine[]>(listKey);
+      return remote.map((m) => {
+        const cachedItem = cached?.find((c) => c.id === m.id);
+        const merged = mergeReadings(
+          m.latestReadings,
+          cachedItem?.latestReadings,
+        );
+        return merged ? { ...m, latestReadings: merged } : m;
+      });
     },
   });
   return {
@@ -45,18 +71,31 @@ export function useMachines(enabled = true) {
   };
 }
 
-export function useMachine(id: string) {
+export function useMachine(id: string, enabled = true) {
+  const queryClient =
+    typeof useQueryClient === "function" ? useQueryClient() : undefined;
   const { user, isLoaded, isSignedIn } = useAuthContext();
   const profile = useProfile();
   const ready = isLoaded && isSignedIn && !!user && profile.isSuccess;
+  const detailKey = machineKeys.detail(user?.id, profile.data?.barangayId, id);
   const query = useQuery({
-    queryKey: machineKeys.detail(user?.id, profile.data?.barangayId, id),
-    enabled: ready && !!id,
+    queryKey: detailKey,
+    enabled: enabled && ready && !!id,
     staleTime: 0,
     retry: false,
     queryFn: async () => {
       if (!ready) throw new Error("User profile is not ready");
-      return machineApi.getMachine(id);
+      const remote = await machineApi.getMachine(id);
+      const cached = queryClient?.getQueryData<Machine>(detailKey);
+      const listCached = queryClient
+        ?.getQueryData<Machine[]>(
+          machineKeys.list(user?.id, profile.data?.barangayId),
+        )
+        ?.find((c) => c.id === id);
+      const cachedReadings =
+        cached?.latestReadings ?? listCached?.latestReadings;
+      const merged = mergeReadings(remote.latestReadings, cachedReadings);
+      return merged ? { ...remote, latestReadings: merged } : remote;
     },
   });
   return {

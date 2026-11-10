@@ -1,12 +1,20 @@
 import { api } from "./client";
 import { compostBatchSchema, completedBatchSchema, type CreateBatchInput } from "@/types/batch";
-import { historyReadingSchema, type HistoryScope } from "@/types/history";
+import { historyReadingSchema, sensorMetaSchema, type HistoryScope, type SensorMeta } from "@/types/history";
 import { z } from "zod";
 
-const pageSchema = z.object({ readings: historyReadingSchema.array(), hasMore: z.boolean() });
+const pageSchema = z.object({
+  sensors: sensorMetaSchema.array().optional(),
+  readings: historyReadingSchema.array(),
+  hasMore: z.boolean(),
+});
 
 export const batchApi = {
   list: async () => compostBatchSchema.array().parse(await api.get<unknown>("/batches")),
+  get: async (id: string) =>
+    compostBatchSchema.parse(
+      await api.get<unknown>(`/batches/${encodeURIComponent(id)}`),
+    ),
   completed: async () => {
     const batches = await api.get<unknown[]>("/batches");
     return completedBatchSchema.array().parse(batches.filter((item) =>
@@ -18,15 +26,22 @@ export const batchApi = {
   readings: async (scope: HistoryScope, startDate: string, endDate: string, signal?: AbortSignal) => {
     const path = scope.kind === "machine" ? `/machines/${encodeURIComponent(scope.machineId)}/readings` : `/batches/${encodeURIComponent(scope.batchId)}/readings`;
     const readings: z.infer<typeof historyReadingSchema>[] = [];
+    let sensors: SensorMeta[] = [];
     let offset = 0;
     let hasMore = true;
     while (hasMore) {
       const page = pageSchema.parse(await api.get<unknown>(`${path}?offset=${offset}&limit=2000&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`, { signal }));
+      if (page.sensors?.length && !sensors.length) {
+        sensors = page.sensors;
+      }
       readings.push(...page.readings);
       offset += page.readings.length;
       if (page.hasMore && !page.readings.length) throw new Error("Invalid history page");
       hasMore = page.hasMore;
     }
-    return readings.sort((a, b) => Date.parse(a.recordedAt) - Date.parse(b.recordedAt));
+    return {
+      readings: readings.sort((a, b) => Date.parse(a.recordedAt) - Date.parse(b.recordedAt)),
+      sensors,
+    };
   },
 };

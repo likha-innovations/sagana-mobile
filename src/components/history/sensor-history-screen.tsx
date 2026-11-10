@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View, ScrollView, useWindowDimensions } from "react-native";
 import { addDays, addWeeks, addMonths, format, parseISO } from "date-fns";
 import { Thermometer, Droplets, Wind, Cloud } from "lucide-react-native";
@@ -11,6 +11,7 @@ import { HistoryDateFilter } from "@/components/history/history-date-filter";
 import { HistoryState } from "@/components/history/history-state";
 import { SensorTrendGraph } from "@/components/devices/sensor-trend-graph";
 import { DateFilterToggle } from "@/components/ui/date-filter-toggle";
+import { SingleDatePicker } from "@/components/ui/single-date-picker";
 import { colors } from "@/constants";
 
 export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
@@ -19,18 +20,33 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
   const [period, setPeriod] = useState<SensorPeriod>("Per day");
   const [custom, setCustom] = useState<DateRange>();
   const [anchor, setAnchor] = useState<Date>();
+  const [debouncedAnchor, setDebouncedAnchor] = useState<Date>();
   const [toggleHeight, setToggleHeight] = useState(56);
-  const query = useHistory(scope, { period, anchor, custom });
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedAnchor(anchor);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [anchor]);
+
+  const query = useHistory(scope, { period, anchor: debouncedAnchor, custom });
   const { readings } = query;
+  const isAnchorPending = Boolean(
+    anchor && anchor.getTime() !== debouncedAnchor?.getTime(),
+  );
   const date = anchor ?? parseISO(query.endDate ?? new Date().toISOString());
   const range = sensorRange(period, date, custom);
   const bounds = dateBounds(range);
   const series = useMemo(
-    () => aggregateReadings(readings, range, period === "Per day"),
-    [readings, range.startDate, range.endDate, period],
-  );
-  const hasData = Object.values(series).some((points) =>
-    points.some((point) => point.value !== null),
+    () =>
+      aggregateReadings(
+        isAnchorPending ? [] : readings,
+        range,
+        period === "Per day",
+      ),
+    [readings, range.startDate, range.endDate, period, isAnchorPending],
   );
   const shift = (amount: number) =>
     period === "Per month"
@@ -51,13 +67,19 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
     period === "Per day"
       ? format(date, "MMMM d, yyyy")
       : `${format(bounds.start, "MMM d")} – ${format(bounds.end, "MMM d, yyyy")}`;
+  const getUnit = (type: string, fallback: string) => {
+    const match = query.sensors?.find(
+      (s) => s.sensorType === type || (type === "oxygen" && s.sensorType === "o2"),
+    );
+    return match?.unit || fallback;
+  };
   const sensors = [
     {
       key: "temperature" as const,
       title: "Temperature Trend",
       icon: Thermometer,
       color: colors.red[500],
-      unit: "°C",
+      unit: getUnit("temperature", "°C"),
       minimumMax: 60,
     },
     {
@@ -65,7 +87,7 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
       title: "Moisture Trend",
       icon: Droplets,
       color: colors.teal[700],
-      unit: "%",
+      unit: getUnit("moisture", "%"),
       minimumMax: 100,
     },
     {
@@ -73,7 +95,7 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
       title: "Oxygen Trend",
       icon: Wind,
       color: colors.yellow[700],
-      unit: "%",
+      unit: getUnit("oxygen", "%"),
       minimumMax: 25,
     },
     {
@@ -81,7 +103,7 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
       title: "Carbon Dioxide Trend",
       icon: Cloud,
       color: colors.brand[500],
-      unit: "ppm",
+      unit: getUnit("co2", "ppm"),
       minimumMax: 2000,
     },
   ];
@@ -117,8 +139,6 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
           retrying={query.isFetching}
           onRetry={() => void query.refetch()}
         />
-      ) : query.isPending ? (
-        <HistoryState message="Loading sensor history…" />
       ) : !query.exists ? (
         <HistoryState
           message={
@@ -128,39 +148,33 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
           }
         />
       ) : (
-        <>
-          <ScrollView
-            contentContainerStyle={{
-              paddingHorizontal: 16,
-              gap: 12,
-              paddingBottom: tabBarHeight + toggleHeight + 16,
-            }}
-            showsVerticalScrollIndicator={false}
-          >
-            {!hasData ? (
-              <HistoryState message="No sensor readings recorded for this period." />
-            ) : (
-              sensors.map((sensor) => {
-                const points = series[sensor.key];
-                const max = Math.max(
-                  sensor.minimumMax,
-                  ...points.map((point) => point.value ?? 0),
-                );
-                return (
-                  <SensorTrendGraph
-                    key={sensor.key}
-                    title={sensor.title}
-                    icon={sensor.icon}
-                    iconColor={sensor.color}
-                    points={points}
-                    maxVal={max}
-                    unit={sensor.unit}
-                  />
-                );
-              })
-            )}
-          </ScrollView>
-        </>
+        <ScrollView
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            gap: 12,
+            paddingBottom: tabBarHeight + toggleHeight + 16,
+          }}
+          showsVerticalScrollIndicator={false}
+        >
+          {sensors.map((sensor) => {
+            const points = series[sensor.key];
+            const max = Math.max(
+              sensor.minimumMax,
+              ...points.map((point) => point.value ?? 0),
+            );
+            return (
+              <SensorTrendGraph
+                key={sensor.key}
+                title={sensor.title}
+                icon={sensor.icon}
+                iconColor={sensor.color}
+                points={points}
+                maxVal={max}
+                unit={sensor.unit}
+              />
+            );
+          })}
+        </ScrollView>
       )}
       {query.exists && (
         <View
@@ -180,6 +194,7 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
             <DateFilterToggle
               prominent
               label={label}
+              onPressLabel={() => setShowDatePicker(true)}
               previousDisabled={
                 period === "Custom range" || previousRange.end < minDate
               }
@@ -192,6 +207,14 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
           </View>
         </View>
       )}
+      <SingleDatePicker
+        visible={showDatePicker}
+        onClose={() => setShowDatePicker(false)}
+        initialDate={date}
+        minDate={query.startDate}
+        maxDate={query.endDate}
+        onSelect={(selectedDate) => setAnchor(selectedDate)}
+      />
     </View>
   );
 }

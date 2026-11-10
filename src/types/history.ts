@@ -12,6 +12,16 @@ export const historyReadingSchema = z.object({
 export type HistoryReading = z.infer<typeof historyReadingSchema>;
 export type SensorKey = "temperature" | "moisture" | "oxygen" | "co2";
 
+export const sensorMetaSchema = z.object({
+  id: z.string().optional(),
+  machineId: z.string().optional(),
+  sensorType: z.string(),
+  location: z.string().nullable().optional(),
+  unit: z.string().nullable().optional(),
+  status: z.string().optional(),
+});
+export type SensorMeta = z.infer<typeof sensorMetaSchema>;
+
 export const historyEventSchema = z.object({
   id: z.string(),
   machineId: z.string(),

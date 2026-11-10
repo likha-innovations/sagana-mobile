@@ -41,7 +41,15 @@ function render(query) {
   const { SensorHistoryScreen } = load(
     "src/components/history/sensor-history-screen.tsx",
     {
-      react: { useState: (value) => [value, () => {}], useMemo: (fn) => fn() },
+      react: {
+        useState: (value) => [value, () => {}],
+        useMemo: (fn) => fn(),
+        useRef: () => ({ current: null }),
+        useEffect: (fn) => {
+          const cleanup = fn();
+          if (typeof cleanup === "function") cleanup();
+        },
+      },
       "react/jsx-runtime": require("react/jsx-runtime"),
       "react-native": {
         View: "View",
@@ -50,6 +58,10 @@ function render(query) {
         useWindowDimensions: () => ({ width: 390, fontScale: 1 }),
       },
       "lucide-react-native": {},
+      "@gorhom/bottom-sheet": {},
+      "@/components/ui/single-date-picker": {
+        SingleDatePicker: "SingleDatePicker",
+      },
       "@/hooks/use-history": {
         useHistory: () => ({
           exists: true,
@@ -68,10 +80,10 @@ function render(query) {
           end: new Date("2026-01-02"),
         }),
         aggregateReadings: () => ({
-          temperature: [],
-          moisture: [],
-          oxygen: [],
-          co2: [],
+          temperature: query?.readings?.length ? [{ value: 45 }] : [],
+          moisture: query?.readings?.length ? [{ value: 60 }] : [],
+          oxygen: query?.readings?.length ? [{ value: 20 }] : [],
+          co2: query?.readings?.length ? [{ value: 800 }] : [],
         }),
       },
       "@/components/history/history-header": { HistoryHeader: "HistoryHeader" },
@@ -100,17 +112,18 @@ function render(query) {
   );
 }
 
-test.each([
-  { isPending: true, isError: false },
-  { isPending: false, isError: true },
-])(
-  "date navigation remains available while the selected period is loading or fails: %o",
-  (query) => {
-    const tree = render(query);
-    expect(tree.some((node) => node.type === "DateFilterToggle")).toBe(true);
-    expect(tree.some((node) => node.type === "HistoryState")).toBe(true);
-  },
-);
+test("date navigation remains available and cards remain mounted while loading", () => {
+  const tree = render({ isPending: true, isError: false });
+  expect(tree.some((node) => node.type === "DateFilterToggle")).toBe(true);
+  expect(tree.some((node) => node.type === "SensorTrendGraph")).toBe(true);
+  expect(tree.some((node) => node.type === "HistoryState")).toBe(false);
+});
+
+test("date navigation and error state remain available on failure", () => {
+  const tree = render({ isPending: false, isError: true });
+  expect(tree.some((node) => node.type === "DateFilterToggle")).toBe(true);
+  expect(tree.some((node) => node.type === "HistoryState")).toBe(true);
+});
 
 test("feedstock images cover database names and trim whitespace", () => {
   const module = load(
@@ -190,4 +203,265 @@ test("history requests pass their cancellation signal through pagination", async
   );
   expect(calls).toHaveLength(1);
   expect(calls[0].signal).toBe(controller.signal);
+});
+
+test("sensor history dynamically maps database units to trend graphs and defaults CO2 to ppm", () => {
+  const tree = render({
+    isPending: false,
+    isError: false,
+    sensors: [
+      { sensorType: "temperature", unit: "°C" },
+      { sensorType: "moisture", unit: "%" },
+      { sensorType: "o2", unit: "%" },
+      { sensorType: "co2", unit: "ppm" },
+    ],
+    readings: [
+      {
+        machineId: "m1",
+        batchId: null,
+        recordedAt: "2026-01-02T10:00:00Z",
+        temperature: 45,
+        moisture: 60,
+        oxygen: 20,
+        co2: 800,
+      },
+    ],
+  });
+  const graphs = tree.filter((node) => node.type === "SensorTrendGraph");
+  expect(graphs.map((g) => [g.props.title, g.props.unit])).toEqual([
+    ["Temperature Trend", "°C"],
+    ["Moisture Trend", "%"],
+    ["Oxygen Trend", "%"],
+    ["Carbon Dioxide Trend", "ppm"],
+  ]);
+});
+
+test("sensor cards remain mounted and consistent even when readings are empty", () => {
+  const tree = render({
+    isPending: false,
+    isError: false,
+    readings: [],
+  });
+  const graphs = tree.filter((node) => node.type === "SensorTrendGraph");
+  expect(graphs).toHaveLength(4);
+});
+
+test("DateFilterToggle supports label press to open datepicker", () => {
+  const { DateFilterToggle } = load(
+    "src/components/ui/date-filter-toggle.tsx",
+    {
+      "react-native": {
+        View: "View",
+        Text: "Text",
+        Pressable: "Pressable",
+      },
+      "lucide-react-native": {},
+      "@/constants": {
+        colors: {
+          semantic: {
+            foreground: "black",
+            primaryForeground: "white",
+          },
+        },
+      },
+    },
+  );
+  let opened = false;
+  const toggleTree = nodes(
+    DateFilterToggle({
+      label: "Nov 10, 2026",
+      onPressLabel: () => {
+        opened = true;
+      },
+    }),
+  );
+  const labelPressable = toggleTree.find(
+    (n) =>
+      n.type === "Pressable" &&
+      n.props.accessibilityLabel?.includes("Selected date"),
+  );
+  expect(labelPressable).toBeDefined();
+  labelPressable.props.onPress();
+  expect(opened).toBe(true);
+});
+
+test("SingleDatePicker enforces minimum machine creation date bounds and triggers selection", () => {
+  const { SingleDatePicker } = load(
+    "src/components/ui/single-date-picker.tsx",
+    {
+      react: {
+        useState: (value) => [value, () => {}],
+        useMemo: (fn) => fn(),
+        useRef: () => ({ current: null }),
+        useEffect: () => {},
+        useCallback: (fn) => fn,
+      },
+      "react/jsx-runtime": require("react/jsx-runtime"),
+      "react-native": {
+        Modal: "Modal",
+        Pressable: "Pressable",
+        View: "View",
+        Text: "Text",
+      },
+      "react-native-calendars": {
+        Calendar: "Calendar",
+      },
+      "./button": { Button: "Button" },
+      "date-fns": require("date-fns"),
+      "@/constants": {
+        colors: {
+          semantic: {
+            background: "white",
+            primaryForeground: "white",
+            foreground: "black",
+          },
+          gray: { textIcon: "gray", border: "gray" },
+          brand: { 500: "green" },
+        },
+      },
+    },
+  );
+
+  const calendarNode = nodes(
+    SingleDatePicker({
+      visible: true,
+      onClose: () => {},
+      minDate: "2026-10-27T00:00:00Z",
+      maxDate: "2026-11-10T00:00:00Z",
+      onSelect: () => {},
+    }),
+  ).find((n) => n.type === "Calendar");
+
+  expect(calendarNode).toBeDefined();
+  expect(calendarNode.props.minDate).toBe("2026-10-27");
+  expect(calendarNode.props.maxDate).toBe("2026-11-10");
+});
+
+test("gates sensor readings when anchor differs from debouncedAnchor", () => {
+  let aggregatedWith = null;
+  const stateValues = [
+    ["Per day", () => {}],
+    [undefined, () => {}],
+    [new Date("2026-11-05"), () => {}],
+    [new Date("2026-11-04"), () => {}],
+    [56, () => {}],
+    [false, () => {}],
+  ];
+  let stateIndex = 0;
+
+  const { SensorHistoryScreen } = load(
+    "src/components/history/sensor-history-screen.tsx",
+    {
+      react: {
+        useState: () => stateValues[stateIndex++ % stateValues.length],
+        useMemo: (fn) => fn(),
+        useRef: () => ({ current: null }),
+        useEffect: () => {},
+      },
+      "react/jsx-runtime": require("react/jsx-runtime"),
+      "react-native": {
+        View: "View",
+        Text: "Text",
+        ScrollView: "ScrollView",
+        useWindowDimensions: () => ({ width: 390, fontScale: 1 }),
+      },
+      "lucide-react-native": {},
+      "@/components/ui/single-date-picker": {
+        SingleDatePicker: "SingleDatePicker",
+      },
+      "@/hooks/use-history": {
+        useHistory: () => ({
+          exists: true,
+          readings: [{ id: "r1", recordedAt: "2026-11-04T10:00:00Z" }],
+        }),
+      },
+      "@/hooks/use-layout": { useDynamicLayout: () => ({ tabBarHeight: 60 }) },
+      "@/lib/history": {
+        sensorRange: () => ({ startDate: "2026-11-05", endDate: "2026-11-05" }),
+        dateBounds: () => ({
+          start: new Date("2026-11-05"),
+          end: new Date("2026-11-05"),
+        }),
+        aggregateReadings: (readings) => {
+          aggregatedWith = readings;
+          return { temperature: [], moisture: [], oxygen: [], co2: [] };
+        },
+      },
+      "@/components/history/history-header": { HistoryHeader: "HistoryHeader" },
+      "@/components/history/history-date-filter": {
+        HistoryDateFilter: "HistoryDateFilter",
+      },
+      "@/components/history/history-state": { HistoryState: "HistoryState" },
+      "@/components/devices/sensor-trend-graph": {
+        SensorTrendGraph: "SensorTrendGraph",
+      },
+      "@/components/ui/date-filter-toggle": {
+        DateFilterToggle: "DateFilterToggle",
+      },
+      "@/constants": {
+        colors: {
+          red: { 500: "red" },
+          teal: { 700: "teal" },
+          yellow: { 700: "yellow" },
+          brand: { 500: "green" },
+        },
+      },
+    },
+  );
+
+  SensorHistoryScreen({ scope: { kind: "machine", machineId: "m1" } });
+  expect(aggregatedWith).toEqual([]);
+});
+
+test("SingleDatePicker stabilizes effect dependency around initial date string", () => {
+  let capturedDeps = [];
+  const { SingleDatePicker } = load(
+    "src/components/ui/single-date-picker.tsx",
+    {
+      react: {
+        useState: (val) => [val, () => {}],
+        useMemo: (fn) => fn(),
+        useEffect: (fn, deps) => {
+          capturedDeps = deps;
+        },
+      },
+      "react/jsx-runtime": {
+        jsx: () => null,
+        jsxs: () => null,
+      },
+      "react-native": {
+        Modal: "Modal",
+        View: "View",
+        Text: "Text",
+        Pressable: "Pressable",
+        StyleSheet: { create: (s) => s },
+      },
+      "react-native-calendars": {
+        Calendar: "Calendar",
+      },
+      "./button": { Button: "Button" },
+      "date-fns": require("date-fns"),
+      "@/constants": {
+        colors: {
+          semantic: {
+            background: "white",
+            primaryForeground: "white",
+            foreground: "black",
+          },
+          gray: { textIcon: "gray", border: "gray" },
+          brand: { 500: "green" },
+        },
+      },
+    },
+  );
+
+  SingleDatePicker({
+    visible: true,
+    initialDate: new Date("2026-11-10T00:00:00Z"),
+    onClose: () => {},
+    onSelect: () => {},
+  });
+
+  // Dependencies should be [visible, initial (string)] rather than Date reference
+  expect(capturedDeps).toEqual([true, "2026-11-10"]);
 });

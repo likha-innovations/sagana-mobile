@@ -446,19 +446,23 @@ test("history queries separate scope caches, load only relevant metadata and han
     "@/types/history": schemas,
     "@/lib/history": h,
     "./use-batches": {
-      useCompletedBatches: (active) => {
+      useBatch: (id, active) => {
         enabled.push(["batch", active]);
         return {
-          data: fixtures.completed_batches,
+          data: fixtures.completed_batches.find((item) => item.id === id),
           isPending: false,
           refetch() {},
         };
       },
     },
     "./use-machines": {
-      useMachines: (active) => {
+      useMachine: (id, active) => {
         enabled.push(["machine", active]);
-        return { data: fixtures.machines, isPending: false, refetch() {} };
+        return {
+          data: fixtures.machines.find((item) => item.id === id),
+          isPending: false,
+          refetch() {},
+        };
       },
     },
     "@tanstack/react-query": {
