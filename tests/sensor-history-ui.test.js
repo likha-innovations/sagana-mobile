@@ -41,7 +41,14 @@ function render(query) {
   const { SensorHistoryScreen } = load(
     "src/components/history/sensor-history-screen.tsx",
     {
-      react: { useState: (value) => [value, () => {}], useMemo: (fn) => fn() },
+      react: {
+        useState: (value) => [value, () => {}],
+        useMemo: (fn) => fn(),
+        useEffect: (fn) => {
+          const cleanup = fn();
+          if (typeof cleanup === "function") cleanup();
+        },
+      },
       "react/jsx-runtime": require("react/jsx-runtime"),
       "react-native": {
         View: "View",
@@ -68,10 +75,10 @@ function render(query) {
           end: new Date("2026-01-02"),
         }),
         aggregateReadings: () => ({
-          temperature: [],
-          moisture: [],
-          oxygen: [],
-          co2: [],
+          temperature: query?.readings?.length ? [{ value: 45 }] : [],
+          moisture: query?.readings?.length ? [{ value: 60 }] : [],
+          oxygen: query?.readings?.length ? [{ value: 20 }] : [],
+          co2: query?.readings?.length ? [{ value: 800 }] : [],
         }),
       },
       "@/components/history/history-header": { HistoryHeader: "HistoryHeader" },
@@ -190,4 +197,35 @@ test("history requests pass their cancellation signal through pagination", async
   );
   expect(calls).toHaveLength(1);
   expect(calls[0].signal).toBe(controller.signal);
+});
+
+test("sensor history dynamically maps database units to trend graphs and defaults CO2 to ppm", () => {
+  const tree = render({
+    isPending: false,
+    isError: false,
+    sensors: [
+      { sensorType: "temperature", unit: "°C" },
+      { sensorType: "moisture", unit: "%" },
+      { sensorType: "o2", unit: "%" },
+      { sensorType: "co2", unit: "ppm" },
+    ],
+    readings: [
+      {
+        machineId: "m1",
+        batchId: null,
+        recordedAt: "2026-01-02T10:00:00Z",
+        temperature: 45,
+        moisture: 60,
+        oxygen: 20,
+        co2: 800,
+      },
+    ],
+  });
+  const graphs = tree.filter((node) => node.type === "SensorTrendGraph");
+  expect(graphs.map((g) => [g.props.title, g.props.unit])).toEqual([
+    ["Temperature Trend", "°C"],
+    ["Moisture Trend", "%"],
+    ["Oxygen Trend", "%"],
+    ["Carbon Dioxide Trend", "ppm"],
+  ]);
 });

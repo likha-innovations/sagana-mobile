@@ -60,65 +60,23 @@ test("API validates list/detail fields, preserves nulls, and rejects invalid rec
     expect(machine[key]).toBe(null);
   response = record;
   expect(await machineApi.getMachine("neo2")).toEqual(machine);
-  expect(paths).toEqual([
-    "/machines",
-    "/machines/neo2",
-    "/machines/neo2/readings?limit=500",
-  ]);
-  response = { ...record, createdAt: "invalid" };
+  expect(paths).toEqual(["/machines", "/machines/neo2"]);
+  response = { ...record, status: "invalid_status" };
   await expect((() => machineApi.getMachine("neo2"))()).rejects.toThrow();
 });
 
-test("machine details survive a readings request failure", async () => {
+test("machine details propagate machine request errors", async () => {
   const { machineApi } = load("src/api/machine.api.ts", {
     "./client": {
       api: {
-        get: async (path) => {
-          if (path.includes("/readings?"))
-            throw new Error("Readings unavailable");
-          return record;
+        get: async () => {
+          throw new Error("Machine unavailable");
         },
       },
     },
     "@/types/machine": load("src/types/machine.ts"),
     "@/types/history": load("src/types/history.ts"),
   });
-  expect(await machineApi.getMachine("neo2")).toEqual(record);
-});
-
-test("machine details retain readings and propagate machine request errors", async () => {
-  let failMachine = false;
-  const { machineApi } = load("src/api/machine.api.ts", {
-    "./client": {
-      api: {
-        get: async (path) => {
-          if (!path.includes("/readings?")) {
-            if (failMachine) throw new Error("Machine unavailable");
-            return record;
-          }
-          return {
-            readings: [
-              {
-                machineId: record.id,
-                batchId: null,
-                recordedAt: "2026-10-14T12:00:00.000Z",
-                temperature: 37,
-                moisture: null,
-                oxygen: null,
-                co2: null,
-              },
-            ],
-          };
-        },
-      },
-    },
-    "@/types/machine": load("src/types/machine.ts"),
-    "@/types/history": load("src/types/history.ts"),
-  });
-  const machine = await machineApi.getMachine("neo2");
-  expect(machine.latestReadings.temperature).toBe(37);
-  expect(machine.latestReadings.updatedAt).toBe("2026-10-14T12:00:00.000Z");
-  failMachine = true;
   await expect(machineApi.getMachine("neo2")).rejects.toThrow(
     "Machine unavailable",
   );
