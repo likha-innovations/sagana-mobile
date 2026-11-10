@@ -245,22 +245,25 @@ test("sensor cards remain mounted and consistent even when readings are empty", 
 });
 
 test("DateFilterToggle supports label press to open datepicker", () => {
-  const { DateFilterToggle } = load("src/components/ui/date-filter-toggle.tsx", {
-    "react-native": {
-      View: "View",
-      Text: "Text",
-      Pressable: "Pressable",
-    },
-    "lucide-react-native": {},
-    "@/constants": {
-      colors: {
-        semantic: {
-          foreground: "black",
-          primaryForeground: "white",
+  const { DateFilterToggle } = load(
+    "src/components/ui/date-filter-toggle.tsx",
+    {
+      "react-native": {
+        View: "View",
+        Text: "Text",
+        Pressable: "Pressable",
+      },
+      "lucide-react-native": {},
+      "@/constants": {
+        colors: {
+          semantic: {
+            foreground: "black",
+            primaryForeground: "white",
+          },
         },
       },
     },
-  });
+  );
   let opened = false;
   const toggleTree = nodes(
     DateFilterToggle({
@@ -271,7 +274,9 @@ test("DateFilterToggle supports label press to open datepicker", () => {
     }),
   );
   const labelPressable = toggleTree.find(
-    (n) => n.type === "Pressable" && n.props.accessibilityLabel?.includes("Selected date"),
+    (n) =>
+      n.type === "Pressable" &&
+      n.props.accessibilityLabel?.includes("Selected date"),
   );
   expect(labelPressable).toBeDefined();
   labelPressable.props.onPress();
