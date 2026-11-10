@@ -196,24 +196,6 @@ export default function SignInScreen() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showErrorModal, setShowErrorModal] = useState(false);
-  const [failedAttempts, setFailedAttempts] = useState(0);
-  const [lockoutUntil, setLockoutUntil] = useState<number | null>(null);
-
-  // Auto-reset lockout after 30s
-  useEffect(() => {
-    if (!lockoutUntil) return;
-    const remainingMs = lockoutUntil - Date.now();
-    if (remainingMs <= 0) {
-      setLockoutUntil(null);
-      setFailedAttempts(0);
-      return;
-    }
-    const timer = setTimeout(() => {
-      setLockoutUntil(null);
-      setFailedAttempts(0);
-    }, remainingMs);
-    return () => clearTimeout(timer);
-  }, [lockoutUntil]);
 
   const handleEmailChange = (text: string) => {
     setEmailAddress(text);
@@ -228,20 +210,6 @@ export default function SignInScreen() {
   };
 
   const handleLoginPress = async () => {
-    // AC10: 5 consecutive failed login attempts guard (30s cooldown)
-    const now = Date.now();
-    if (lockoutUntil && now < lockoutUntil) {
-      setEmailError(true);
-      setPasswordError(true);
-      setErrorMessage('Too many failed attempts, you may try again later');
-      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      return;
-    }
-    if (lockoutUntil && now >= lockoutUntil) {
-      setLockoutUntil(null);
-      setFailedAttempts(0);
-    }
-
     const trimmedEmail = emailAddress.trim();
     const missingEmail = !trimmedEmail;
     const missingPassword = !password;
@@ -272,13 +240,8 @@ export default function SignInScreen() {
     try {
       if (isLoaded) {
         await signIn(trimmedEmail, password);
-        setFailedAttempts(0);
-        setLockoutUntil(null);
       }
     } catch (err: unknown) {
-      const nextFailCount = failedAttempts + 1;
-      setFailedAttempts(nextFailCount);
-
       const clerkErr = err as { errors?: Array<{ code?: string; message?: string; longMessage?: string }>; message?: string };
       const errorCode = clerkErr?.errors?.[0]?.code;
       const rawMessage =
@@ -293,8 +256,8 @@ export default function SignInScreen() {
         error: err,
       });
 
+      // Rate limiting comes from Clerk
       const isLockout =
-        nextFailCount >= 5 ||
         errorCode === 'too_many_requests' ||
         /too many/i.test(rawMessage);
 
@@ -306,7 +269,6 @@ export default function SignInScreen() {
 
       let message = 'Unable to sign in, please try again';
       if (isLockout) {
-        setLockoutUntil(Date.now() + 30_000);
         message = 'Too many failed attempts, you may try again later';
         setEmailError(true);
         setPasswordError(true);
