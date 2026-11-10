@@ -9,6 +9,7 @@ interface DateFilterToggleProps {
   previousDisabled?: boolean;
   nextDisabled?: boolean;
   prominent?: boolean;
+  onPressLabel?: () => void;
 }
 export function DateFilterToggle({
   label,
@@ -17,6 +18,7 @@ export function DateFilterToggle({
   previousDisabled = false,
   nextDisabled = false,
   prominent = false,
+  onPressLabel,
 }: DateFilterToggleProps) {
   const color = prominent
     ? colors.semantic.primaryForeground
@@ -43,12 +45,20 @@ export function DateFilterToggle({
           opacity={previousDisabled ? 0.35 : 1}
         />
       </Pressable>
-      <Text
-        style={{ color }}
-        className="shrink text-center text-[14px] font-sans"
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`Selected date: ${label}`}
+        disabled={!onPressLabel}
+        onPress={onPressLabel}
+        className="shrink flex-1 items-center justify-center py-2"
       >
-        {label}
-      </Text>
+        <Text
+          style={{ color }}
+          className="text-center text-[14px] font-sans"
+        >
+          {label}
+        </Text>
+      </Pressable>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Next period"

@@ -1,4 +1,4 @@
-﻿import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Machine } from "@/types/machine";
 import type { RegisterMachinePayload } from "@/types/device";
 import { deviceApi } from "@/api/device.api";

@@ -54,8 +54,12 @@ function render(query) {
         View: "View",
         Text: "Text",
         ScrollView: "ScrollView",
+        Modal: "Modal",
+        Pressable: "Pressable",
+        Platform: { OS: "android" },
         useWindowDimensions: () => ({ width: 390, fontScale: 1 }),
       },
+      "@react-native-community/datetimepicker": "DateTimePicker",
       "lucide-react-native": {},
       "@/hooks/use-history": {
         useHistory: () => ({
@@ -228,4 +232,48 @@ test("sensor history dynamically maps database units to trend graphs and default
     ["Oxygen Trend", "%"],
     ["Carbon Dioxide Trend", "ppm"],
   ]);
+});
+
+test("sensor cards remain mounted and consistent even when readings are empty", () => {
+  const tree = render({
+    isPending: false,
+    isError: false,
+    readings: [],
+  });
+  const graphs = tree.filter((node) => node.type === "SensorTrendGraph");
+  expect(graphs).toHaveLength(4);
+});
+
+test("DateFilterToggle supports label press to open datepicker", () => {
+  const { DateFilterToggle } = load("src/components/ui/date-filter-toggle.tsx", {
+    "react-native": {
+      View: "View",
+      Text: "Text",
+      Pressable: "Pressable",
+    },
+    "lucide-react-native": {},
+    "@/constants": {
+      colors: {
+        semantic: {
+          foreground: "black",
+          primaryForeground: "white",
+        },
+      },
+    },
+  });
+  let opened = false;
+  const toggleTree = nodes(
+    DateFilterToggle({
+      label: "Nov 10, 2026",
+      onPressLabel: () => {
+        opened = true;
+      },
+    }),
+  );
+  const labelPressable = toggleTree.find(
+    (n) => n.type === "Pressable" && n.props.accessibilityLabel?.includes("Selected date"),
+  );
+  expect(labelPressable).toBeDefined();
+  labelPressable.props.onPress();
+  expect(opened).toBe(true);
 });
