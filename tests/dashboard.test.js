@@ -159,14 +159,18 @@ test("batches with null finalWeight do not break the metric sum", () => {
 });
 
 test("finishBatchInputSchema validates input with or without finalWeight", () => {
-  expect(types.finishBatchInputSchema.parse({ id: "b1", finalWeight: 14.2 })).toEqual({
+  expect(
+    types.finishBatchInputSchema.parse({ id: "b1", finalWeight: 14.2 }),
+  ).toEqual({
     id: "b1",
     finalWeight: 14.2,
   });
   expect(types.finishBatchInputSchema.parse({ id: "b2" })).toEqual({
     id: "b2",
   });
-  expect(() => types.finishBatchInputSchema.parse({ id: "b3", finalWeight: -1 })).toThrow();
+  expect(() =>
+    types.finishBatchInputSchema.parse({ id: "b3", finalWeight: -1 }),
+  ).toThrow();
 });
 
 test("compostBatchSchema validates batches containing finalWeight, machineName, and phase timestamp", () => {
@@ -181,7 +185,11 @@ test("compostBatchSchema validates batches containing finalWeight, machineName, 
     machineName: "SAGANA-1",
     feedstocks: [],
     compostingPhases: [
-      { phaseName: "Mesophilic", status: "active", timestamp: "2026-11-10T01:00:00Z" },
+      {
+        phaseName: "Mesophilic",
+        status: "active",
+        timestamp: "2026-11-10T01:00:00Z",
+      },
     ],
   });
   expect(parsed.finalWeight).toBe(14.2);
