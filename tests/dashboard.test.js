@@ -138,3 +138,53 @@ test("batch creation calls the API and invalidates dashboard dependencies", asyn
   expect(invalidations.includes("machines")).toBeTruthy();
   expect(() => mutation.mutationFn({ ...input, feedstocks: [] })).toThrow();
 });
+
+test("batches with null finalWeight do not break the metric sum", () => {
+  const mixed = [
+    { ...completed[0], id: "c1", finalWeight: 40.5 },
+    { ...completed[0], id: "c2", finalWeight: null },
+    { ...completed[0], id: "c3", finalWeight: 20.3 },
+  ];
+  const metrics = helpers.getDashboardMetrics(mixed, [], []);
+  expect(metrics.totalCompost.value).toBe(60.8);
+  expect(metrics.completedBatches).toBe(3);
+
+  const allNull = [
+    { ...completed[0], id: "c1", finalWeight: null },
+    { ...completed[0], id: "c2", finalWeight: null },
+  ];
+  const allNullMetrics = helpers.getDashboardMetrics(allNull, [], []);
+  expect(allNullMetrics.totalCompost.value).toBeNull();
+  expect(allNullMetrics.completedBatches).toBe(2);
+});
+
+test("finishBatchInputSchema validates input with or without finalWeight", () => {
+  expect(types.finishBatchInputSchema.parse({ id: "b1", finalWeight: 14.2 })).toEqual({
+    id: "b1",
+    finalWeight: 14.2,
+  });
+  expect(types.finishBatchInputSchema.parse({ id: "b2" })).toEqual({
+    id: "b2",
+  });
+  expect(() => types.finishBatchInputSchema.parse({ id: "b3", finalWeight: -1 })).toThrow();
+});
+
+test("compostBatchSchema validates batches containing finalWeight, machineName, and phase timestamp", () => {
+  const parsed = types.compostBatchSchema.parse({
+    id: "b1",
+    machineId: "m1",
+    batchCode: "BATCH-001",
+    status: "active",
+    startDate: "2026-11-10T00:00:00Z",
+    totalWeight: 50.0,
+    finalWeight: 14.2,
+    machineName: "SAGANA-1",
+    feedstocks: [],
+    compostingPhases: [
+      { phaseName: "Mesophilic", status: "active", timestamp: "2026-11-10T01:00:00Z" },
+    ],
+  });
+  expect(parsed.finalWeight).toBe(14.2);
+  expect(parsed.machineName).toBe("SAGANA-1");
+  expect(parsed.compostingPhases[0].timestamp).toBe("2026-11-10T01:00:00Z");
+});

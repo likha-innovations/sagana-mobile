@@ -10,13 +10,21 @@ export function getDashboardMetrics(
   batches: CompostBatch[],
   machines: Machine[],
 ): DashboardMetrics {
+  const withWeight = completed.filter((batch) => batch.finalWeight != null);
+  const totalCompostValue =
+    completed.length === 0
+      ? 0
+      : withWeight.length === 0
+        ? null
+        : Number(
+            withWeight
+              .reduce((sum, batch) => sum + (batch.finalWeight ?? 0), 0)
+              .toFixed(2),
+          );
+
   return {
     totalCompost: {
-      value: completed.some((batch) => batch.finalWeight == null) ? null : Number(
-        completed
-          .reduce((sum, batch) => sum + (batch.finalWeight ?? 0), 0)
-          .toFixed(2),
-      ),
+      value: totalCompostValue,
       unit: "kg",
     },
     totalFeedstock: {

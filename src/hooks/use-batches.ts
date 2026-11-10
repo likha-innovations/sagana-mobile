@@ -4,6 +4,7 @@ import {
   type BatchFeedstock,
   type CreateBatchInput,
   type DashboardMetrics,
+  type FinishBatchInput,
   createBatchInputSchema,
 } from "@/types/batch";
 import {
@@ -129,7 +130,8 @@ export function useCreateCompostBatch() {
 export function useFinishCompostBatch() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: batchApi.finish,
+    mutationFn: ({ id, finalWeight }: FinishBatchInput) =>
+      batchApi.finish(id, finalWeight),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: batchKeys.all });
       queryClient.invalidateQueries({ queryKey: machineKeys.all });
