@@ -111,17 +111,18 @@ function render(query) {
   );
 }
 
-test.each([
-  { isPending: true, isError: false },
-  { isPending: false, isError: true },
-])(
-  "date navigation remains available while the selected period is loading or fails: %o",
-  (query) => {
-    const tree = render(query);
-    expect(tree.some((node) => node.type === "DateFilterToggle")).toBe(true);
-    expect(tree.some((node) => node.type === "HistoryState")).toBe(true);
-  },
-);
+test("date navigation remains available and cards remain mounted while loading", () => {
+  const tree = render({ isPending: true, isError: false });
+  expect(tree.some((node) => node.type === "DateFilterToggle")).toBe(true);
+  expect(tree.some((node) => node.type === "SensorTrendGraph")).toBe(true);
+  expect(tree.some((node) => node.type === "HistoryState")).toBe(false);
+});
+
+test("date navigation and error state remain available on failure", () => {
+  const tree = render({ isPending: false, isError: true });
+  expect(tree.some((node) => node.type === "DateFilterToggle")).toBe(true);
+  expect(tree.some((node) => node.type === "HistoryState")).toBe(true);
+});
 
 test("feedstock images cover database names and trim whitespace", () => {
   const module = load(

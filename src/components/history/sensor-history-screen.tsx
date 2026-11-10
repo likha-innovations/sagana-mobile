@@ -131,8 +131,6 @@ export function SensorHistoryScreen({ scope }: { scope: HistoryScope }) {
           retrying={query.isFetching}
           onRetry={() => void query.refetch()}
         />
-      ) : query.isPending ? (
-        <HistoryState message="Loading sensor history…" />
       ) : !query.exists ? (
         <HistoryState
           message={
