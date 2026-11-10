@@ -36,10 +36,10 @@ export function SingleDatePicker({
     selected <= upper;
 
   useEffect(() => {
-    if (visible && initialDate) {
-      setSelected(format(initialDate, "yyyy-MM-dd"));
+    if (visible) {
+      setSelected(initial);
     }
-  }, [visible, initialDate]);
+  }, [visible, initial]);
 
   const markedDates = useMemo(() => {
     if (!selected) return {};

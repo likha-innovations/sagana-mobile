@@ -306,6 +306,7 @@ test("SingleDatePicker enforces minimum machine creation date bounds and trigger
       "react-native-calendars": {
         Calendar: "Calendar",
       },
+      "./button": { Button: "Button" },
       "date-fns": require("date-fns"),
       "@/constants": {
         colors: {
@@ -317,9 +318,6 @@ test("SingleDatePicker enforces minimum machine creation date bounds and trigger
           gray: { textIcon: "gray", border: "gray" },
           brand: { 500: "green" },
         },
-      },
-      "./button": {
-        Button: "Button",
       },
     },
   );
@@ -413,4 +411,57 @@ test("gates sensor readings when anchor differs from debouncedAnchor", () => {
 
   SensorHistoryScreen({ scope: { kind: "machine", machineId: "m1" } });
   expect(aggregatedWith).toEqual([]);
+});
+
+test("SingleDatePicker stabilizes effect dependency around initial date string", () => {
+  let capturedDeps = [];
+  const { SingleDatePicker } = load(
+    "src/components/ui/single-date-picker.tsx",
+    {
+      react: {
+        useState: (val) => [val, () => {}],
+        useMemo: (fn) => fn(),
+        useEffect: (fn, deps) => {
+          capturedDeps = deps;
+        },
+      },
+      "react/jsx-runtime": {
+        jsx: () => null,
+        jsxs: () => null,
+      },
+      "react-native": {
+        Modal: "Modal",
+        View: "View",
+        Text: "Text",
+        Pressable: "Pressable",
+        StyleSheet: { create: (s) => s },
+      },
+      "react-native-calendars": {
+        Calendar: "Calendar",
+      },
+      "./button": { Button: "Button" },
+      "date-fns": require("date-fns"),
+      "@/constants": {
+        colors: {
+          semantic: {
+            background: "white",
+            primaryForeground: "white",
+            foreground: "black",
+          },
+          gray: { textIcon: "gray", border: "gray" },
+          brand: { 500: "green" },
+        },
+      },
+    },
+  );
+
+  SingleDatePicker({
+    visible: true,
+    initialDate: new Date("2026-11-10T00:00:00Z"),
+    onClose: () => {},
+    onSelect: () => {},
+  });
+
+  // Dependencies should be [visible, initial (string)] rather than Date reference
+  expect(capturedDeps).toEqual([true, "2026-11-10"]);
 });
