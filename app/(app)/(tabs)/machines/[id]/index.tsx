@@ -466,7 +466,7 @@ export default function MachineDetailsDashboard() {
         onCancel={() => setFinishVisible(false)}
         onConfirm={() => {
           if (!batch) return;
-          finishBatch.mutate(batch.id, {
+          finishBatch.mutate({ id: batch.id }, {
             onSuccess: () => { setFinishVisible(false); router.replace("/(app)/(tabs)/machines"); },
             onError: (error) => Alert.alert("Could not finish batch", error.message),
           });

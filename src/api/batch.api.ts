@@ -22,7 +22,13 @@ export const batchApi = {
     ));
   },
   create: async (input: CreateBatchInput) => compostBatchSchema.parse(await api.post<unknown>("/batches", input)),
-  finish: async (id: string) => completedBatchSchema.parse(await api.post<unknown>(`/batches/${encodeURIComponent(id)}/finish`, {})),
+  finish: async (id: string, finalWeight?: number) =>
+    completedBatchSchema.parse(
+      await api.post<unknown>(
+        `/batches/${encodeURIComponent(id)}/finish`,
+        finalWeight !== undefined ? { finalWeight } : {},
+      ),
+    ),
   readings: async (scope: HistoryScope, startDate: string, endDate: string, signal?: AbortSignal) => {
     const path = scope.kind === "machine" ? `/machines/${encodeURIComponent(scope.machineId)}/readings` : `/batches/${encodeURIComponent(scope.batchId)}/readings`;
     const readings: z.infer<typeof historyReadingSchema>[] = [];

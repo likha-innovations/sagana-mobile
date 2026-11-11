@@ -42,8 +42,18 @@ export const compostBatchSchema = z.object({
   startDate: z.string(),
   completionDate: z.string().nullable().optional(),
   totalWeight: z.number().nonnegative(),
+  finalWeight: z.number().nonnegative().nullable().optional(),
+  machineName: z.string().optional(),
   feedstocks: z.array(batchFeedstockSchema),
-  compostingPhases: z.array(z.object({ phaseName: z.string(), status: z.string() })).optional(),
+  compostingPhases: z
+    .array(
+      z.object({
+        phaseName: z.string(),
+        status: z.string(),
+        timestamp: z.string().optional(),
+      }),
+    )
+    .optional(),
 });
 export type CompostBatch = z.infer<typeof compostBatchSchema>;
 
@@ -54,6 +64,12 @@ export const completedBatchSchema = compostBatchSchema.extend({
   machineName: z.string(),
 });
 export type CompletedBatch = z.infer<typeof completedBatchSchema>;
+
+export const finishBatchInputSchema = z.object({
+  id: z.string(),
+  finalWeight: z.number().nonnegative().optional(),
+});
+export type FinishBatchInput = z.infer<typeof finishBatchInputSchema>;
 
 // Form validation schemas for batch creation wizard
 export const createBatchItemInputSchema = z.object({
