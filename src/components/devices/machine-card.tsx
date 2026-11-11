@@ -109,10 +109,17 @@ export function MachineCard({
           className="min-h-[99px] items-center justify-center border border-border rounded-[8px] px-1 py-3"
         >
           <Thermometer size={24} color={tempColor} className="mb-2" />
-          <Text className="text-sm font-bold" style={{ color: tempColor }}>
+          <Text
+            numberOfLines={1}
+            className="text-sm font-bold text-center"
+            style={{ color: tempColor }}
+          >
             {temp}
           </Text>
-          <Text className="text-[12px] font-sans text-foreground mt-0.5">
+          <Text
+            numberOfLines={1}
+            className="text-[12px] font-sans text-foreground mt-0.5 text-center"
+          >
             Temp.
           </Text>
         </View>
@@ -123,10 +130,17 @@ export function MachineCard({
           className="min-h-[99px] items-center justify-center border border-border rounded-[8px] px-1 py-3"
         >
           <Droplets size={24} color={moistureColor} className="mb-2" />
-          <Text className="text-sm font-bold" style={{ color: moistureColor }}>
+          <Text
+            numberOfLines={1}
+            className="text-sm font-bold text-center"
+            style={{ color: moistureColor }}
+          >
             {moisture}
           </Text>
-          <Text className="text-[12px] font-sans text-foreground mt-0.5">
+          <Text
+            numberOfLines={1}
+            className="text-[12px] font-sans text-foreground mt-0.5 text-center"
+          >
             Moisture
           </Text>
         </View>
@@ -137,10 +151,17 @@ export function MachineCard({
           className="min-h-[99px] items-center justify-center border border-border rounded-[8px] px-1 py-3"
         >
           <Wind size={24} color={o2Color} className="mb-2" />
-          <Text className="text-sm font-bold" style={{ color: o2Color }}>
+          <Text
+            numberOfLines={1}
+            className="text-sm font-bold text-center"
+            style={{ color: o2Color }}
+          >
             {o2}
           </Text>
-          <Text className="text-[12px] font-sans text-foreground mt-0.5">
+          <Text
+            numberOfLines={1}
+            className="text-[12px] font-sans text-foreground mt-0.5 text-center"
+          >
             O2
           </Text>
         </View>
@@ -151,10 +172,18 @@ export function MachineCard({
           className="min-h-[99px] items-center justify-center border border-border rounded-[8px] px-1 py-3"
         >
           <Cloud size={24} color={co2Color} className="mb-2" />
-          <Text className="text-sm font-bold" style={{ color: co2Color }}>
+          <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            className="text-xs font-bold text-center"
+            style={{ color: co2Color }}
+          >
             {co2}
           </Text>
-          <Text className="text-[12px] font-sans text-foreground mt-0.5">
+          <Text
+            numberOfLines={1}
+            className="text-[12px] font-sans text-foreground mt-0.5 text-center"
+          >
             CO2
           </Text>
         </View>
