@@ -33,7 +33,7 @@ if (!publishableKey) {
 }
 
 function AuthProtectedNavigation() {
-  const { isSignedIn, isLoaded, user, clerkUser, signupBarangay, signOut } = useAuthContext();
+  const { isSignedIn, isLoaded, user, signupBarangay, signOut } = useAuthContext();
   const segments = useSegments();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -66,12 +66,10 @@ function AuthProtectedNavigation() {
     if (isSignedIn && (!user || profile.isLoading || profile.isError)) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    const isSuspended =
-      profile.data?.status === 'suspended' ||
-      (clerkUser?.publicMetadata as Record<string, unknown> | undefined)?.status === 'suspended';
+    const isSuspended = profile.data?.status === 'suspended';
 
     authGateLogger.info(
-      `AuthGate evaluation: dbStatus=${profile.data?.status}, clerkStatus=${(clerkUser?.publicMetadata as Record<string, unknown> | undefined)?.status}, isSuspended=${isSuspended}`
+      `AuthGate evaluation: dbStatus=${profile.data?.status}, isSuspended=${isSuspended}`
     );
 
     const destination = signupDestination(
@@ -109,9 +107,7 @@ function AuthProtectedNavigation() {
     }
   }, [isSignedIn, isLoaded, user, segments, router, queryClient, profile.data, profile.isLoading, profile.isError, signupBarangay]);
 
-  const isSuspended =
-    profile.data?.status === 'suspended' ||
-    (clerkUser?.publicMetadata as Record<string, unknown> | undefined)?.status === 'suspended';
+  const isSuspended = profile.data?.status === 'suspended';
   const showLoading =
     isSignedIn &&
     (!user ||
