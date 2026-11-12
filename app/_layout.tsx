@@ -8,6 +8,7 @@ import { ClerkProvider, ClerkLoaded, ClerkLoading } from '@clerk/expo';
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
 import { View, Text, Pressable } from 'react-native';
 import { userApi } from '@/api/user.api';
+import { setForbiddenHandler } from '@/api/client';
 import { signupDestination } from '@/lib/barangay-code';
 import { useFonts } from 'expo-font';
 import { tokenCache } from '@/lib/token-cache';
@@ -39,6 +40,13 @@ function AuthProtectedNavigation() {
   const profile = useQuery({ queryKey: ['signup-profile', user?.id], queryFn: userApi.getProfile, enabled: !!isSignedIn && !!user?.id, retry: 1 });
 
   useEffect(() => {
+    setForbiddenHandler(() => {
+      void queryClient.invalidateQueries({ queryKey: ['signup-profile', user?.id] });
+    });
+    return () => setForbiddenHandler(null);
+  }, [queryClient, user?.id]);
+
+  useEffect(() => {
     if (segments.length > 0) {
       navLogger.screen(segments.join('/'));
     }
@@ -52,7 +60,13 @@ function AuthProtectedNavigation() {
     if (isSignedIn && (!user || profile.isLoading || profile.isError)) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    const destination = signupDestination(Boolean(profile.data?.barangayId), Boolean(user?.birthday), Boolean(signupBarangay));
+    const isSuspended = profile.data?.status === 'suspended';
+    const destination = signupDestination(
+      Boolean(profile.data?.barangayId),
+      Boolean(user?.birthday),
+      Boolean(signupBarangay),
+      isSuspended,
+    );
 
     if (!isSignedIn) {
       queryClient.removeQueries({ queryKey: ['signup-profile'] });
@@ -60,6 +74,11 @@ function AuthProtectedNavigation() {
         authGateLogger.info('Unauthenticated user redirected to sign-in');
         queryClient.clear();
         router.replace('/(auth)/sign-in');
+      }
+    } else if (isSignedIn && destination === 'suspended') {
+      if (!inAuthGroup || segments.at(1) !== 'suspended') {
+        authGateLogger.warn('Suspended operator redirected to suspended screen');
+        router.replace('/(auth)/suspended');
       }
     } else if (isSignedIn && destination === 'code') {
       if (!inAuthGroup || segments.at(1) !== 'barangay-code') router.replace('/(auth)/barangay-code');
@@ -77,7 +96,14 @@ function AuthProtectedNavigation() {
     }
   }, [isSignedIn, isLoaded, user, segments, router, queryClient, profile.data, profile.isLoading, profile.isError, signupBarangay]);
 
-  const showLoading = isSignedIn && (!user || profile.isLoading || !profile.data?.barangayId) && segments[0] !== '(auth)';
+  const isSuspended = profile.data?.status === 'suspended';
+  const showLoading =
+    isSignedIn &&
+    (!user ||
+      profile.isLoading ||
+      (!isSuspended && !profile.data?.barangayId) ||
+      (isSuspended && segments.at(1) !== 'suspended')) &&
+    (segments[0] !== '(auth)' || (isSuspended && segments.at(1) !== 'suspended'));
   const showError = isSignedIn && profile.isError;
 
   return (

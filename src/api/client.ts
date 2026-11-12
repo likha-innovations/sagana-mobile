@@ -45,9 +45,14 @@ export interface FetchOptions extends RequestInit {
 
 export type UnauthorizedHandler = () => void | Promise<void>;
 let onUnauthorizedCallback: UnauthorizedHandler | null = null;
+let onForbiddenCallback: UnauthorizedHandler | null = null;
 
 export function setUnauthorizedHandler(handler: UnauthorizedHandler | null): void {
   onUnauthorizedCallback = handler;
+}
+
+export function setForbiddenHandler(handler: UnauthorizedHandler | null): void {
+  onForbiddenCallback = handler;
 }
 
 // Typed Native Fetch Wrapper for Sagana Backend with auto JWT injection
@@ -99,6 +104,9 @@ export async function apiFetch<T>(
       if (response.status === 401 && withAuth) {
         logger.warn(`401 Unauthorized -> ${url}. Session is invalid or revoked.`);
         void onUnauthorizedCallback?.();
+      } else if (response.status === 403 && withAuth) {
+        logger.warn(`403 Forbidden -> ${url}. Checking if account is suspended.`);
+        void onForbiddenCallback?.();
       }
 
       const errorData = json as ApiErrorResponse | null;

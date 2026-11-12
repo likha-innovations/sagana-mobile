@@ -11,6 +11,8 @@ export const userSchema = z.object({
   contactNumber: z.string().nullable().optional(),
   barangayId: z.string().nullable().optional(),
   verificationStatus: z.enum(['verified', 'unverified', 'rejected']).optional(),
+  status: z.enum(['active', 'suspended']).or(z.string()).optional(),
+  role: z.string().optional(),
   barangay: z.union([
     z.string(),
     z.object({ id: z.string(), name: z.string() })
