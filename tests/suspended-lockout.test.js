@@ -25,3 +25,4 @@ test("routes active users according to their onboarding profile state", () => {
   expect(signupDestination(true, false, false, false)).toBe("signup");
   expect(signupDestination(false, false, false, false)).toBe("code");
 });
+
