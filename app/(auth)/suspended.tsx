@@ -28,6 +28,7 @@ export default function SuspendedScreen() {
 
   const handleSignOut = async () => {
     await signOut();
+    queryClient.clear();
   };
 
   return (

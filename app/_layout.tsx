@@ -33,11 +33,17 @@ if (!publishableKey) {
 }
 
 function AuthProtectedNavigation() {
-  const { isSignedIn, isLoaded, user, signupBarangay, signOut } = useAuthContext();
+  const { isSignedIn, isLoaded, user, clerkUser, signupBarangay, signOut } = useAuthContext();
   const segments = useSegments();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const profile = useQuery({ queryKey: ['signup-profile', user?.id], queryFn: userApi.getProfile, enabled: !!isSignedIn && !!user?.id, retry: 1 });
+  const profile = useQuery({
+    queryKey: ['signup-profile', user?.id],
+    queryFn: userApi.getProfile,
+    enabled: !!isSignedIn && !!user?.id,
+    retry: 1,
+    refetchInterval: 60000,
+  });
 
   useEffect(() => {
     setForbiddenHandler(() => {
@@ -60,7 +66,14 @@ function AuthProtectedNavigation() {
     if (isSignedIn && (!user || profile.isLoading || profile.isError)) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    const isSuspended = profile.data?.status === 'suspended';
+    const isSuspended =
+      profile.data?.status === 'suspended' ||
+      (clerkUser?.publicMetadata as Record<string, unknown> | undefined)?.status === 'suspended';
+
+    authGateLogger.info(
+      `AuthGate evaluation: dbStatus=${profile.data?.status}, clerkStatus=${(clerkUser?.publicMetadata as Record<string, unknown> | undefined)?.status}, isSuspended=${isSuspended}`
+    );
+
     const destination = signupDestination(
       Boolean(profile.data?.barangayId),
       Boolean(user?.birthday),
@@ -70,7 +83,7 @@ function AuthProtectedNavigation() {
 
     if (!isSignedIn) {
       queryClient.removeQueries({ queryKey: ['signup-profile'] });
-      if (!inAuthGroup) {
+      if (!inAuthGroup || segments.at(1) === 'suspended') {
         authGateLogger.info('Unauthenticated user redirected to sign-in');
         queryClient.clear();
         router.replace('/(auth)/sign-in');
@@ -96,7 +109,9 @@ function AuthProtectedNavigation() {
     }
   }, [isSignedIn, isLoaded, user, segments, router, queryClient, profile.data, profile.isLoading, profile.isError, signupBarangay]);
 
-  const isSuspended = profile.data?.status === 'suspended';
+  const isSuspended =
+    profile.data?.status === 'suspended' ||
+    (clerkUser?.publicMetadata as Record<string, unknown> | undefined)?.status === 'suspended';
   const showLoading =
     isSignedIn &&
     (!user ||
