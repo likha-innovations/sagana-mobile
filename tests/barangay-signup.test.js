@@ -38,6 +38,7 @@ function setup({
     useCallback: (fn) => fn,
     useMemo: (fn) => fn(),
     useEffect: () => {},
+    useRef: (val) => ({ current: val }),
     useState: () => [
       code ? { id: "b1", name: "Barangay 1", code } : null,
       setBarangay,
@@ -79,6 +80,7 @@ function setup({
     "expo-router": { useRouter: () => router },
     "@/types": { ApiError },
     "@/lib/auth-token": { setAuthTokenGetter: jest.fn() },
+    "@/api/client": { setUnauthorizedHandler: jest.fn() },
     "@/lib/socket": { disconnectSocket: jest.fn() },
     "@/lib/logger": {
       createLogger: () => ({

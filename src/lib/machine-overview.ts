@@ -4,9 +4,9 @@ import type { CompostBatch } from "@/types/batch";
 
 export const machineOverviewSchema = z.object({
   machineId: z.string(),
-  batchId: z.string(),
+  batchId: z.string().nullable(),
   currentWeight: z.number().nonnegative().nullable(),
-  recordedAt: z.string(),
+  recordedAt: z.string().refine((val) => !Number.isNaN(Date.parse(val)), "Invalid date"),
   automations: z.array(
     z.object({
       kind: z.enum(["aeration", "sprinkler"]),
@@ -15,6 +15,7 @@ export const machineOverviewSchema = z.object({
     }),
   ),
 });
+export type MachineOverview = z.infer<typeof machineOverviewSchema>;
 
 export function getMachineState(machine: Machine, batch: CompostBatch | null) {
   const occupied =
