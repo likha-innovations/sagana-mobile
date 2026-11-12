@@ -37,7 +37,13 @@ function AuthProtectedNavigation() {
   const segments = useSegments();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const profile = useQuery({ queryKey: ['signup-profile', user?.id], queryFn: userApi.getProfile, enabled: !!isSignedIn && !!user?.id, retry: 1 });
+  const profile = useQuery({
+    queryKey: ['signup-profile', user?.id],
+    queryFn: userApi.getProfile,
+    enabled: !!isSignedIn && !!user?.id,
+    retry: 1,
+    refetchInterval: 60000,
+  });
 
   useEffect(() => {
     setForbiddenHandler(() => {
@@ -61,6 +67,11 @@ function AuthProtectedNavigation() {
 
     const inAuthGroup = segments[0] === '(auth)';
     const isSuspended = profile.data?.status === 'suspended';
+
+    authGateLogger.info(
+      `AuthGate evaluation: dbStatus=${profile.data?.status}, isSuspended=${isSuspended}`
+    );
+
     const destination = signupDestination(
       Boolean(profile.data?.barangayId),
       Boolean(user?.birthday),
@@ -70,7 +81,7 @@ function AuthProtectedNavigation() {
 
     if (!isSignedIn) {
       queryClient.removeQueries({ queryKey: ['signup-profile'] });
-      if (!inAuthGroup) {
+      if (!inAuthGroup || segments.at(1) === 'suspended') {
         authGateLogger.info('Unauthenticated user redirected to sign-in');
         queryClient.clear();
         router.replace('/(auth)/sign-in');
