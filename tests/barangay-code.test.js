@@ -31,6 +31,8 @@ test("routes existing, new, and interrupted signup accounts correctly", () => {
   expect(signupDestination(false, false, false)).toBe("code");
   expect(signupDestination(false, false, true)).toBe("signup");
   expect(signupDestination(false, true, false)).toBe("code");
+  expect(signupDestination(true, true, false, true)).toBe("suspended");
+  expect(signupDestination(false, false, false, true)).toBe("suspended");
 });
 
 test("preserves repeated characters pasted over a selected character", () => {

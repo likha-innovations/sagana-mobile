@@ -29,7 +29,9 @@ export function signupDestination(
   hasBarangay: boolean,
   hasBirthday: boolean,
   hasCode: boolean,
-): "code" | "signup" | "app" {
+  isSuspended?: boolean,
+): "code" | "signup" | "app" | "suspended" {
+  if (isSuspended) return "suspended";
   if (!hasBarangay) return hasCode ? "signup" : "code";
   return hasBirthday ? "app" : "signup";
 }
