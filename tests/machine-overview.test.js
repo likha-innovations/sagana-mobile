@@ -81,6 +81,8 @@ test("overview fixtures are valid, keyed to active batches, and separate current
 
 test("settings validate required values and preserve data when a machine is missing", async () => {
   expect(logic.machineNameSchema.parse("  SAGANA  ")).toBe("SAGANA");
+  expect(logic.machineNameSchema.safeParse("a".repeat(31)).success).toBe(false);
+  expect(logic.machineNameSchema.safeParse("a".repeat(30)).success).toBe(true);
   expect(logic.machineSsidSchema.safeParse("   ").success).toBe(false);
   expect(logic.machineNameSchema.safeParse("   ").success).toBe(false);
   const invalidations = [];

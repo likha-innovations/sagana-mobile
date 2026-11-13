@@ -31,7 +31,8 @@ export function getMachinePhase(temperature: number | undefined, days: number) {
 export const machineNameSchema = z
   .string()
   .trim()
-  .min(1, "Please enter required field");
+  .min(1, "Please enter required field")
+  .max(30, "Machine name must be 30 characters or fewer");
 export const machineSsidSchema = z
   .string()
   .trim()

@@ -84,7 +84,11 @@ export function MachineCard({
           ) : (
             <Radio size={20} color={colors.brand[500]} />
           )}
-          <Text className="flex-1 text-[14px] font-bold text-foreground">
+          <Text
+            numberOfLines={2}
+            ellipsizeMode="tail"
+            className="flex-1 text-[14px] font-bold text-foreground"
+          >
             {machine.name}
           </Text>
         </View>

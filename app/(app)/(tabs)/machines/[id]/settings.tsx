@@ -378,6 +378,7 @@ export default function MachineSettingsScreen() {
                     label="Machine Name"
                     accessibilityLabel="Machine Name"
                     value={name}
+                    maxLength={30}
                     onChangeText={(value) => {
                       setName(value);
                       setError("");
