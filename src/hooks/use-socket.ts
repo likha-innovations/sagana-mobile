@@ -307,6 +307,21 @@ export function useSocket() {
       });
     };
 
+    const onAutomationLog = (data: unknown) => {
+      const payload = data as { machineId?: string };
+      if (!payload?.machineId) return;
+
+      // Drop stale cache so the query refetches and the new log appears instantly
+      void queryClient.invalidateQueries({ queryKey: ['automation-logs'] });
+
+      addLog({
+        type: 'telemetry',
+        title: 'Automation log received',
+        payload: data,
+        timestamp: new Date().toISOString(),
+      });
+    };
+
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('connect_error', onConnectError);
@@ -315,6 +330,7 @@ export function useSocket() {
     socket.on('machine_added', onMachineAdded);
     socket.on('machine_updated', onMachineUpdated);
     socket.on('machine_removed', onMachineRemoved);
+    socket.on('automation_log', onAutomationLog);
 
     return () => {
       socket.off('connect', onConnect);
@@ -325,6 +341,7 @@ export function useSocket() {
       socket.off('machine_added', onMachineAdded);
       socket.off('machine_updated', onMachineUpdated);
       socket.off('machine_removed', onMachineRemoved);
+      socket.off('automation_log', onAutomationLog);
     };
   }, [isSignedIn, addLog, queryClient]);
 
