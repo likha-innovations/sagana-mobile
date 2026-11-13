@@ -443,6 +443,7 @@ test("history queries separate scope caches, load only relevant metadata and han
       useProfile: () => ({ data: { barangayId: "barangay" } }),
     },
     "@/api/batch.api": { batchApi: { readings: async () => [] } },
+    "@/api/machine.api": { machineApi: { getAutomationLogs: async () => [] } },
     "@/types/history": schemas,
     "@/lib/history": h,
     "./use-batches": {

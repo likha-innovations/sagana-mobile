@@ -28,12 +28,16 @@ export interface RealtimeEventLog {
 export const machineRegistrationSchema = z.object({
   ssid: z.string().min(1, 'Please enter required field'),
   password: z.string().min(1, 'Please enter required field'),
-  machineName: z.string().min(1, 'Please enter required field'),
+  machineName: z
+    .string()
+    .trim()
+    .min(1, 'Please enter required field')
+    .max(30, 'Machine name must be 30 characters or fewer'),
 });
 export type MachineRegistrationInput = z.infer<typeof machineRegistrationSchema>;
 
 export const registerMachinePayloadSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
+  name: z.string().min(1, 'Name is required').max(30, 'Name must be 30 characters or fewer'),
   macAddress: z.string().min(1, 'Device identifier is required'),
   wifiSsid: z.string().min(1, 'WiFi SSID is required'),
 });

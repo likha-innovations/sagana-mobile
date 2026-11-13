@@ -316,6 +316,7 @@ export function NameMachineStep({ control }: { control: Control<MachineRegistrat
           <Input
             placeholder="Machine name"
             value={value}
+            maxLength={30}
             onChangeText={onChange}
             onBlur={onBlur}
             error={error?.message}

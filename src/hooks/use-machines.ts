@@ -182,9 +182,13 @@ export function useRegisterMachine() {
 export function useMachineOverview(id: string) {
   return useQuery({
     queryKey: ["machine-overview", id],
-    queryFn: async () => {
-      const records = machineOverviewSchema.array().parse([]);
-      return records.find((record) => record.machineId === id) ?? null;
+    enabled: !!id,
+    queryFn: async ({ signal }) => {
+      try {
+        return await machineApi.getOverview(id, signal);
+      } catch {
+        return null;
+      }
     },
   });
 }

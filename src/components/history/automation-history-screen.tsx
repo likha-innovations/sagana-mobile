@@ -5,12 +5,32 @@ import { Fan, ShowerHead, AlertTriangle, Wind } from "lucide-react-native";
 import { useHistory } from "@/hooks/use-history";
 import { useDynamicLayout } from "@/hooks/use-layout";
 import { historyRange, groupHistoryEvents } from "@/lib/history";
-import type { DateRange, HistoryScope } from "@/types/history";
+import { formatTimeAgo } from "@/lib/utils";
+import type { DateRange, HistoryScope, HistoryEvent } from "@/types/history";
 import { HistoryHeader } from "@/components/history/history-header";
 import { HistoryDateFilter } from "@/components/history/history-date-filter";
 import { HistoryState } from "@/components/history/history-state";
 import { AutomationLogCard } from "@/components/devices/automation-log-card";
 import { colors } from "@/constants";
+
+function getLogVisuals(type: HistoryEvent["type"]) {
+  if (type === "emergency_stop") {
+    return { icon: AlertTriangle, color: colors.semantic.destructive };
+  }
+  if (type === "sprinkler_on") {
+    return { icon: ShowerHead, color: colors.brand[500] };
+  }
+  if (type === "sprinkler_off") {
+    return { icon: ShowerHead, color: colors.gray.textIcon };
+  }
+  if (type === "blower_on") {
+    return { icon: Fan, color: colors.brand[500] };
+  }
+  if (type === "blower_off") {
+    return { icon: Fan, color: colors.gray.textIcon };
+  }
+  return { icon: Wind, color: colors.semantic.foreground };
+}
 
 export function AutomationHistoryScreen({ scope }: { scope: HistoryScope }) {
   const query = useHistory(scope);
@@ -73,22 +93,17 @@ export function AutomationHistoryScreen({ scope }: { scope: HistoryScope }) {
             </Text>
           )}
           renderSectionFooter={() => <View className="h-5" />}
-          renderItem={({ item }) => (
-            <AutomationLogCard
-              icon={
-                item.type === "emergency_stop"
-                  ? AlertTriangle
-                  : item.type.startsWith("sprinkler")
-                    ? ShowerHead
-                    : item.type === "ventilation_adjust"
-                      ? Wind
-                      : Fan
-              }
-              iconColor={colors.semantic.foreground}
-              message={item.message}
-              timeAgo={format(parseISO(item.createdAt), "h:mm a")}
-            />
-          )}
+          renderItem={({ item }) => {
+            const visuals = getLogVisuals(item.type);
+            return (
+              <AutomationLogCard
+                icon={visuals.icon}
+                iconColor={visuals.color}
+                message={item.message}
+                timeAgo={formatTimeAgo(item.createdAt)}
+              />
+            );
+          }}
           ListEmptyComponent={
             <HistoryState message="No automation logs recorded for this period." />
           }

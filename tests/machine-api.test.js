@@ -47,6 +47,7 @@ test("API validates list/detail fields, preserves nulls, and rejects invalid rec
     },
     "@/types/machine": load("src/types/machine.ts"),
     "@/types/history": load("src/types/history.ts"),
+    "@/lib/machine-overview": load("src/lib/machine-overview.ts"),
   });
   const [machine] = await machineApi.getMachines();
   expect(machine.id).toBe(record.id);
@@ -76,6 +77,7 @@ test("machine details propagate machine request errors", async () => {
     },
     "@/types/machine": load("src/types/machine.ts"),
     "@/types/history": load("src/types/history.ts"),
+    "@/lib/machine-overview": load("src/lib/machine-overview.ts"),
   });
   await expect(machineApi.getMachine("neo2")).rejects.toThrow(
     "Machine unavailable",
