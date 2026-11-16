@@ -5,6 +5,7 @@ import {
   ScrollView,
   RefreshControl,
   useWindowDimensions,
+  Pressable,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Box } from "lucide-react-native";
@@ -15,6 +16,7 @@ import { useCompostBatches } from "@/hooks/use-batches";
 import { MachineCard } from "@/components/devices/machine-card";
 import { MachineSkeletons } from "@/components/devices/machine-skeletons";
 import { QuickActionButton } from "@/components/dashboard";
+import { EmptyState } from "@/components/ui/empty-state";
 import { HistoryState } from "@/components/history/history-state";
 import { createLogger } from "@/lib/logger";
 
@@ -45,10 +47,10 @@ export default function MachinesListScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
+          flexGrow: 1,
           paddingHorizontal: 16,
           paddingTop: Math.max(headerPaddingTop, 48),
           paddingBottom: scrollPaddingBottom,
-          gap: 32,
         }}
         refreshControl={
           <RefreshControl
@@ -58,7 +60,7 @@ export default function MachinesListScreen() {
           />
         }
       >
-        <Text className="text-[32px] font-bold text-foreground">Machines</Text>
+        <Text className="text-[32px] font-bold text-foreground mb-8">Machines</Text>
         {failed && (
           <HistoryState
             message="Could not load machines."
@@ -72,11 +74,22 @@ export default function MachinesListScreen() {
           machines.data &&
           batches.data &&
           (machines.data.length === 0 ? (
-            <QuickActionButton
-              label="Add new SAGANA Machine"
-              icon={<Box size={20} color={colors.semantic.primaryForeground} />}
-              onPress={() => router.push("/(app)/machine-registration/new")}
-            />
+            <View className="flex-1 items-center justify-center">
+              <EmptyState
+                message="You have no machines yet."
+                action={
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => router.push("/(app)/machine-registration/new")}
+                    className="h-11 px-6 rounded-full border border-primary items-center justify-center active:opacity-85"
+                  >
+                    <Text className="font-bold text-sm text-primary">
+                      Add a new machine
+                    </Text>
+                  </Pressable>
+                }
+              />
+            </View>
           ) : (
             <View className="gap-3">
               {machines.data.map((machine) => (

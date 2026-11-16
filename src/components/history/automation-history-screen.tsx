@@ -10,6 +10,7 @@ import type { DateRange, HistoryScope, HistoryEvent } from "@/types/history";
 import { HistoryHeader } from "@/components/history/history-header";
 import { HistoryDateFilter } from "@/components/history/history-date-filter";
 import { HistoryState } from "@/components/history/history-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { AutomationLogCard } from "@/components/devices/automation-log-card";
 import { colors } from "@/constants";
 
@@ -78,6 +79,19 @@ export function AutomationHistoryScreen({ scope }: { scope: HistoryScope }) {
               : "This machine could not be found."
           }
         />
+      ) : sections.length === 0 ? (
+        <View
+          className="flex-1 items-center justify-center px-4"
+          style={{ paddingBottom: scrollPaddingBottom }}
+        >
+          <EmptyState
+            message={
+              query.logs.length === 0
+                ? "You have no logs yet."
+                : "No automation logs recorded for this period."
+            }
+          />
+        </View>
       ) : (
         <SectionList
           sections={sections}
@@ -104,9 +118,6 @@ export function AutomationHistoryScreen({ scope }: { scope: HistoryScope }) {
               />
             );
           }}
-          ListEmptyComponent={
-            <HistoryState message="No automation logs recorded for this period." />
-          }
         />
       )}
     </View>

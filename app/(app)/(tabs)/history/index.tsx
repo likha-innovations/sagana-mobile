@@ -19,6 +19,7 @@ import { CompletedBatchCard } from "@/components/dashboard/completed-batch-card"
 import { HistoryHeader } from "@/components/history/history-header";
 import { HistoryDateFilter } from "@/components/history/history-date-filter";
 import { HistoryState } from "@/components/history/history-state";
+import { EmptyState } from "@/components/ui/empty-state";
 
 const logger = createLogger("HistoryScreen");
 
@@ -72,67 +73,71 @@ export default function HistoryScreen() {
           />
         }
       />
-      <FlatList
-        data={query.isError || query.isPending ? [] : batches}
-        keyExtractor={(batch) => batch.id}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        contentContainerStyle={{
-          paddingHorizontal: 16,
-          paddingBottom: scrollPaddingBottom,
-        }}
-        ItemSeparatorComponent={() => <View className="h-3" />}
-        ListHeaderComponent={
-          <View className="gap-8 pb-4">
-            <Input
-              value={search}
-              onChangeText={setSearch}
-              accessibilityLabel="Search Batch ID"
-              placeholder="Search Batch ID.."
-              autoCapitalize="none"
-              autoCorrect={false}
-              returnKeyType="search"
-              containerClassName="mb-0"
-              controlClassName="rounded-[14px] border-[1.5px] border-border"
-              className="font-sans"
-              trailingIcon={<Search size={20} color={colors.gray.textIcon} />}
-            />
-            <Text className="text-[16px] font-bold text-foreground">
-              Completed Batches
-            </Text>
-          </View>
-        }
-        renderItem={({ item }) => (
-          <CompletedBatchCard
-            batch={item}
-            onPress={() =>
-              router.push({
-                pathname: "/(app)/(tabs)/history/[batchId]",
-                params: { batchId: item.id },
-              })
-            }
-          />
-        )}
-        ListEmptyComponent={
-          query.isError ? (
-            <HistoryState
-              message="Could not load completed batches."
-              retrying={query.isFetching}
-              onRetry={() => void query.refetch()}
-            />
-          ) : (
-            <HistoryState
-              message={
-                query.isPending
-                  ? "Loading completed batches…"
-                  : query.data?.length
-                    ? "No batches match this search or date filter."
-                    : "No completed batches yet. Finished batches will appear here."
+      {!query.isPending && !query.isError && query.data && query.data.length === 0 ? (
+        <View
+          className="flex-1 items-center justify-center px-4"
+          style={{ paddingBottom: scrollPaddingBottom }}
+        >
+          <EmptyState message="You have no finished batches yet." />
+        </View>
+      ) : (
+        <FlatList
+          data={query.isError || query.isPending ? [] : batches}
+          keyExtractor={(batch) => batch.id}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingHorizontal: 16,
+            paddingBottom: scrollPaddingBottom,
+          }}
+          ItemSeparatorComponent={() => <View className="h-3" />}
+          ListHeaderComponent={
+            <View className="gap-8 pb-4">
+              <Input
+                value={search}
+                onChangeText={setSearch}
+                accessibilityLabel="Search Batch ID"
+                placeholder="Search Batch ID.."
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="search"
+                containerClassName="mb-0"
+                controlClassName="rounded-[14px] border-[1.5px] border-border"
+                className="font-sans"
+                trailingIcon={<Search size={20} color={colors.gray.textIcon} />}
+              />
+              <Text className="text-[16px] font-bold text-foreground">
+                Completed Batches
+              </Text>
+            </View>
+          }
+          renderItem={({ item }) => (
+            <CompletedBatchCard
+              batch={item}
+              onPress={() =>
+                router.push({
+                  pathname: "/(app)/(tabs)/history/[batchId]",
+                  params: { batchId: item.id },
+                })
               }
             />
-          )
-        }
-      />
+          )}
+          ListEmptyComponent={
+            query.isError ? (
+              <HistoryState
+                message="Could not load completed batches."
+                retrying={query.isFetching}
+                onRetry={() => void query.refetch()}
+              />
+            ) : query.isPending ? (
+              <HistoryState message="Loading completed batches…" />
+            ) : (
+              <HistoryState message="No batches match this search or date filter." />
+            )
+          }
+        />
+      )}
     </KeyboardAvoidingView>
   );
 }

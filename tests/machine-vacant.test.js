@@ -119,6 +119,7 @@ function renderDetail(completed, activeBatch = null, offline = false) {
       SensorStatCard: "SensorStatCard",
     },
     "@/components/ui/skeleton": { Skeleton: "Skeleton" },
+    "@/components/ui/empty-state": { EmptyState: "EmptyState" },
     "@/components/ui/confirm-modal": { ConfirmModal: "ConfirmModal" },
     "@/components/dashboard/completed-batch-card": {
       CompletedBatchCard: "CompletedBatchCard",
@@ -166,6 +167,68 @@ test("a vacant machine without a completed batch shows no batch card, and fetch 
   expect(error.props.message).toBe("Could not load the previous batch.");
   error.props.onRetry();
   expect(refetch).toHaveBeenCalled();
+});
+
+test("a vacant machine keeps start-batch action independent of completedQuery pending and error states", () => {
+  const pending = renderDetail({
+    data: undefined,
+    isPending: true,
+    isError: false,
+  });
+  const pendingEmptyState = pending.tree.find(
+    (node) => node.type === "EmptyState",
+  );
+  expect(pendingEmptyState).toBeDefined();
+  const pendingActionNodes = nodes(pendingEmptyState.props.action);
+  expect(
+    pendingActionNodes.some(
+      (node) =>
+        node.type === "Text" && node.props?.children === "Start a new batch",
+    ),
+  ).toBe(true);
+  expect(pending.tree.some((node) => node.type === "Skeleton")).toBe(true);
+
+  const refetch = jestMock.fn();
+  const errorResult = renderDetail({
+    data: undefined,
+    isPending: false,
+    isError: true,
+    refetch,
+  });
+  const errorEmptyState = errorResult.tree.find(
+    (node) => node.type === "EmptyState",
+  );
+  expect(errorEmptyState).toBeDefined();
+  const errorActionNodes = nodes(errorEmptyState.props.action);
+  expect(
+    errorActionNodes.some(
+      (node) =>
+        node.type === "Text" && node.props?.children === "Start a new batch",
+    ),
+  ).toBe(true);
+  const error = errorResult.tree.find((node) => node.type === "HistoryState");
+  expect(error).toBeDefined();
+  expect(error.props.message).toBe("Could not load the previous batch.");
+  error.props.onRetry();
+  expect(refetch).toHaveBeenCalled();
+
+  const button = errorActionNodes.find((node) => node.type === "Pressable");
+  expect(button.props.disabled).toBe(false);
+  button.props.onPress();
+  expect(errorResult.pushes[0].pathname).toBe("/(app)/batch/new");
+
+  const disconnected = renderDetail(
+    { data: undefined, isPending: true, isError: false },
+    null,
+    true,
+  );
+  const disconnectedEmptyState = disconnected.tree.find(
+    (node) => node.type === "EmptyState",
+  );
+  const disabledButton = nodes(disconnectedEmptyState.props.action).find(
+    (node) => node.type === "Pressable",
+  );
+  expect(disabledButton.props.disabled).toBe(true);
 });
 
 test("an active machine detail shows sensor readings and history navigation", () => {
