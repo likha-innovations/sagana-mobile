@@ -46,28 +46,6 @@ import { changeOtpCode } from '@/lib/otp-input';
 
 const logger = createLogger('SignUpScreen');
 
-// --- Figma Component: 2-Segment Expanding Step Indicator for Account Creation ---
-function AccountCreationProgressBar({ activeStep }: { activeStep: 1 | 2 }) {
-  return (
-    <View className="flex-row items-center gap-2 h-[5px]">
-      <View
-        className={cn(
-          'h-[5px] rounded-full bg-primary',
-          activeStep === 1 ? 'w-[84px]' : 'w-[18px]'
-        )}
-      />
-      <View
-        className={cn(
-          'h-[5px] rounded-full',
-          activeStep === 2
-            ? 'w-[84px] bg-primary'
-            : 'w-[18px] bg-[#C8C7BE]'
-        )}
-      />
-    </View>
-  );
-}
-
 // --- Figma Component: Floating Label Input Field (58px height, rounded-2xl) ---
 interface FloatingInputFieldProps {
   label: string;
@@ -318,7 +296,7 @@ function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupPr
 
 
 
-type SignUpStep = 'email' | 'otp' | 'password' | 'name' | 'location';
+type SignUpStep = 'email' | 'otp' | 'password' | 'name';
 
 export default function SignUpScreen() {
   const insets = useSafeAreaInsets();
@@ -453,9 +431,7 @@ export default function SignUpScreen() {
   };
 
   const handleBack = useCallback(async () => {
-    if (step === 'location') {
-      setStep('name');
-    } else if (step === 'name') {
+    if (step === 'name') {
       if (isSignedIn) {
         confirmExit();
       } else {
@@ -605,8 +581,33 @@ export default function SignUpScreen() {
     setStep('name');
   };
 
-  // --- Step 4: Validate Name & Birthday ---
-  const handleNextName = () => {
+  const handleBirthdayChange = (text: string) => {
+    if (birthdayError) setBirthdayError(false);
+    if (birthdayErrorMessage) setBirthdayErrorMessage(null);
+
+    // If user hit backspace on " / "
+    if (text.length < birthdayInput.length) {
+      if (text.endsWith(' / ') || text.endsWith('/')) {
+        setBirthdayInput(text.slice(0, -3).trim());
+        return;
+      }
+      setBirthdayInput(text);
+      return;
+    }
+
+    const clean = text.replace(/\D/g, '').slice(0, 8);
+    let formatted = clean;
+
+    if (clean.length > 4) {
+      formatted = `${clean.slice(0, 2)} / ${clean.slice(2, 4)} / ${clean.slice(4)}`;
+    } else if (clean.length > 2) {
+      formatted = `${clean.slice(0, 2)} / ${clean.slice(2)}`;
+    }
+
+    setBirthdayInput(formatted);
+  };
+
+  const handleNextName = async () => {
     const trimmedFirst = firstName.trim();
     const trimmedLast = lastName.trim();
 
@@ -658,38 +659,7 @@ export default function SignUpScreen() {
     setNameErrorMessage(null);
     setBirthdayError(false);
     setBirthdayErrorMessage(null);
-    setStep('location');
-  };
 
-  const handleBirthdayChange = (text: string) => {
-    if (birthdayError) setBirthdayError(false);
-    if (birthdayErrorMessage) setBirthdayErrorMessage(null);
-
-    // If user hit backspace on " / "
-    if (text.length < birthdayInput.length) {
-      if (text.endsWith(' / ') || text.endsWith('/')) {
-        setBirthdayInput(text.slice(0, -3).trim());
-        return;
-      }
-      setBirthdayInput(text);
-      return;
-    }
-
-    const clean = text.replace(/\D/g, '').slice(0, 8);
-    let formatted = clean;
-
-    if (clean.length > 4) {
-      formatted = `${clean.slice(0, 2)} / ${clean.slice(2, 4)} / ${clean.slice(4)}`;
-    } else if (clean.length > 2) {
-      formatted = `${clean.slice(0, 2)} / ${clean.slice(2)}`;
-    }
-
-    setBirthdayInput(formatted);
-  };
-
-
-  // --- Step 5: Finish Registration ---
-  const handleFinish = async () => {
     let hasErr = false;
 
     if (!barangay) {
@@ -712,7 +682,6 @@ export default function SignUpScreen() {
       return;
     }
 
-    const digits = birthdayInput.replace(/\D/g, '');
     const formattedBirthday = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
     setLoading(true);
 
@@ -799,14 +768,6 @@ export default function SignUpScreen() {
                   <ChevronLeft size={24} color="#414141" />
                 </Pressable>
 
-                {/* Progress Bar for Step 3 and 4 */}
-                {(step === 'name' || step === 'location') && (
-                  <View className="absolute inset-x-0 items-center justify-center pointer-events-none">
-                    <AccountCreationProgressBar
-                      activeStep={step === 'name' ? 1 : 2}
-                    />
-                  </View>
-                )}
                 <View className="w-10" />
               </View>
 
@@ -1110,32 +1071,15 @@ export default function SignUpScreen() {
                         {birthdayErrorMessage}
                       </Text>
                     )}
-                  </View>
-                </View>
-              )}
 
-              {/* --- SCREEN 5: Location (Barangay) --- */}
-              {step === 'location' && (
-                <View className="w-full">
-                  <View className="w-full mb-6">
-                    <Text className="text-[20px] font-bold text-foreground text-left">
-                      Where are you from?
-                    </Text>
-                  </View>
-
-                  <View className="w-full gap-y-4">
                     <View className="w-full">
-                      <Pressable disabled>
-                        <View pointerEvents="none">
-                          <FloatingInputField
-                            label="Barangay"
-                            value={selectedBarangayName}
-                            onChangeText={() => {}}
-                            hasError={barangayError}
-                          />
-                        </View>
-                      </Pressable>
-
+                      <FloatingInputField
+                        label="Barangay"
+                        value={selectedBarangayName}
+                        onChangeText={() => {}}
+                        editable={false}
+                        hasError={barangayError}
+                      />
                       {barangayErrorMessage && (
                         <Text className="text-xs font-sans text-destructive mt-1.5 ml-1 text-left">
                           {barangayErrorMessage}
@@ -1198,18 +1142,6 @@ export default function SignUpScreen() {
               {step === 'name' && (
                 <Pressable
                   onPress={handleNextName}
-                  className="w-full h-[50px] rounded-full bg-primary items-center justify-center active:opacity-90"
-                  accessibilityRole="button"
-                >
-                  <Text className="text-[15px] font-bold text-primary-foreground">
-                    Next
-                  </Text>
-                </Pressable>
-              )}
-
-              {step === 'location' && (
-                <Pressable
-                  onPress={handleFinish}
                   disabled={loading}
                   className="w-full h-[50px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
                   accessibilityRole="button"

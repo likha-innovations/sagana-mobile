@@ -39,11 +39,6 @@ export const updateProfileSchema = z.object({
     .trim()
     .min(2, 'Last name must be at least 2 characters')
     .optional(),
-  barangayId: z
-    .string()
-    .trim()
-    .min(2, 'Location is required')
-    .optional(),
   birthday: z
     .string()
     .trim()
