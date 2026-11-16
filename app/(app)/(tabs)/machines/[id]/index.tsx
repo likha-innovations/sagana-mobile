@@ -31,6 +31,7 @@ import { formatTimeAgo } from "@/lib/utils";
 import { getMachineState } from "@/lib/machine-overview";
 import { createLogger } from "@/lib/logger";
 import { CompostIcon } from "@/components/icons";
+import { EmptyState } from "@/components/ui/empty-state";
 import { FeedstockGrid } from "@/components/history/feedstock-grid";
 import { HistoryState } from "@/components/history/history-state";
 import { QuickActionButton } from "@/components/dashboard";
@@ -147,9 +148,10 @@ export default function MachineDetailsDashboard() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
+          flexGrow: 1,
           paddingHorizontal: 16,
           paddingBottom: scrollPaddingBottom,
-          gap: 32,
+          gap: state.vacant && !lastCompleted ? 0 : 32,
         }}
       >
         {failed && (
@@ -183,52 +185,63 @@ export default function MachineDetailsDashboard() {
           machine &&
           batchQuery.data !== undefined &&
           (state.vacant ? (
-            <>
-              <View className="rounded-[14px] border border-border p-6 gap-5">
-                <View className="flex-row items-center gap-3">
-                  <CompostIcon size={24} color={colors.semantic.foreground} />
-                  <Text className="flex-1 font-bold text-sm text-foreground">
-                    Machine is vacant
-                  </Text>
-                </View>
-                {state.disconnected ? (
-                  <View
-                    accessibilityState={{ disabled: true }}
-                    className="rounded-lg bg-secondary p-4"
-                  >
-                    <Text className="text-sm font-sans text-foreground">
-                      Connect the machine to start a new compost batch.
-                    </Text>
-                  </View>
-                ) : (
-                  <QuickActionButton
-                    label="Start new compost batch"
-                    icon={
-                      <CompostIcon
-                        size={24}
-                        color={colors.semantic.primaryForeground}
-                      />
-                    }
-                    onPress={() =>
-                      router.push({
-                        pathname: "/(app)/batch/new",
-                        params: { machineId: id },
-                      })
-                    }
-                  />
-                )}
-              </View>
-              {completedQuery.isError ? (
-                <HistoryState message="Could not load the previous batch." onRetry={() => void completedQuery.refetch()} retrying={completedQuery.isFetching} />
-              ) : completedQuery.isPending ? (
-                <Skeleton className="h-24 rounded-[14px]" />
-              ) : lastCompleted ? (
+            lastCompleted ? (
+              <>
+                <EmptyState
+                  message="This machine is vacant."
+                  action={
+                    <Pressable
+                      disabled={state.disconnected}
+                      accessibilityRole="button"
+                      accessibilityState={{ disabled: state.disconnected }}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/(app)/batch/new",
+                          params: { machineId: id },
+                        })
+                      }
+                      className={`h-11 px-6 rounded-full border border-primary items-center justify-center ${state.disconnected ? "opacity-60" : "active:opacity-85"}`}
+                    >
+                      <Text className="font-bold text-sm text-primary">
+                        Start a new batch
+                      </Text>
+                    </Pressable>
+                  }
+                />
                 <View className="gap-3">
                   <Text className="text-base font-bold text-foreground">Last completed batch</Text>
                   <CompletedBatchCard batch={lastCompleted} onPress={() => router.push({ pathname: "/(app)/(tabs)/history/[batchId]", params: { batchId: lastCompleted.id } })} />
                 </View>
-              ) : null}
-            </>
+              </>
+            ) : completedQuery.isPending ? (
+              <Skeleton className="h-24 rounded-[14px]" />
+            ) : completedQuery.isError ? (
+              <HistoryState message="Could not load the previous batch." onRetry={() => void completedQuery.refetch()} retrying={completedQuery.isFetching} />
+            ) : (
+              <View className="flex-1 items-center justify-center">
+                <EmptyState
+                  message="This machine is vacant."
+                  action={
+                    <Pressable
+                      disabled={state.disconnected}
+                      accessibilityRole="button"
+                      accessibilityState={{ disabled: state.disconnected }}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/(app)/batch/new",
+                          params: { machineId: id },
+                        })
+                      }
+                      className={`h-11 px-6 rounded-full border border-primary items-center justify-center ${state.disconnected ? "opacity-60" : "active:opacity-85"}`}
+                    >
+                      <Text className="font-bold text-sm text-primary">
+                        Start a new batch
+                      </Text>
+                    </Pressable>
+                  }
+                />
+              </View>
+            )
           ) : (
             batch && (
               <>

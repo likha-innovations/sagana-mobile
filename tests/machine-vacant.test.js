@@ -119,6 +119,7 @@ function renderDetail(completed, activeBatch = null, offline = false) {
       SensorStatCard: "SensorStatCard",
     },
     "@/components/ui/skeleton": { Skeleton: "Skeleton" },
+    "@/components/ui/empty-state": { EmptyState: "EmptyState" },
     "@/components/ui/confirm-modal": { ConfirmModal: "ConfirmModal" },
     "@/components/dashboard/completed-batch-card": {
       CompletedBatchCard: "CompletedBatchCard",
