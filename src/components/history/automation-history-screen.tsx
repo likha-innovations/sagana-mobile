@@ -84,7 +84,13 @@ export function AutomationHistoryScreen({ scope }: { scope: HistoryScope }) {
           className="flex-1 items-center justify-center px-4"
           style={{ paddingBottom: scrollPaddingBottom }}
         >
-          <EmptyState message="You have no logs yet." />
+          <EmptyState
+            message={
+              query.logs.length === 0
+                ? "You have no logs yet."
+                : "No automation logs recorded for this period."
+            }
+          />
         </View>
       ) : (
         <SectionList

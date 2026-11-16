@@ -151,7 +151,7 @@ export default function MachineDetailsDashboard() {
           flexGrow: 1,
           paddingHorizontal: 16,
           paddingBottom: scrollPaddingBottom,
-          gap: state.vacant && !lastCompleted ? 0 : 32,
+          gap: 32,
         }}
       >
         {failed && (
@@ -185,63 +185,43 @@ export default function MachineDetailsDashboard() {
           machine &&
           batchQuery.data !== undefined &&
           (state.vacant ? (
-            lastCompleted ? (
-              <>
-                <EmptyState
-                  message="This machine is vacant."
-                  action={
-                    <Pressable
-                      disabled={state.disconnected}
-                      accessibilityRole="button"
-                      accessibilityState={{ disabled: state.disconnected }}
-                      onPress={() =>
-                        router.push({
-                          pathname: "/(app)/batch/new",
-                          params: { machineId: id },
-                        })
-                      }
-                      className={`h-11 px-6 rounded-full border border-primary items-center justify-center ${state.disconnected ? "opacity-60" : "active:opacity-85"}`}
-                    >
-                      <Text className="font-bold text-sm text-primary">
-                        Start a new batch
-                      </Text>
-                    </Pressable>
-                  }
+            <>
+              <EmptyState
+                message="This machine is vacant."
+                action={
+                  <Pressable
+                    disabled={state.disconnected}
+                    accessibilityRole="button"
+                    accessibilityState={{ disabled: state.disconnected }}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/(app)/batch/new",
+                        params: { machineId: id },
+                      })
+                    }
+                    className={`h-11 px-6 rounded-full border border-primary items-center justify-center ${state.disconnected ? "opacity-60" : "active:opacity-85"}`}
+                  >
+                    <Text className="font-bold text-sm text-primary">
+                      Start a new batch
+                    </Text>
+                  </Pressable>
+                }
+              />
+              {completedQuery.isPending ? (
+                <Skeleton className="h-24 rounded-[14px]" />
+              ) : completedQuery.isError ? (
+                <HistoryState
+                  message="Could not load the previous batch."
+                  onRetry={() => void completedQuery.refetch()}
+                  retrying={completedQuery.isFetching}
                 />
+              ) : lastCompleted ? (
                 <View className="gap-3">
                   <Text className="text-base font-bold text-foreground">Last completed batch</Text>
                   <CompletedBatchCard batch={lastCompleted} onPress={() => router.push({ pathname: "/(app)/(tabs)/history/[batchId]", params: { batchId: lastCompleted.id } })} />
                 </View>
-              </>
-            ) : completedQuery.isPending ? (
-              <Skeleton className="h-24 rounded-[14px]" />
-            ) : completedQuery.isError ? (
-              <HistoryState message="Could not load the previous batch." onRetry={() => void completedQuery.refetch()} retrying={completedQuery.isFetching} />
-            ) : (
-              <View className="flex-1 items-center justify-center">
-                <EmptyState
-                  message="This machine is vacant."
-                  action={
-                    <Pressable
-                      disabled={state.disconnected}
-                      accessibilityRole="button"
-                      accessibilityState={{ disabled: state.disconnected }}
-                      onPress={() =>
-                        router.push({
-                          pathname: "/(app)/batch/new",
-                          params: { machineId: id },
-                        })
-                      }
-                      className={`h-11 px-6 rounded-full border border-primary items-center justify-center ${state.disconnected ? "opacity-60" : "active:opacity-85"}`}
-                    >
-                      <Text className="font-bold text-sm text-primary">
-                        Start a new batch
-                      </Text>
-                    </Pressable>
-                  }
-                />
-              </View>
-            )
+              ) : null}
+            </>
           ) : (
             batch && (
               <>
