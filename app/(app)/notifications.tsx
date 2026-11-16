@@ -80,19 +80,13 @@ export default function NotificationsScreen() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color={colors.brand[500]} />
         </View>
-      ) : sections.length === 0 ? (
-        <View
-          className="flex-1 items-center justify-center px-4"
-          style={{ paddingBottom: scrollPaddingBottom }}
-        >
-          <EmptyState message="You have no notifications yet." />
-        </View>
       ) : (
         <SectionList
           sections={sections}
           keyExtractor={(item) => item.id}
           stickySectionHeadersEnabled={false}
           contentContainerStyle={{
+            flexGrow: 1,
             paddingHorizontal: 16,
             paddingBottom: scrollPaddingBottom + 24,
           }}
@@ -103,6 +97,14 @@ export default function NotificationsScreen() {
               tintColor={colors.brand[500]}
               colors={[colors.brand[500]]}
             />
+          }
+          ListEmptyComponent={
+            <View
+              className="flex-1 items-center justify-center px-4"
+              style={{ paddingBottom: scrollPaddingBottom }}
+            >
+              <EmptyState message="You have no notifications yet." />
+            </View>
           }
           renderSectionHeader={({ section }) => (
             <Text className="mb-3 mt-4 text-[16px] font-bold text-foreground">
