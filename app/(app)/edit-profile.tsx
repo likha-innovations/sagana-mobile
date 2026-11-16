@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,19 +12,13 @@ import {
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronLeft, Calendar, Check, Pencil } from 'lucide-react-native';
+import { ChevronLeft, Calendar, Pencil } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import {
-  BottomSheetModal,
-  BottomSheetBackdrop,
-  BottomSheetScrollView,
-} from '@gorhom/bottom-sheet';
 import { format } from 'date-fns';
 
 import { useToast } from '@/components/ui/toast';
 
 import { useProfile, useUpdateProfile } from '@/hooks/use-profile';
-import { useBarangays } from '@/hooks/use-barangays';
 import { useDynamicLayout } from '@/hooks';
 import { updateProfileSchema, type UpdateProfileInput } from '@/types/auth';
 import { Input } from '@/components/ui/input';
@@ -49,30 +43,23 @@ export default function EditProfileScreen() {
   const { insets, stackScrollPadding } = useDynamicLayout();
   const router = useRouter();
   const { data: profile } = useProfile();
-  const { data: barangays = [] } = useBarangays();
   const { mutateAsync: updateProfile, isPending } = useUpdateProfile();
-  
-  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+
   const birthdaySheetRef = useRef<BirthdayBottomSheetRef>(null);
-  const snapPoints = useMemo(() => ['50%', '80%'], []);
   const [isEditing, setIsEditing] = useState(false);
   const [isBackModalVisible, setIsBackModalVisible] = useState(false);
   const { showToast } = useToast();
 
-  // Split full name for initial values
   const parts = (profile?.fullName || '').split(' ');
   const initialFirstName = parts.length > 0 ? parts[0] : '';
   const initialLastName = parts.length > 1 ? parts.slice(1).join(' ') : '';
-  
-  // Resolve barangay ID from potentially complex object
-  let initialBarangayId = profile?.barangayId || '';
-  if (profile?.barangay) {
-    if (typeof profile.barangay === 'object' && profile.barangay.id) {
-      initialBarangayId = profile.barangay.id;
-    } else if (typeof profile.barangay === 'string') {
-      initialBarangayId = profile.barangay;
-    }
-  }
+
+  const barangayName =
+    typeof profile?.barangay === 'object' && profile.barangay?.name
+      ? profile.barangay.name
+      : typeof profile?.barangay === 'string'
+        ? profile.barangay
+        : '';
 
   const {
     control,
@@ -87,7 +74,6 @@ export default function EditProfileScreen() {
       firstName: initialFirstName,
       lastName: initialLastName,
       birthday: formatDisplayBirthday(profile?.birthday),
-      barangayId: initialBarangayId,
     },
   });
 
@@ -98,34 +84,9 @@ export default function EditProfileScreen() {
         firstName: p.length > 0 ? p[0] : '',
         lastName: p.length > 1 ? p.slice(1).join(' ') : '',
         birthday: formatDisplayBirthday(profile.birthday),
-        barangayId:
-          typeof profile.barangay === 'object' && profile.barangay?.id
-            ? profile.barangay.id
-            : typeof profile.barangay === 'string'
-              ? profile.barangay
-              : profile.barangayId || '',
       });
     }
   }, [profile, reset]);
-
-  const selectedBarangayId = watch('barangayId');
-  const selectedBarangay = barangays.find((b) => b.id === selectedBarangayId);
-  const selectedBarangayName = selectedBarangay?.name || '';
-
-  const handleCloseModal = useCallback(() => {
-    bottomSheetModalRef.current?.dismiss();
-  }, []);
-
-  const renderBackdrop = useCallback(
-    (props: any) => (
-      <BottomSheetBackdrop
-        {...props}
-        appearsOnIndex={0}
-        disappearsOnIndex={-1}
-      />
-    ),
-    []
-  );
 
   const onSubmit = async (data: UpdateProfileInput) => {
     Keyboard.dismiss();
@@ -280,71 +241,16 @@ export default function EditProfileScreen() {
                 )}
               />
 
-              <Controller
-                control={control}
-                name="barangayId"
-                render={({ field: { value } }) => (
-                  <TouchableOpacity
-                    disabled
-                    activeOpacity={1}
-                  >
-                    <View pointerEvents="none">
-                      <Input
-                        label="Barangay"
-                        placeholder="Select barangay"
-                        value={selectedBarangayName}
-                        error={errors.barangayId?.message}
-                        editable={false}
-                      />
-                    </View>
-                  </TouchableOpacity>
-                )}
+              <Input
+                label="Barangay"
+                placeholder="Barangay"
+                value={barangayName}
+                editable={false}
               />
             </View>
           </ScrollView>
         </View>
       </TouchableWithoutFeedback>
-
-      <BottomSheetModal
-        ref={bottomSheetModalRef}
-        index={0}
-        snapPoints={snapPoints}
-        backdropComponent={renderBackdrop}
-        backgroundStyle={{ backgroundColor: '#FAF9EE' }}
-        handleIndicatorStyle={{ backgroundColor: '#C8C8C2' }}
-      >
-        <BottomSheetScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}>
-          <View className="px-6 py-4">
-            <Text className="text-xl font-bold text-foreground mb-4">Select Barangay</Text>
-            {barangays.map((barangay) => {
-              const isSelected = selectedBarangayId === barangay.id;
-              return (
-                <TouchableOpacity
-                  key={barangay.id}
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    setValue('barangayId', barangay.id, { shouldValidate: true });
-                    handleCloseModal();
-                  }}
-                  className={`flex-row items-center justify-between py-4 border-b border-border ${isSelected ? 'bg-primary/5 px-2 rounded-lg' : ''}`}
-                >
-                  <Text
-                    className={`text-base ${isSelected ? 'font-bold text-primary' : 'font-medium text-foreground'}`}
-                  >
-                    {barangay.name}
-                  </Text>
-                  {isSelected && <Check size={20} color="#718619" />}
-                </TouchableOpacity>
-              );
-            })}
-            {barangays.length === 0 && (
-              <Text className="text-muted-foreground text-center py-8">
-                No barangays available.
-              </Text>
-            )}
-          </View>
-        </BottomSheetScrollView>
-      </BottomSheetModal>
 
       <BirthdayBottomSheet
         ref={birthdaySheetRef}
