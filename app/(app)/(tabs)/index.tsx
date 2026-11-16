@@ -18,7 +18,11 @@ import { useProfile, useBarangays, useDynamicLayout } from "@/hooks";
 import { useMachines } from "@/hooks/use-machines";
 import { useCompostBatches, useDashboardMetrics } from "@/hooks/use-batches";
 import { CompostIcon } from "@/components/icons";
-import { GradientMetricCard, QuickActionButton } from "@/components/dashboard";
+import {
+  GradientMetricCard,
+  QuickActionButton,
+  NotificationBell,
+} from "@/components/dashboard";
 import { CompletedBatchCard } from "@/components/dashboard/completed-batch-card";
 import { MachineCard } from "@/components/devices/machine-card";
 import { HistoryState } from "@/components/history/history-state";
@@ -66,16 +70,19 @@ export default function DashboardScreen() {
         className="flex-1"
       >
         <View className="gap-8 px-4">
-          <View className="gap-2">
-            <Text className="text-[20px] font-bold text-foreground">
-              Hello, {firstName}!
-            </Text>
-            <View className="flex-row items-center gap-1.5">
-              <MapPin size={16} color={colors.semantic.foreground} />
-              <Text className="flex-1 text-[14px] font-sans text-foreground">
-                {getBarangayName(user, barangays)}
+          <View className="flex-row items-center justify-between">
+            <View className="flex-1 gap-2 pr-2">
+              <Text className="text-[20px] font-bold text-foreground">
+                Hello, {firstName}!
               </Text>
+              <View className="flex-row items-center gap-1.5">
+                <MapPin size={16} color={colors.semantic.foreground} />
+                <Text className="flex-1 text-[14px] font-sans text-foreground">
+                  {getBarangayName(user, barangays)}
+                </Text>
+              </View>
             </View>
+            <NotificationBell />
           </View>
           {dashboard.isError ? (
             <HistoryState message="Could not load dashboard data." onRetry={() => void dashboard.refetch()} retrying={dashboard.isFetching} />

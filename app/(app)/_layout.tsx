@@ -16,6 +16,7 @@ export default function AppLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="notifications" options={{ headerShown: false }} />
       <Stack.Screen name="change-password" options={{ headerShown: false }} />
       <Stack.Screen name="batch/new" options={{ headerShown: false }} />
     </Stack>

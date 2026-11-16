@@ -6,3 +6,4 @@ export * from './use-machines';
 export * from './use-batches';
 export * from './use-bluetooth';
 export * from './use-current-wifi';
+export * from './use-notifications';
