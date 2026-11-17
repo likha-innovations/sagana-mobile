@@ -173,3 +173,108 @@ describe("notificationKeys", () => {
     ]);
   });
 });
+
+describe("notifications lib & routing", () => {
+  test("handleNotificationResponse routes to batchId, machineId, route or fallback", () => {
+    const pushedRoutes = [];
+    const routerMock = {
+      push: (route) => pushedRoutes.push(route),
+    };
+
+    const { handleNotificationResponse } = load("src/lib/notifications.ts", {
+      "expo-notifications": {
+        setNotificationHandler: jest.fn(),
+        getPermissionsAsync: jest.fn(),
+        requestPermissionsAsync: jest.fn(),
+        scheduleNotificationAsync: jest.fn(),
+        addNotificationResponseReceivedListener: jest.fn(),
+      },
+      "expo-router": { router: routerMock },
+      "@/types/notification": {},
+      "@/lib/logger": {
+        createLogger: () => ({ info: jest.fn(), warn: jest.fn() }),
+      },
+    });
+
+    // 1. route in metadata
+    handleNotificationResponse({
+      notification: {
+        request: {
+          content: { data: { route: "/(app)/edit-profile" } },
+        },
+      },
+    });
+    expect(pushedRoutes[pushedRoutes.length - 1]).toBe("/(app)/edit-profile");
+
+    // 2. batchId
+    handleNotificationResponse({
+      notification: {
+        request: {
+          content: { data: { batchId: "batch_abc" } },
+        },
+      },
+    });
+    expect(pushedRoutes[pushedRoutes.length - 1]).toBe("/history/batch_abc");
+
+    // 3. machineId
+    handleNotificationResponse({
+      notification: {
+        request: {
+          content: { data: { machineId: "mach_xyz" } },
+        },
+      },
+    });
+    expect(pushedRoutes[pushedRoutes.length - 1]).toBe("/machines/mach_xyz");
+
+    // 4. Fallback
+    handleNotificationResponse({
+      notification: {
+        request: { content: { data: {} } },
+      },
+    });
+    expect(pushedRoutes[pushedRoutes.length - 1]).toBe("/notifications");
+  });
+
+  test("scheduleLocalNotification schedules immediate notification", async () => {
+    let scheduled = null;
+    const { scheduleLocalNotification } = load("src/lib/notifications.ts", {
+      "expo-notifications": {
+        setNotificationHandler: jest.fn(),
+        scheduleNotificationAsync: async (opts) => {
+          scheduled = opts;
+        },
+        addNotificationResponseReceivedListener: jest.fn(),
+      },
+      "expo-router": { router: {} },
+      "@/types/notification": {},
+      "@/lib/logger": {
+        createLogger: () => ({ info: jest.fn(), warn: jest.fn() }),
+      },
+    });
+
+    await scheduleLocalNotification({
+      id: "n1",
+      title: "Alert",
+      message: "Test message",
+      type: "machine",
+      severity: "warning",
+      machineId: "m1",
+    });
+
+    expect(scheduled).toEqual({
+      content: {
+        title: "Alert",
+        body: "Test message",
+        data: {
+          id: "n1",
+          machineId: "m1",
+          batchId: undefined,
+          route: undefined,
+          type: "machine",
+          severity: "warning",
+        },
+      },
+      trigger: null,
+    });
+  });
+});
