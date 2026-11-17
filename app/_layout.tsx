@@ -17,6 +17,10 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { Toast } from '@/components/ui/toast';
 import { createLogger } from '@/lib/logger';
 import { LoadingScreen } from '@/components/ui/loading-screen';
+import {
+  requestNotificationPermissions,
+  setupNotificationListeners,
+} from '@/lib/notifications';
 
 const logger = createLogger('RootLayout');
 const authGateLogger = createLogger('AuthGate');
@@ -51,6 +55,13 @@ function AuthProtectedNavigation() {
     });
     return () => setForbiddenHandler(null);
   }, [queryClient, user?.id]);
+
+  useEffect(() => {
+    if (isSignedIn) {
+      void requestNotificationPermissions();
+      return setupNotificationListeners();
+    }
+  }, [isSignedIn]);
 
   useEffect(() => {
     if (segments.length > 0) {

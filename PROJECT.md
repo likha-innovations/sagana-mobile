@@ -18,15 +18,15 @@ Mobile client for Sagana platform built with Expo SDK 57, React 19, React Native
 ## Architecture & Conventions
 
 - **Flat-Layered Architecture (`src/`)**:
-  - `src/api/`: Typed REST endpoints (`apiFetch<T>`) — native fetch wrapper, unwraps `{ success, data }`, handles Clerk JWT injection. Axios is strictly banned.
-  - `src/hooks/`: TanStack Query v5 query/mutation hooks (`use-profile.ts`, `use-socket.ts`).
-  - `src/components/`: UI primitives (`@rn-primitives` + `cva`), auth widgets, and navigation elements.
+  - `src/api/`: Typed REST endpoints (`apiFetch<T>`) — native fetch wrapper, unwraps `{ success, data }`, handles Clerk JWT injection. Modules: `user.api.ts`, `barangays.api.ts`, `machine.api.ts`, `notifications.api.ts`.
+  - `src/hooks/`: TanStack Query v5 query/mutation hooks (`use-profile.ts`, `use-machines.ts`, `use-socket.ts`, `use-notifications.ts`).
+  - `src/components/`: UI primitives (`@rn-primitives` + `cva`), auth widgets, navigation elements (`notification-bell.tsx`).
   - `src/context/`: Centralized state machines (`auth-context.tsx` wrapping Clerk Core).
-  - `src/lib/`: Native hardware persistence (`token-cache.ts` using `expo-secure-store`), `socket.ts`, logger (`createLogger` / `Logger`), and `cn()` utility.
+  - `src/lib/`: Native hardware persistence (`token-cache.ts` using `expo-secure-store`), `socket.ts`, `notifications.ts` (Expo local push alerts & cold launch), logger (`createLogger` / `Logger`), and `cn()` utility.
   - `src/types/`: Single source of truth schemas (`auth.ts`, `api.ts`, `device.ts`) using Zod-first validation and inferred TypeScript types.
 - **Routing Hierarchy (`app/`)**:
   - `(auth)`: Public authentication screens (`sign-in`, `sign-up`, `forgot-password`).
-  - `(app)`: Protected app layouts and tabs (`(tabs)`: `index`, `profile`).
+  - `(app)`: Protected app layouts and tabs (`(tabs)`: `index`, `profile`, `notifications.tsx`).
   - `_layout.tsx`: Provider pipeline: `GestureHandlerRootView` → `ClerkProvider` → `ClerkLoaded` → `AuthProvider` → `QueryClientProvider`.
   - AuthGate: Redirects unauthenticated users to `/(auth)/sign-in` and authenticated users to `/(app)/(tabs)`.
 - **UI & Styling**:
@@ -51,8 +51,12 @@ Mobile client for Sagana platform built with Expo SDK 57, React 19, React Native
 - **Protected Tabs (`/(app)/(tabs)`)**:
   - Dashboard (`index.tsx`): Real-time metrics and quick stats.
   - Profile (`profile.tsx`): User profile view and update.
-- **Realtime / IoT**:
-  - 2-way IoT event bridge (`use-socket.ts`, `src/lib/socket.ts`): Inbound telemetry on topic `sagana/stream` ➔ event `'telemetry'`; Outbound command dispatch on event `'command'` ➔ topic `sagana/commands`.
+- **Realtime / IoT & Notifications**:
+  - 2-way IoT event bridge (`use-socket.ts`, `src/lib/socket.ts`): Inbound telemetry on topic `sagana/devices/+/telemetry` ➔ event `'telemetry'`; Outbound command dispatch on event `'command'` ➔ topic `sagana/devices/:mac/commands`.
+  - Room synchronization: Emits `'join_barangay'` with `user.barangayId` on connect/reconnect.
+  - Real-time Notifications: Listens to `'notification'` event, optimistically updates user's notifications list cache, invalidates `unread-count`, and schedules foreground local push alerts via `expo-notifications`.
+  - Header Bell (`notification-bell.tsx`): Uniwind-styled badge indicator dynamically bound to unread notification count.
+  - Dedicated Notifications Screen (`/(app)/notifications`): Filter by all/unread, infinite scrolling pagination, mark as read on tap, and "Mark all as read" batch action.
 
 ## Decisions & Dead-ends
 

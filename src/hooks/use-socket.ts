@@ -3,14 +3,17 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getSocket, getSocketUrl, disconnectSocket } from '@/lib/socket';
 import { TelemetryData, RealtimeEventLog } from '@/types';
 import type { Machine } from '@/types/machine';
+import type { NotificationItem } from '@/types/notification';
 import { useAuthContext } from '@/context/auth-context';
+import { notificationKeys } from '@/hooks/use-notifications';
+import { scheduleLocalNotification } from '@/lib/notifications';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('useSocket');
 
 export function useSocket() {
   const queryClient = useQueryClient();
-  const { isSignedIn } = useAuthContext();
+  const { isSignedIn, user } = useAuthContext();
   const [isConnected, setIsConnected] = useState(false);
   const [socketId, setSocketId] = useState<string | null>(null);
   const [latestTelemetry, setLatestTelemetry] = useState<TelemetryData | null>(null);
@@ -41,11 +44,17 @@ export function useSocket() {
     } else {
       setIsConnected(true);
       setSocketId(socket.id || null);
+      if (user?.barangayId) {
+        socket.emit('join_barangay', { barangayId: user.barangayId });
+      }
     }
 
     const onConnect = () => {
       setIsConnected(true);
       setSocketId(socket.id || null);
+      if (user?.barangayId) {
+        socket.emit('join_barangay', { barangayId: user.barangayId });
+      }
       addLog({
         type: 'connection',
         title: 'Socket.IO Connected',
@@ -335,6 +344,42 @@ export function useSocket() {
       });
     };
 
+    const onNotification = (data: unknown) => {
+      const payload = data as NotificationItem;
+      if (!payload?.id) return;
+
+      // Present foreground banner via expo-notifications
+      void scheduleLocalNotification(payload);
+
+      // Instantly update unread count cache
+      queryClient.setQueryData<number>(
+        notificationKeys.unreadCount(user?.id),
+        (prev) => (prev ?? 0) + 1,
+      );
+
+      // Optimistically prepend only to active notification list queries in cache
+      if (user?.id) {
+        queryClient.setQueriesData<NotificationItem[]>(
+          { queryKey: notificationKeys.lists(user.id) },
+          (old) => {
+            if (!old || !Array.isArray(old)) return old;
+            if (old.some((n) => n.id === payload.id)) return old;
+            return [payload, ...old];
+          },
+        );
+      }
+
+      // Invalidate for eventual background consistency
+      void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
+
+      addLog({
+        type: 'telemetry',
+        title: `Notification: ${payload.title}`,
+        payload: data,
+        timestamp: new Date().toISOString(),
+      });
+    };
+
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('connect_error', onConnectError);
@@ -344,6 +389,7 @@ export function useSocket() {
     socket.on('machine_updated', onMachineUpdated);
     socket.on('machine_removed', onMachineRemoved);
     socket.on('automation_log', onAutomationLog);
+    socket.on('notification', onNotification);
 
     return () => {
       socket.off('connect', onConnect);
@@ -355,8 +401,9 @@ export function useSocket() {
       socket.off('machine_updated', onMachineUpdated);
       socket.off('machine_removed', onMachineRemoved);
       socket.off('automation_log', onAutomationLog);
+      socket.off('notification', onNotification);
     };
-  }, [isSignedIn, addLog, queryClient]);
+  }, [isSignedIn, user?.id, user?.barangayId, addLog, queryClient]);
 
   // Dispatches custom command from mobile to backend -> EMQX commands topic
   const sendCommand = useCallback(

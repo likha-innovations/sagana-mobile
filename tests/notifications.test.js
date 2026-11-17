@@ -173,3 +173,171 @@ describe("notificationKeys", () => {
     ]);
   });
 });
+
+describe("notifications lib & routing", () => {
+  test("handleNotificationResponse routes to batchId, machineId, route or fallback", () => {
+    const pushedRoutes = [];
+    const routerMock = {
+      push: (route) => pushedRoutes.push(route),
+    };
+
+    const { handleNotificationResponse } = load("src/lib/notifications.ts", {
+      "expo-notifications": {
+        setNotificationHandler: jest.fn(),
+        getPermissionsAsync: jest.fn(),
+        requestPermissionsAsync: jest.fn(),
+        scheduleNotificationAsync: jest.fn(),
+        addNotificationResponseReceivedListener: jest.fn(),
+      },
+      "expo-router": { router: routerMock },
+      "@/types/notification": {},
+      "@/lib/logger": {
+        createLogger: () => ({ info: jest.fn(), warn: jest.fn() }),
+      },
+    });
+
+    // 1. route in metadata
+    handleNotificationResponse({
+      notification: {
+        request: {
+          content: { data: { route: "/(app)/edit-profile" } },
+        },
+      },
+    });
+    expect(pushedRoutes[pushedRoutes.length - 1]).toBe("/(app)/edit-profile");
+
+    // 2. batchId
+    handleNotificationResponse({
+      notification: {
+        request: {
+          content: { data: { batchId: "batch_abc" } },
+        },
+      },
+    });
+    expect(pushedRoutes[pushedRoutes.length - 1]).toBe("/history/batch_abc");
+
+    // 3. machineId
+    handleNotificationResponse({
+      notification: {
+        request: {
+          content: { data: { machineId: "mach_xyz" } },
+        },
+      },
+    });
+    expect(pushedRoutes[pushedRoutes.length - 1]).toBe("/machines/mach_xyz");
+
+    // 4. Fallback
+    handleNotificationResponse({
+      notification: {
+        request: { content: { data: {} } },
+      },
+    });
+    expect(pushedRoutes[pushedRoutes.length - 1]).toBe("/notifications");
+  });
+
+  test("scheduleLocalNotification schedules immediate notification", async () => {
+    let scheduled = null;
+    const { scheduleLocalNotification } = load("src/lib/notifications.ts", {
+      "expo-notifications": {
+        setNotificationHandler: jest.fn(),
+        scheduleNotificationAsync: async (opts) => {
+          scheduled = opts;
+        },
+        addNotificationResponseReceivedListener: jest.fn(),
+      },
+      "expo-router": { router: {} },
+      "@/types/notification": {},
+      "@/lib/logger": {
+        createLogger: () => ({ info: jest.fn(), warn: jest.fn() }),
+      },
+    });
+
+    await scheduleLocalNotification({
+      id: "n1",
+      title: "Alert",
+      message: "Test message",
+      type: "machine",
+      severity: "warning",
+      machineId: "m1",
+    });
+
+    expect(scheduled).toEqual({
+      content: {
+        title: "Alert",
+        body: "Test message",
+        data: {
+          id: "n1",
+          machineId: "m1",
+          batchId: undefined,
+          route: undefined,
+          type: "machine",
+          severity: "warning",
+        },
+      },
+      trigger: null,
+    });
+  });
+
+  test("setupNotificationListeners processes and clears stored initial notification response", async () => {
+    let cleared = false;
+    let handled = null;
+
+    const storedResponse = {
+      notification: {
+        request: {
+          content: { data: { machineId: "m-cold-1" } },
+        },
+      },
+    };
+
+    const { setupNotificationListeners } = load("src/lib/notifications.ts", {
+      "expo-notifications": {
+        setNotificationHandler: jest.fn(),
+        getLastNotificationResponse: () => storedResponse,
+        clearLastNotificationResponse: () => {
+          cleared = true;
+        },
+        addNotificationResponseReceivedListener: jest.fn(() => ({
+          remove: jest.fn(),
+        })),
+      },
+      "expo-router": {
+        router: {
+          push: (route) => {
+            handled = route;
+          },
+        },
+      },
+      "@/types/notification": {},
+      "@/lib/logger": {
+        createLogger: () => ({ info: jest.fn(), warn: jest.fn() }),
+      },
+    });
+
+    const cleanup = setupNotificationListeners();
+    expect(handled).toBe("/machines/m-cold-1");
+    expect(cleared).toBe(true);
+    cleanup();
+  });
+
+  test("notificationKeys.lists provides list-scoped prefix without matching unreadCount", () => {
+    const { notificationKeys } = load("src/hooks/use-notifications.ts", {
+      "@tanstack/react-query": {},
+      "date-fns": { isToday: () => false, differenceInCalendarDays: () => 0 },
+      "@/api/notifications.api": {},
+      "@/context/auth-context": {},
+      "@/types/notification": {},
+    });
+
+    const listsKey = notificationKeys.lists("user_123");
+    const listKey = notificationKeys.list("user_123", true);
+    const unreadKey = notificationKeys.unreadCount("user_123");
+
+    expect(listsKey).toEqual(["notifications", "user_123", "list"]);
+    expect(listKey[0]).toBe(listsKey[0]);
+    expect(listKey[1]).toBe(listsKey[1]);
+    expect(listKey[2]).toBe(listsKey[2]);
+    // unreadCount does not match list prefix
+    expect(unreadKey[2]).toBe("unread-count");
+  });
+});

@@ -44,6 +44,7 @@ export default defineConfig({
           { text: 'State Management (TanStack)', link: '/core/state-management' },
           { text: 'Design System & Uniwind', link: '/core/design-system' },
           { text: 'Real-time & Socket.IO', link: '/core/realtime-socket-io' },
+          { text: 'In-App & Push Notifications', link: '/core/notifications' },
           { text: 'Logging & Telemetry', link: '/core/logging-telemetry' },
         ],
       },
