@@ -78,8 +78,8 @@ importers:
         specifier: ^3.46.0
         version: 3.49.0(react-native-svg@15.15.4(react-native@0.86.3(@babel/core@7.29.7(supports-color@10.2.2))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.3)(supports-color@10.2.2))(react@19.2.3))(react@19.2.3)
       '@tanstack/react-query':
-        specifier: ^5.101.4
-        version: 5.104.1(react@19.2.3)
+        specifier: ^5.107.1
+        version: 5.107.1(@types/react@19.2.18)(react@19.2.3)
       burnt:
         specifier: ^0.13.0
         version: 0.13.0(@types/react@19.2.18)(expo@57.0.33)(react-dom@19.2.3(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7(supports-color@10.2.2))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.3)(supports-color@10.2.2))(react@19.2.3)
@@ -2805,10 +2805,17 @@ packages:
   '@tanstack/query-core@5.104.1':
     resolution: {integrity: sha512-TiRghcrGkUTE+M4JBxvpPSpBhxvIzQairw+cksrHYGr+2uwC77yW1SY9nYxnYRYOppvucf8rEg6b5byoz4rTpw==}
 
-  '@tanstack/react-query@5.104.1':
-    resolution: {integrity: sha512-Zz70EgjahNI7aCz8BZxM3vUGU44ycxEAzMuCUjLeA7SVhhOkg3ZgPjPJPvHjs6Rmky/dtmnu1WzjGHNHmhCoZQ==}
+  '@tanstack/query-core@5.107.1':
+    resolution: {integrity: sha512-PSyAik11oQBEVOiVy5hjZWHmoUqOXqK1WYy4v55mcxozEfKaQgpUMsgnXhWjuESzSht8JfzqMS1m6M/9CpNgvg==}
+
+  '@tanstack/react-query@5.107.1':
+    resolution: {integrity: sha512-udCOOLp3ZAheUrIHLCe+ZZge6nr2ZUrGMSWcCuXsjY1Bf2JeeE09oxst97PILiCY6N8xo/7bIo3Hvz13zh06FA==}
     peerDependencies:
+      '@types/react': ^18 || ^19
       react: ^18 || ^19
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -4090,7 +4097,6 @@ packages:
     resolution: {integrity: sha512-IbGSGrglkN55O1VhJT7CeCRchaFgPxUotC73jQ8/PB7LEob8r65dbDCV3aZeZUqIbVzslNHKcRjrrXdsNEp3WA==}
     hasBin: true
     peerDependencies:
-      '@expo/dom-webview': '*'
       '@expo/metro-runtime': '*'
       react: '*'
       react-dom: '*'
@@ -4098,8 +4104,6 @@ packages:
       react-native-web: '*'
       react-native-webview: '*'
     peerDependenciesMeta:
-      '@expo/dom-webview':
-        optional: true
       '@expo/metro-runtime':
         optional: true
       react-dom:
@@ -9223,10 +9227,14 @@ snapshots:
 
   '@tanstack/query-core@5.104.1': {}
 
-  '@tanstack/react-query@5.104.1(react@19.2.3)':
+  '@tanstack/query-core@5.107.1': {}
+
+  '@tanstack/react-query@5.107.1(@types/react@19.2.18)(react@19.2.3)':
     dependencies:
-      '@tanstack/query-core': 5.104.1
+      '@tanstack/query-core': 5.107.1
       react: 19.2.3
+    optionalDependencies:
+      '@types/react': 19.2.18
 
   '@types/babel__core@7.20.5':
     dependencies:
