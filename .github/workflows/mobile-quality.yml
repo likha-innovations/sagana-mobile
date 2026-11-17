@@ -34,7 +34,7 @@ jobs:
             if [ "$status" -ne 1 ]; then exit "$status"; fi
             echo 'changed=true' >> "$GITHUB_OUTPUT"
           fi
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '24.13.0'
       - uses: pnpm/action-setup@v6
