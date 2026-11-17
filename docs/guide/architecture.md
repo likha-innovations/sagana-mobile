@@ -13,23 +13,24 @@ sagana-mobile/
 │   │   ├── batch/             # New compost batch wizard
 │   │   ├── machine-registration/ # BLE registration wizard
 │   │   ├── change-password/   # Current, new, success
-│   │   └── edit-profile.tsx
+│   │   ├── edit-profile.tsx
+│   │   └── notifications.tsx  # In-app notifications center
 │   ├── _layout.tsx            # Providers, fonts, auth routing
 │   └── +not-found.tsx
 ├── src/
-│   ├── api/                   # client, user, barangays, device commands
+│   ├── api/                   # client, user, barangays, device commands, notifications
 │   ├── components/
 │   │   ├── auth/              # OTP, birthday/policy sheets, form helpers
 │   │   ├── dashboard/         # Metric cards and quick actions
 │   │   ├── devices/           # Machine cards, graphs, registration steps
 │   │   ├── icons/             # Custom SVG components
-│   │   ├── navigation/        # bottom-tab-bar.tsx
+│   │   ├── navigation/        # bottom-tab-bar.tsx, notification-bell.tsx
 │   │   └── ui/                # Buttons, inputs, modals, filters, toast
 │   ├── constants/             # colors.ts, layout.ts
 │   ├── context/               # auth-context.tsx
 │   ├── data/                  # data.json: demo fixtures
-│   ├── hooks/                 # Profile, machines, batches, BLE, Wi-Fi, socket
-│   ├── lib/                   # BLE/socket drivers, tokens, logger, utilities
+│   ├── hooks/                 # Profile, machines, batches, BLE, Wi-Fi, socket, notifications
+│   ├── lib/                   # BLE/socket drivers, tokens, logger, notifications, utilities
 │   ├── types/                 # auth, api, barangay, device, machine, batch
 │   └── uniwind-types.d.ts     # Metro-generated Uniwind declarations
 ├── assets/                    # Local fonts, logo and images
@@ -58,6 +59,7 @@ sagana-mobile/
 | Batches | Screen → `use-batches.ts` → module-level arrays | Batch creation is local; data resets when the JS runtime reloads. |
 | Pairing | Registration → `use-bluetooth.ts` and `/machines/register` | Coordinate the Bluetooth protocol with firmware. |
 | Telemetry | App layout → `use-socket.ts` → `lib/socket.ts` | Socket events update the machine query cache. |
+| Notifications | Screen → `use-notifications.ts` → `notifications.api.ts` → `/notifications` | Socket events optimistically update lists and trigger local Expo notifications via `lib/notifications.ts`. |
 | Authentication | `AuthProvider` → Clerk | Read session state through `useAuthContext()`. |
 
 `types/machine.ts` defines machines and current readings; `types/batch.ts` defines batches and feedstocks. Machine and batch objects use `id` for their own identifier and camelCase properties. Fields such as `machineId` and `batchId` identify related records. `types/device.ts` retains telemetry, command and registration contracts.

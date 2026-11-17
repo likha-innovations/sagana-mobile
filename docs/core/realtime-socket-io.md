@@ -38,11 +38,13 @@ The backend gateway exposes a dedicated namespace for real-time telemetry:
 | **`machine_added`** | `{ machineId: string; name: string; macAddress: string; barangayId?: string; wifiSsid?: string \| null; status?: string; createdAt?: string }` | Emitted when a new machine is registered or re-provisioned. Prepends/appends the machine into the `['machines']` list cache and invalidates query. |
 | **`machine_updated`** | `{ machineId: string; name?: string; barangayId?: string }` | Emitted on machine rename or config update. Patches name in both list and detail query cache. |
 | **`machine_removed`** | `{ machineId: string; barangayId?: string }` | Emitted on soft-deletion. Removes machine from the `['machines']` list cache immediately. |
+| **`notification`** | `{ id: string; title: string; message: string; type: string; isRead: boolean; createdAt: string; metadata?: any }` | Real-time in-app notification. Optimistically prepends to current user's list query (`['notifications', userId, 'list']`), invalidates `unread-count`, and triggers a foreground push alert via `expo-notifications`. |
 
 ### 2. Client ➔ Server Events (Emitted by Mobile)
 
 | Event Name | Payload Shape | Description |
 | :--- | :--- | :--- |
+| **`join_barangay`** | `{ barangayId?: string }` | Automatically emitted upon socket connect or reconnect when `user?.barangayId` is available. Joins the user's socket to the backend's verified barangay room for targeted alert broadcasts. |
 | **`command`** | `string \| object` | Custom actuator control/instructions forwarded to HiveMQ command topic for the machine. |
 
 ---
