@@ -1,5 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import { getApiBaseUrl } from '@/api/client';
+import { getAuthToken } from '@/lib/auth-token';
 import { createLogger } from '@/lib/logger';
 
 const logger = createLogger('SocketClient');
@@ -23,6 +24,14 @@ export function getSocket(): Socket {
       reconnectionAttempts: 10,
       reconnectionDelay: 2000,
       timeout: 10000,
+      auth: async (cb) => {
+        try {
+          const token = await getAuthToken();
+          cb({ token: token ? `Bearer ${token}` : '' });
+        } catch {
+          cb({ token: '' });
+        }
+      },
     });
 
     socketInstance.on('connect', () => {

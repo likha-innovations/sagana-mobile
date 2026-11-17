@@ -132,33 +132,46 @@ export function useSocket() {
           const scd = payloadObj.scd41 as { co2?: number } | undefined;
           const moist = payloadObj.moisture as { sensor1?: number } | undefined;
 
-          const tempVal =
-            typeof ds?.probe1 === 'number'
-              ? ds.probe1
-              : typeof payloadObj.temperature === 'number'
-                  ? (payloadObj.temperature as number)
-                  : undefined;
+          const parseMetric = (
+            nestedVal: unknown,
+            rootVal: unknown,
+            hasNestedKey: boolean,
+            hasRootKey: boolean,
+          ): number | null | undefined => {
+            if (typeof nestedVal === 'number' && !Number.isNaN(nestedVal)) return nestedVal;
+            if (typeof rootVal === 'number' && !Number.isNaN(rootVal)) return rootVal;
+            // If the key was explicitly sent as null or invalid, clear the reading
+            if (hasNestedKey || hasRootKey) return null;
+            return undefined;
+          };
 
-          const moistVal =
-            typeof moist?.sensor1 === 'number'
-              ? moist.sensor1
-              : typeof payloadObj.moisture === 'number'
-                ? (payloadObj.moisture as number)
-                : undefined;
+          const tempVal = parseMetric(
+            ds?.probe1,
+            payloadObj.temperature,
+            Boolean(ds && 'probe1' in ds),
+            'temperature' in payloadObj,
+          );
 
-          const o2Val =
-            typeof payloadObj.o2 === 'number'
-              ? (payloadObj.o2 as number)
-              : typeof payloadObj.oxygen === 'number'
-                ? (payloadObj.oxygen as number)
-                : undefined;
+          const moistVal = parseMetric(
+            moist?.sensor1,
+            payloadObj.moisture,
+            Boolean(moist && 'sensor1' in moist),
+            'moisture' in payloadObj,
+          );
 
-          const co2Val =
-            typeof scd?.co2 === 'number'
-              ? scd.co2
-              : typeof payloadObj.co2 === 'number'
-                ? (payloadObj.co2 as number)
-                : undefined;
+          const o2Val = parseMetric(
+            undefined,
+            payloadObj.o2 ?? payloadObj.oxygen,
+            false,
+            'o2' in payloadObj || 'oxygen' in payloadObj,
+          );
+
+          const co2Val = parseMetric(
+            scd?.co2,
+            payloadObj.co2,
+            Boolean(scd && 'co2' in scd),
+            'co2' in payloadObj,
+          );
 
           queryClient.setQueriesData<Machine[]>({ queryKey: ['machines'] }, (old) => {
             if (!old || !Array.isArray(old)) return old;
@@ -168,10 +181,10 @@ export function useSocket() {
                   ...m,
                   status: 'active',
                   latestReadings: {
-                    temperature: tempVal ?? m.latestReadings?.temperature ?? null,
-                    moisture: moistVal ?? m.latestReadings?.moisture ?? null,
-                    oxygen: o2Val ?? m.latestReadings?.oxygen ?? null,
-                    co2: co2Val ?? m.latestReadings?.co2 ?? null,
+                    temperature: tempVal !== undefined ? tempVal : (m.latestReadings?.temperature ?? null),
+                    moisture: moistVal !== undefined ? moistVal : (m.latestReadings?.moisture ?? null),
+                    oxygen: o2Val !== undefined ? o2Val : (m.latestReadings?.oxygen ?? null),
+                    co2: co2Val !== undefined ? co2Val : (m.latestReadings?.co2 ?? null),
                     updatedAt: new Date().toISOString(),
                   },
                 };
@@ -187,10 +200,10 @@ export function useSocket() {
                 ...old,
                 status: 'active',
                 latestReadings: {
-                  temperature: tempVal ?? old.latestReadings?.temperature ?? null,
-                  moisture: moistVal ?? old.latestReadings?.moisture ?? null,
-                  oxygen: o2Val ?? old.latestReadings?.oxygen ?? null,
-                  co2: co2Val ?? old.latestReadings?.co2 ?? null,
+                  temperature: tempVal !== undefined ? tempVal : (old.latestReadings?.temperature ?? null),
+                  moisture: moistVal !== undefined ? moistVal : (old.latestReadings?.moisture ?? null),
+                  oxygen: o2Val !== undefined ? o2Val : (old.latestReadings?.oxygen ?? null),
+                  co2: co2Val !== undefined ? co2Val : (old.latestReadings?.co2 ?? null),
                   updatedAt: new Date().toISOString(),
                 },
               };
