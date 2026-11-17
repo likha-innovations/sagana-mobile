@@ -277,4 +277,67 @@ describe("notifications lib & routing", () => {
       trigger: null,
     });
   });
+
+  test("setupNotificationListeners processes and clears stored initial notification response", async () => {
+    let cleared = false;
+    let handled = null;
+
+    const storedResponse = {
+      notification: {
+        request: {
+          content: { data: { machineId: "m-cold-1" } },
+        },
+      },
+    };
+
+    const { setupNotificationListeners } = load("src/lib/notifications.ts", {
+      "expo-notifications": {
+        setNotificationHandler: jest.fn(),
+        getLastNotificationResponse: () => storedResponse,
+        clearLastNotificationResponse: () => {
+          cleared = true;
+        },
+        addNotificationResponseReceivedListener: jest.fn(() => ({
+          remove: jest.fn(),
+        })),
+      },
+      "expo-router": {
+        router: {
+          push: (route) => {
+            handled = route;
+          },
+        },
+      },
+      "@/types/notification": {},
+      "@/lib/logger": {
+        createLogger: () => ({ info: jest.fn(), warn: jest.fn() }),
+      },
+    });
+
+    const cleanup = setupNotificationListeners();
+    expect(handled).toBe("/machines/m-cold-1");
+    expect(cleared).toBe(true);
+    cleanup();
+  });
+
+  test("notificationKeys.lists provides list-scoped prefix without matching unreadCount", () => {
+    const { notificationKeys } = load("src/hooks/use-notifications.ts", {
+      "@tanstack/react-query": {},
+      "date-fns": { isToday: () => false, differenceInCalendarDays: () => 0 },
+      "@/api/notifications.api": {},
+      "@/context/auth-context": {},
+      "@/types/notification": {},
+    });
+
+    const listsKey = notificationKeys.lists("user_123");
+    const listKey = notificationKeys.list("user_123", true);
+    const unreadKey = notificationKeys.unreadCount("user_123");
+
+    expect(listsKey).toEqual(["notifications", "user_123", "list"]);
+    expect(listKey[0]).toBe(listsKey[0]);
+    expect(listKey[1]).toBe(listsKey[1]);
+    expect(listKey[2]).toBe(listsKey[2]);
+    // unreadCount does not match list prefix
+    expect(unreadKey[2]).toBe("unread-count");
+  });
 });

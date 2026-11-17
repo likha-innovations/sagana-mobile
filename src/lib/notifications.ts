@@ -91,13 +91,39 @@ export function handleNotificationResponse(
 }
 
 /**
- * Subscribes to notification response events (taps on banners).
+ * Subscribes to notification response events (taps on banners)
+ * and processes any stored initial notification response from cold launch.
  */
 export function setupNotificationListeners(): () => void {
+  // Retrieve and handle stored initial response (cold launch) once setup is invoked
+  void (async () => {
+    try {
+      const initialResponse =
+        typeof Notifications.getLastNotificationResponse === 'function'
+          ? Notifications.getLastNotificationResponse()
+          : await Notifications.getLastNotificationResponseAsync?.();
+
+      if (initialResponse) {
+        handleNotificationResponse(initialResponse);
+        if (typeof Notifications.clearLastNotificationResponse === 'function') {
+          Notifications.clearLastNotificationResponse();
+        } else if (
+          typeof Notifications.clearLastNotificationResponseAsync === 'function'
+        ) {
+          await Notifications.clearLastNotificationResponseAsync();
+        }
+      }
+    } catch (err) {
+      logger.warn('Failed to retrieve initial notification response', err);
+    }
+  })();
+
+  // Keep listener registered for subsequent taps while app is running
   const subscription =
     Notifications.addNotificationResponseReceivedListener(
       handleNotificationResponse,
     );
+
   return () => {
     subscription.remove();
   };

@@ -9,6 +9,7 @@ import type {
 
 export const notificationKeys = {
   all: ["notifications"] as const,
+  lists: (userId?: string) => ["notifications", userId, "list"] as const,
   list: (userId?: string, unreadOnly?: boolean) =>
     ["notifications", userId, "list", { unreadOnly }] as const,
   unreadCount: (userId?: string) =>

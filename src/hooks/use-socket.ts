@@ -44,6 +44,9 @@ export function useSocket() {
     } else {
       setIsConnected(true);
       setSocketId(socket.id || null);
+      if (user?.barangayId) {
+        socket.emit('join_barangay', { barangayId: user.barangayId });
+      }
     }
 
     const onConnect = () => {
@@ -354,15 +357,17 @@ export function useSocket() {
         (prev) => (prev ?? 0) + 1,
       );
 
-      // Prepend to all notification queries in cache
-      queryClient.setQueriesData<NotificationItem[]>(
-        { queryKey: notificationKeys.all },
-        (old) => {
-          if (!old || !Array.isArray(old)) return [payload];
-          if (old.some((n) => n.id === payload.id)) return old;
-          return [payload, ...old];
-        },
-      );
+      // Optimistically prepend only to active notification list queries in cache
+      if (user?.id) {
+        queryClient.setQueriesData<NotificationItem[]>(
+          { queryKey: notificationKeys.lists(user.id) },
+          (old) => {
+            if (!old || !Array.isArray(old)) return old;
+            if (old.some((n) => n.id === payload.id)) return old;
+            return [payload, ...old];
+          },
+        );
+      }
 
       // Invalidate for eventual background consistency
       void queryClient.invalidateQueries({ queryKey: notificationKeys.all });
