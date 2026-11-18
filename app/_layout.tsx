@@ -99,7 +99,7 @@ function AuthProtectedNavigation() {
   }, [segments]);
 
   useEffect(() => {
-    if (!isLoaded || !onboardingStatus.checked) return;
+    if (!isLoaded || (!isSignedIn && !onboardingStatus.checked)) return;
     
     // Clerk updates `isSignedIn` immediately, but `user` (clerkUser) might take a tick to fetch.
     // Wait until the user object is fully loaded before making routing decisions.
