@@ -8,6 +8,8 @@ import { ClerkProvider, ClerkLoaded, ClerkLoading } from '@clerk/expo';
 import { QueryClient, QueryClientProvider, useQuery, useQueryClient, onlineManager } from '@tanstack/react-query';
 import NetInfo from '@react-native-community/netinfo';
 import { View, Text, Pressable } from 'react-native';
+import { WifiOff } from 'lucide-react-native';
+import { useNetwork } from '@/hooks/use-network';
 import { userApi } from '@/api/user.api';
 import { setForbiddenHandler } from '@/api/client';
 import { signupDestination } from '@/lib/barangay-code';
@@ -43,6 +45,7 @@ function AuthProtectedNavigation() {
   const segments = useSegments();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { isOffline } = useNetwork();
   const [onboardingStatus, setOnboardingStatus] = useState<{ checked: boolean; seen: boolean }>({
     checked: false,
     seen: false,
@@ -103,7 +106,7 @@ function AuthProtectedNavigation() {
     
     // Clerk updates `isSignedIn` immediately, but `user` (clerkUser) might take a tick to fetch.
     // Wait until the user object is fully loaded before making routing decisions.
-    if (isSignedIn && (!user || profile.isLoading || profile.isError)) return;
+    if (isSignedIn && (!user || profile.isPending || profile.isError)) return;
 
     const inAuthGroup = segments[0] === '(auth)';
     const isSuspended = profile.data?.status === 'suspended';
@@ -160,17 +163,19 @@ function AuthProtectedNavigation() {
         router.replace('/(auth)/sign-up');
       }
     }
-  }, [isSignedIn, isLoaded, user, segments, router, queryClient, profile.data, profile.isLoading, profile.isError, signupBarangay, onboardingStatus]);
+  }, [isSignedIn, isLoaded, user, segments, router, queryClient, profile.data, profile.isPending, profile.isError, signupBarangay, onboardingStatus]);
 
   const isSuspended = profile.data?.status === 'suspended';
+  const isOfflinePending = isSignedIn && profile.isPending && (profile.isPaused || isOffline);
   const showLoading =
     isSignedIn &&
+    !isOfflinePending &&
     (!user ||
-      profile.isLoading ||
+      profile.isPending ||
       (!isSuspended && !profile.data?.barangayId) ||
       (isSuspended && segments.at(1) !== 'suspended')) &&
     (segments[0] !== '(auth)' || (isSuspended && segments.at(1) !== 'suspended'));
-  const showError = isSignedIn && profile.isError;
+  const showError = isSignedIn && profile.isError && !isOfflinePending;
 
   return (
     <View className="flex-1">
@@ -179,9 +184,35 @@ function AuthProtectedNavigation() {
         <Stack.Screen name="(app)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" options={{ title: 'Oops!' }} />
       </Stack>
-      {(showLoading || showError) && (
+      {(showLoading || showError || isOfflinePending) && (
         <View className="absolute inset-0 bg-background">
-          {showError ? (
+          {isOfflinePending ? (
+            <View className="flex-1 justify-center items-center px-6 gap-3">
+              <View className="w-16 h-16 rounded-full bg-muted items-center justify-center mb-2">
+                <WifiOff size={32} color="#718619" />
+              </View>
+              <Text className="text-foreground text-xl font-bold text-center">
+                You are offline
+              </Text>
+              <Text className="text-muted-foreground text-sm text-center max-w-[280px]">
+                Please connect to the internet to load your account and continue.
+              </Text>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => void profile.refetch()}
+                className="mt-4 px-6 py-3 rounded-full bg-primary items-center justify-center active:opacity-90 w-full max-w-[280px]"
+              >
+                <Text className="text-primary-foreground font-bold text-sm">Try again</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => void signOut()}
+                className="py-2 active:opacity-70"
+              >
+                <Text className="text-muted-foreground text-sm font-medium">Sign out</Text>
+              </Pressable>
+            </View>
+          ) : showError ? (
             <View className="flex-1 justify-center px-6 gap-4">
               <Text className="text-foreground text-lg font-bold">Unable to load your profile</Text>
               <Text className="text-muted-foreground">Check your connection and try again.</Text>
