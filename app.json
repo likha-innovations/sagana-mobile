@@ -14,7 +14,7 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#FAF9EE",
-        "foregroundImage": "./assets/sagana_logo.png"
+        "foregroundImage": "./assets/adaptive-icon.png"
       },
       "package": "com.sagana.mobile",
       "predictiveBackGestureEnabled": false,
@@ -45,8 +45,8 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/sagana_logo.png",
-          "backgroundColor": "#FAF9EE",
+          "image": "./assets/sagana_logo_cream.png",
+          "backgroundColor": "#404D0A",
           "resizeMode": "contain"
         }
       ],
