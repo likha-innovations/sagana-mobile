@@ -1,4 +1,4 @@
-import { View, Text, Pressable, Platform, Linking, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, Platform, Linking, ActivityIndicator, Image } from 'react-native';
 import { Info, AlertCircle, Bluetooth } from 'lucide-react-native';
 import * as IntentLauncher from 'expo-intent-launcher';
 import { Input } from '@/components/ui/input';
@@ -18,7 +18,14 @@ export function TurnOnStep() {
         <Text className="font-bold text-foreground">SAGANA AIVSP Machine</Text>
         {' '}should blink 3 times in order to proceed.
       </Text>
-      <View className="w-full h-[220px] bg-skeleton rounded-2xl mt-8" />
+      <View className="w-full h-[220px] items-center justify-center mt-8">
+        <Image
+          source={require('@/assets/icons/mascot/sagana_machine_power.png')}
+          style={{ width: '100%', height: 220 }}
+          resizeMode="contain"
+          accessibilityLabel="Turn on SAGANA machine mascot"
+        />
+      </View>
     </View>
   );
 }
@@ -331,7 +338,14 @@ export function NameMachineStep({ control }: { control: Control<MachineRegistrat
 export function SuccessStep() {
   return (
     <View className="flex-1 mt-4">
-      <View className="w-full h-[220px] bg-skeleton rounded-2xl mb-8" />
+      <View className="w-full h-[220px] items-center justify-center mb-8">
+        <Image
+          source={require('@/assets/icons/mascot/sagana_celebrate.png')}
+          style={{ width: 220, height: 220 }}
+          resizeMode="contain"
+          accessibilityLabel="Machine registered celebration mascot"
+        />
+      </View>
       <Text className="text-2xl font-bold text-foreground">Your machine has been registered!</Text>
       <Text className="text-sm text-muted-foreground mt-2 leading-relaxed">
         You can now start a compost batch using your newly registered device.

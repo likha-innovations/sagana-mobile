@@ -10,6 +10,7 @@ import {
   Keyboard,
   TextInput,
   ActivityIndicator,
+  Image,
   type TextInputProps,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -473,10 +474,13 @@ export default function ForgotPasswordScreen() {
               {/* --- SCREEN 4: Success Content --- */}
               {step === 'success' && (
                 <View className="w-full">
-                  <View className="w-full h-[182px] bg-[#E2E1DC] rounded-[12px] mb-8 items-center justify-center">
-                    <View className="w-16 h-16 rounded-full bg-primary items-center justify-center">
-                      <Text className="text-white text-2xl font-bold">✓</Text>
-                    </View>
+                  <View className="w-full h-[200px] mb-8 items-center justify-center">
+                    <Image
+                      source={require('@/assets/icons/mascot/sagana_celebrate.png')}
+                      style={{ width: 200, height: 200 }}
+                      resizeMode="contain"
+                      accessibilityLabel="Sagana celebration mascot"
+                    />
                   </View>
 
                   <View className="w-full gap-2.5">

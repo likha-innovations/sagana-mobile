@@ -133,7 +133,15 @@ export default function HistoryScreen() {
             ) : query.isPending ? (
               <HistoryState message="Loading completed batches…" />
             ) : (
-              <HistoryState message="No batches match this search or date filter." />
+              <View className="py-8">
+                <EmptyState
+                  message={
+                    query.data && query.data.length === 0
+                      ? "You have no finished batches yet."
+                      : "No batches match this search or date filter."
+                  }
+                />
+              </View>
             )
           }
         />
