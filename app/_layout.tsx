@@ -50,11 +50,15 @@ function AuthProtectedNavigation() {
 
   useEffect(() => {
     let isMounted = true;
-    hasSeenOnboarding().then((seen) => {
-      if (isMounted) {
-        setOnboardingStatus({ checked: true, seen });
-      }
-    });
+    hasSeenOnboarding()
+      .then((seen) => {
+        if (isMounted) {
+          setOnboardingStatus({ checked: true, seen });
+        }
+      })
+      .catch((error) => {
+        authGateLogger.warn('Failed to read onboarding state from storage:', error);
+      });
     const unsubscribe = subscribeOnboarding((seen) => {
       if (isMounted) {
         setOnboardingStatus({ checked: true, seen });

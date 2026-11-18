@@ -7,20 +7,33 @@ const listeners = new Set<Listener>();
 
 let memoryCache: boolean | null = null;
 
+function notifyListeners(seen: boolean) {
+  listeners.forEach((fn) => {
+    try {
+      fn(seen);
+    } catch {
+      // noop
+    }
+  });
+}
+
 export async function hasSeenOnboarding(): Promise<boolean> {
   if (memoryCache !== null) return memoryCache;
   try {
     const value = await SecureStore.getItemAsync(ONBOARDING_KEY);
-    memoryCache = value === 'true';
-    return memoryCache;
-  } catch {
-    return false;
+    const seen = value === 'true';
+    memoryCache = seen;
+    notifyListeners(seen);
+    return seen;
+  } catch (error) {
+    // Keep failed read distinct from confirmed missing key
+    throw error;
   }
 }
 
 export async function setOnboardingCompleted(): Promise<void> {
   memoryCache = true;
-  listeners.forEach((fn) => fn(true));
+  notifyListeners(true);
   try {
     await SecureStore.setItemAsync(ONBOARDING_KEY, 'true');
   } catch {
@@ -30,7 +43,7 @@ export async function setOnboardingCompleted(): Promise<void> {
 
 export async function resetOnboarding(): Promise<void> {
   memoryCache = false;
-  listeners.forEach((fn) => fn(false));
+  notifyListeners(false);
   try {
     await SecureStore.deleteItemAsync(ONBOARDING_KEY);
   } catch {
@@ -40,6 +53,9 @@ export async function resetOnboarding(): Promise<void> {
 
 export function subscribeOnboarding(fn: Listener): () => void {
   listeners.add(fn);
+  if (memoryCache !== null) {
+    fn(memoryCache);
+  }
   return () => {
     listeners.delete(fn);
   };

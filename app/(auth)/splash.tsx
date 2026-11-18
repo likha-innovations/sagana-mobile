@@ -35,13 +35,28 @@ export default function SplashScreen() {
     let isMounted = true;
     const timer = setTimeout(async () => {
       if (!isMounted) return;
-      const seen = await hasSeenOnboarding();
-      if (!isMounted) return;
+      try {
+        const seen = await hasSeenOnboarding();
+        if (!isMounted) return;
 
-      if (!seen) {
-        router.replace('/(auth)/onboarding');
-      } else {
-        router.replace('/(auth)/sign-in');
+        if (!seen) {
+          router.replace('/(auth)/onboarding');
+        } else {
+          router.replace('/(auth)/sign-in');
+        }
+      } catch {
+        try {
+          const seen = await hasSeenOnboarding();
+          if (!isMounted) return;
+          if (!seen) {
+            router.replace('/(auth)/onboarding');
+          } else {
+            router.replace('/(auth)/sign-in');
+          }
+        } catch {
+          if (!isMounted) return;
+          router.replace('/(auth)/onboarding');
+        }
       }
     }, 2200);
 
