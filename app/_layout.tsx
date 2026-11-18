@@ -17,6 +17,7 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { Toast } from '@/components/ui/toast';
 import { createLogger } from '@/lib/logger';
 import { LoadingScreen } from '@/components/ui/loading-screen';
+import { hasSeenOnboarding, subscribeOnboarding } from '@/lib/onboarding-storage';
 import {
   requestNotificationPermissions,
   setupNotificationListeners,
@@ -41,6 +42,29 @@ function AuthProtectedNavigation() {
   const segments = useSegments();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const [onboardingStatus, setOnboardingStatus] = useState<{ checked: boolean; seen: boolean }>({
+    checked: false,
+    seen: false,
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    hasSeenOnboarding().then((seen) => {
+      if (isMounted) {
+        setOnboardingStatus({ checked: true, seen });
+      }
+    });
+    const unsubscribe = subscribeOnboarding((seen) => {
+      if (isMounted) {
+        setOnboardingStatus({ checked: true, seen });
+      }
+    });
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
+
   const profile = useQuery({
     queryKey: ['signup-profile', user?.id],
     queryFn: userApi.getProfile,
@@ -70,7 +94,7 @@ function AuthProtectedNavigation() {
   }, [segments]);
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || !onboardingStatus.checked) return;
     
     // Clerk updates `isSignedIn` immediately, but `user` (clerkUser) might take a tick to fetch.
     // Wait until the user object is fully loaded before making routing decisions.
@@ -92,10 +116,25 @@ function AuthProtectedNavigation() {
 
     if (!isSignedIn) {
       queryClient.removeQueries({ queryKey: ['signup-profile'] });
-      if (!inAuthGroup || segments.at(1) === 'suspended') {
-        authGateLogger.info('Unauthenticated user redirected to sign-in');
-        queryClient.clear();
-        router.replace('/(auth)/sign-in');
+      const currentAuthScreen = segments.at(1) as string | undefined;
+
+      if (!onboardingStatus.seen) {
+        if (currentAuthScreen !== 'splash' && currentAuthScreen !== 'onboarding') {
+          authGateLogger.info('Unseen onboarding redirected to splash');
+          queryClient.clear();
+          router.replace('/(auth)/splash');
+        }
+      } else {
+        if (
+          !inAuthGroup ||
+          currentAuthScreen === 'splash' ||
+          currentAuthScreen === 'onboarding' ||
+          currentAuthScreen === 'suspended'
+        ) {
+          authGateLogger.info('Returning unauthenticated user redirected to sign-in');
+          queryClient.clear();
+          router.replace('/(auth)/sign-in');
+        }
       }
     } else if (isSignedIn && destination === 'suspended') {
       if (!inAuthGroup || segments.at(1) !== 'suspended') {
@@ -116,7 +155,7 @@ function AuthProtectedNavigation() {
         router.replace('/(auth)/sign-up');
       }
     }
-  }, [isSignedIn, isLoaded, user, segments, router, queryClient, profile.data, profile.isLoading, profile.isError, signupBarangay]);
+  }, [isSignedIn, isLoaded, user, segments, router, queryClient, profile.data, profile.isLoading, profile.isError, signupBarangay, onboardingStatus]);
 
   const isSuspended = profile.data?.status === 'suspended';
   const showLoading =
