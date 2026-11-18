@@ -5,13 +5,25 @@ All notable changes to the SAGANA Mobile application will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.4.0] - 2026-11-18
 
 ### Added
+- **Interactive Onboarding Walkthrough**: 6-slide onboarding flow matching Figma (Node 1351:1181) featuring dotLottie mascot animations, dynamic viewport scaling, and skip/back navigation.
+- **First-Launch & Auth Gating**: Persistent first-launch check via `expo-secure-store`; automatically routes new unauthenticated users to onboarding while bypassing for returning users and signed-in operators.
+- **Brand Splash Screen Flow**: Full 148° gradient (`#404D0A` to `#CEFF00`) animated splash screen (`(auth)/splash`) with breathing `sagana_logo_cream` icon, plus cold-boot OS splash alignment in `app.json`.
+- **Network & Offline Connectivity**:
+  - Wired `@react-native-community/netinfo` to TanStack Query's `onlineManager` to automatically pause and resume queries during connectivity changes without UI errors.
+  - Added reusable `useNetwork` hook (`@/hooks`) for offline state detection.
+- **Hardware Machine Discovery**: Added `android.permission.BLUETOOTH_SCAN` in `app.json` for reliable BLE device pairing on Android 12+.
 - Historical batch sensor graphs with custom date range and interval filters.
 - Batch detail screens linking machine occupancy directly to composting progress.
 
+### Changed
+- Reused core `ProgressBar` from `@/components/auth` for the onboarding top navigation, maintaining a single source of truth for segmented progress indicators.
+- Pruned unused `react-native-keyboard-controller` dependency and config plugin.
+
 ### Fixed
+- **Android Adaptive Icon Safe Zone**: Generated padded 1024×1024 `adaptive-icon.png` centered in the 512px safe zone, resolving icon clipping and blown-up scale across Android squircle/round launchers.
 - Added image fallback handling and visual asset mappings for feedstock grid cards.
 - Improved loading skeletons and error modal recovery states.
 
@@ -65,4 +77,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Authentication**: Multi-step registration, email verification code input, password reset, and Clerk authentication integration.
 - **Networking**: Typed `apiFetch` wrapper with automatic Clerk JWT injection, structured `ApiError` handling, and response unwrapping.
 - **Logging**: Scoped `createLogger` utility with timestamps formatted in `Asia/Manila` timezone.
-
