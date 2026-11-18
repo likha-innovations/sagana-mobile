@@ -5,7 +5,8 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as SplashScreen from 'expo-splash-screen';
 import { ClerkProvider, ClerkLoaded, ClerkLoading } from '@clerk/expo';
-import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQuery, useQueryClient, onlineManager } from '@tanstack/react-query';
+import NetInfo from '@react-native-community/netinfo';
 import { View, Text, Pressable } from 'react-native';
 import { userApi } from '@/api/user.api';
 import { setForbiddenHandler } from '@/api/client';
@@ -191,6 +192,14 @@ function AuthProtectedNavigation() {
 }
 
 export default function RootLayout() {
+  useEffect(() => {
+    return onlineManager.setEventListener((setOnline) => {
+      return NetInfo.addEventListener((state) => {
+        setOnline(!!state.isConnected && !!state.isInternetReachable);
+      });
+    });
+  }, []);
+
   const [queryClient] = useState(
     () =>
       new QueryClient({
