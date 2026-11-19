@@ -1,11 +1,10 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import {
   View,
   Text,
   ScrollView,
   Pressable,
   useWindowDimensions,
-  Alert,
 } from "react-native";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -24,7 +23,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { format, parseISO } from "date-fns";
 import { useMachine, useMachineOverview } from "@/hooks/use-machines";
-import { useActiveBatch, useCompletedBatches, useFinishCompostBatch } from "@/hooks/use-batches";
+import { useActiveBatch, useCompletedBatches } from "@/hooks/use-batches";
 import { useDynamicLayout } from "@/hooks";
 import { colors } from "@/constants";
 import { formatTimeAgo } from "@/lib/utils";
@@ -36,7 +35,6 @@ import { FeedstockGrid } from "@/components/history/feedstock-grid";
 import { HistoryState } from "@/components/history/history-state";
 import { QuickActionButton } from "@/components/dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { CompletedBatchCard } from "@/components/dashboard/completed-batch-card";
 import { SensorStatCard } from "@/components/devices/sensor-stat-card";
 import { getRecentCompletedBatches } from "@/lib/dashboard";
@@ -51,9 +49,7 @@ export default function MachineDetailsDashboard() {
   const stacked = width < 360 || fontScale > 1.2;
   const machineQuery = useMachine(id);
   const batchQuery = useActiveBatch(id);
-  const finishBatch = useFinishCompostBatch();
   const overviewQuery = useMachineOverview(id);
-  const [finishVisible, setFinishVisible] = useState(false);
   useFocusEffect(
     useCallback(() => {
       logger.screen("Machine Details", { id });
@@ -338,7 +334,12 @@ export default function MachineDetailsDashboard() {
                     disabled={state.disconnected}
                     accessibilityRole="button"
                     accessibilityState={{ disabled: state.disconnected }}
-                    onPress={() => setFinishVisible(true)}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/(app)/machines/[id]/collect",
+                        params: { id, mode: "collect" },
+                      })
+                    }
                     className="min-h-12 rounded-full bg-secondary px-5 py-3 items-center justify-center"
                   >
                     <Text className="text-sm text-center font-bold text-foreground">
@@ -449,22 +450,6 @@ export default function MachineDetailsDashboard() {
           ))
         )}
       </ScrollView>
-      <ConfirmModal
-        visible={finishVisible}
-        title="Finish Batch"
-        description="Are you sure you want to finish the current composting batch? This action cannot be undone."
-        confirmText="Finish Batch"
-        isDestructive
-        pending={finishBatch.isPending}
-        onCancel={() => setFinishVisible(false)}
-        onConfirm={() => {
-          if (!batch) return;
-          finishBatch.mutate({ id: batch.id }, {
-            onSuccess: () => { setFinishVisible(false); router.replace("/(app)/(tabs)/machines"); },
-            onError: (error) => Alert.alert("Could not finish batch", error.message),
-          });
-        }}
-      />
     </View>
   );
 }
