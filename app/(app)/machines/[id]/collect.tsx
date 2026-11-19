@@ -44,8 +44,15 @@ export default function LinearActuatorCollectScreen() {
   const overview = overviewQuery.data;
   const { latestTelemetry } = useSocket();
 
-  const [floorState, setFloorState] = useState<FloorState>("lowered");
-  const [hasEmptied, setHasEmptied] = useState(false);
+  const actObj = (latestTelemetry as Record<string, unknown> | null)?.actuators as
+    | Record<string, unknown>
+    | undefined;
+  const initialFloorPosition = actObj?.actuator_position as string | undefined;
+
+  const [floorState, setFloorState] = useState<FloorState>(() =>
+    initialFloorPosition === "RAISED" ? "raised" : "lowered",
+  );
+  const [hasEmptied, setHasEmptied] = useState(() => initialFloorPosition === "RAISED");
   const [isSuccess, setIsSuccess] = useState(false);
 
   const initialWeight = overview?.currentWeight ?? activeBatch?.totalWeight ?? null;
@@ -138,7 +145,23 @@ export default function LinearActuatorCollectScreen() {
     }
   }, [isMoving, latestTelemetry, floorState]);
 
-  // Safety watchdog: Releases UI if device loses Wi-Fi or power mid-movement
+  // Synchronize floor position from machine telemetry when idle
+  useEffect(() => {
+    if (isMoving || !latestTelemetry) return;
+    const act = (latestTelemetry as Record<string, unknown>).actuators as
+      | Record<string, unknown>
+      | undefined;
+    const pos = act?.actuator_position as string | undefined;
+
+    if (pos === "RAISED" && floorState === "lowered") {
+      setFloorState("raised");
+      setHasEmptied(true);
+    } else if (pos === "LOWERED" && floorState === "raised" && !hasEmptied) {
+      setFloorState("lowered");
+    }
+  }, [isMoving, latestTelemetry, floorState, hasEmptied]);
+
+  // Calibrated watchdog (19s): Matches physical 17.5-18s stroke time
   useEffect(() => {
     if (!isMoving) return;
 
@@ -155,7 +178,7 @@ export default function LinearActuatorCollectScreen() {
           void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }
       }
-    }, 45000);
+    }, 19000);
 
     return () => clearTimeout(watchdog);
   }, [isMoving, floorState]);
