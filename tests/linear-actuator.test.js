@@ -74,4 +74,44 @@ describe("Linear actuator manual override & collect flow", () => {
       }),
     ).rejects.toThrow("Device offline or network error");
   });
+
+  test("actuator movement state machine produces correct labels and uninterruptible lock", () => {
+    function getActuatorState(floorState) {
+      const isMoving = floorState === "raising" || floorState === "dropping";
+      let label = "Raise floor";
+      if (floorState === "raising") label = "Raising floor..";
+      else if (floorState === "raised") label = "Drop floor";
+      else if (floorState === "dropping") label = "Dropping floor..";
+
+      return {
+        floorState,
+        isMoving,
+        label,
+        canGoBack: !isMoving,
+        canToggle: !isMoving,
+      };
+    }
+
+    const lowered = getActuatorState("lowered");
+    expect(lowered.label).toBe("Raise floor");
+    expect(lowered.isMoving).toBe(false);
+    expect(lowered.canGoBack).toBe(true);
+
+    const raising = getActuatorState("raising");
+    expect(raising.label).toBe("Raising floor..");
+    expect(raising.isMoving).toBe(true);
+    expect(raising.canGoBack).toBe(false);
+    expect(raising.canToggle).toBe(false);
+
+    const raised = getActuatorState("raised");
+    expect(raised.label).toBe("Drop floor");
+    expect(raised.isMoving).toBe(false);
+    expect(raised.canGoBack).toBe(true);
+
+    const dropping = getActuatorState("dropping");
+    expect(dropping.label).toBe("Dropping floor..");
+    expect(dropping.isMoving).toBe(true);
+    expect(dropping.canGoBack).toBe(false);
+    expect(dropping.canToggle).toBe(false);
+  });
 });

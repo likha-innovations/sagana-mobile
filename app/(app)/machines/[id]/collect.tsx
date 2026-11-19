@@ -1,10 +1,11 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
   Pressable,
   ActivityIndicator,
   Platform,
+  BackHandler,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ChevronLeft } from "lucide-react-native";
@@ -14,6 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useDynamicLayout } from "@/hooks/use-layout";
 import { useMachine, useMachineOverview } from "@/hooks/use-machines";
 import { useActiveBatch, useFinishCompostBatch } from "@/hooks/use-batches";
+import { useSocket } from "@/hooks/use-socket";
 import { deviceApi } from "@/api/device.api";
 import { colors } from "@/constants";
 import { createLogger } from "@/lib/logger";
@@ -39,6 +41,7 @@ export default function LinearActuatorCollectScreen() {
   const machine = machineQuery.data;
   const activeBatch = batchQuery.data;
   const overview = overviewQuery.data;
+  const { latestTelemetry } = useSocket();
 
   const [floorState, setFloorState] = useState<FloorState>("lowered");
   const [hasEmptied, setHasEmptied] = useState(false);
@@ -56,6 +59,63 @@ export default function LinearActuatorCollectScreen() {
   const isMoving = floorState === "raising" || floorState === "dropping";
   const isFloorRaised = floorState === "raised";
 
+  // Block Android hardware back button during actuator movement
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
+        if (isMoving) {
+          return true;
+        }
+        return false;
+      });
+      return () => subscription.remove();
+    }
+  }, [isMoving]);
+
+  // Listen for hardware telemetry confirming actuator reached limit and stopped
+  useEffect(() => {
+    if (!isMoving || !latestTelemetry) return;
+    const actObj = (latestTelemetry as Record<string, unknown>).actuators as
+      | Record<string, unknown>
+      | undefined;
+    if (actObj?.linear_actuator === "STOPPED") {
+      if (floorState === "raising") {
+        setFloorState("raised");
+        setHasEmptied(true);
+        if (Platform.OS !== "web") {
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        }
+      } else if (floorState === "dropping") {
+        setFloorState("lowered");
+        if (Platform.OS !== "web") {
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        }
+      }
+    }
+  }, [isMoving, latestTelemetry, floorState]);
+
+  // Fallback timer ensures movement completes if telemetry is offline or delayed
+  useEffect(() => {
+    if (!isMoving) return;
+
+    const timer = setTimeout(() => {
+      if (floorState === "raising") {
+        setFloorState("raised");
+        setHasEmptied(true);
+        if (Platform.OS !== "web") {
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        }
+      } else if (floorState === "dropping") {
+        setFloorState("lowered");
+        if (Platform.OS !== "web") {
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        }
+      }
+    }, 6000);
+
+    return () => clearTimeout(timer);
+  }, [isMoving, floorState]);
+
   const handleActuatorToggle = useCallback(async () => {
     if (isMoving) return;
 
@@ -64,7 +124,6 @@ export default function LinearActuatorCollectScreen() {
     }
 
     if (!isFloorRaised) {
-      // Dispatches extend command to raise floor and dump compost
       setFloorState("raising");
       if (machine?.macAddress) {
         try {
@@ -73,14 +132,7 @@ export default function LinearActuatorCollectScreen() {
           logger.warn("Failed to dispatch ACTUATOR_EXTEND", err);
         }
       }
-
-      // Allow physical actuator time to complete extension
-      setTimeout(() => {
-        setFloorState("raised");
-        setHasEmptied(true);
-      }, 2500);
     } else {
-      // Dispatches retract command to return floor to base position
       setFloorState("dropping");
       if (machine?.macAddress) {
         try {
@@ -89,11 +141,6 @@ export default function LinearActuatorCollectScreen() {
           logger.warn("Failed to dispatch ACTUATOR_RETRACT", err);
         }
       }
-
-      // Allow physical actuator time to complete retraction
-      setTimeout(() => {
-        setFloorState("lowered");
-      }, 2500);
     }
   }, [isMoving, isFloorRaised, machine?.macAddress]);
 
@@ -171,11 +218,11 @@ export default function LinearActuatorCollectScreen() {
   const getActuatorButtonText = () => {
     switch (floorState) {
       case "raising":
-        return "Raising..";
+        return "Raising floor..";
       case "raised":
         return "Drop floor";
       case "dropping":
-        return "Dropping..";
+        return "Dropping floor..";
       case "lowered":
       default:
         return "Raise floor";
@@ -193,10 +240,13 @@ export default function LinearActuatorCollectScreen() {
       <View>
         {/* Header */}
         <Pressable
-          onPress={() => router.back()}
+          disabled={isMoving}
+          onPress={() => !isMoving && router.back()}
           accessibilityRole="button"
           accessibilityLabel="Back"
-          className="min-h-12 min-w-12 items-center justify-center -ml-3 self-start"
+          className={`min-h-12 min-w-12 items-center justify-center -ml-3 self-start ${
+            isMoving ? "opacity-30" : "active:opacity-75"
+          }`}
         >
           <ChevronLeft size={24} color={colors.semantic.foreground} />
         </Pressable>
