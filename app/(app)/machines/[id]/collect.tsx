@@ -145,22 +145,6 @@ export default function LinearActuatorCollectScreen() {
     }
   }, [isMoving, latestTelemetry, floorState]);
 
-  // Synchronize floor position from machine telemetry when idle
-  useEffect(() => {
-    if (isMoving || !latestTelemetry) return;
-    const act = (latestTelemetry as Record<string, unknown>).actuators as
-      | Record<string, unknown>
-      | undefined;
-    const pos = act?.actuator_position as string | undefined;
-
-    if (pos === "RAISED" && floorState === "lowered") {
-      setFloorState("raised");
-      setHasEmptied(true);
-    } else if (pos === "LOWERED" && floorState === "raised" && !hasEmptied) {
-      setFloorState("lowered");
-    }
-  }, [isMoving, latestTelemetry, floorState, hasEmptied]);
-
   // Calibrated watchdog (19s): Matches physical 17.5-18s stroke time
   useEffect(() => {
     if (!isMoving) return;
