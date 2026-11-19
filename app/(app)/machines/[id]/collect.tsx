@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { useDynamicLayout } from "@/hooks/use-layout";
 import { useMachine, useMachineOverview } from "@/hooks/use-machines";
 import { useActiveBatch, useFinishCompostBatch } from "@/hooks/use-batches";
 import { useSocket } from "@/hooks/use-socket";
+import { getSocket } from "@/lib/socket";
 import { deviceApi } from "@/api/device.api";
 import { colors } from "@/constants";
 import { createLogger } from "@/lib/logger";
@@ -59,6 +60,8 @@ export default function LinearActuatorCollectScreen() {
   const isMoving = floorState === "raising" || floorState === "dropping";
   const isFloorRaised = floorState === "raised";
 
+  const hasSeenMoving = useRef(false);
+
   // Block Android hardware back button during actuator movement
   useEffect(() => {
     if (Platform.OS === "android") {
@@ -72,13 +75,54 @@ export default function LinearActuatorCollectScreen() {
     }
   }, [isMoving]);
 
-  // Listen for hardware telemetry confirming actuator reached limit and stopped
+  // Instant response: Listen for firmware automation event (actuator_extended / actuator_retracted)
+  useEffect(() => {
+    if (!isMoving) return;
+    const socket = getSocket();
+
+    const handleAutomationLog = (data: unknown) => {
+      const log = data as { type?: string; machineId?: string; macAddress?: string };
+      const isCurrentMachine =
+        (log.machineId && log.machineId === id) ||
+        (machine?.macAddress && log.macAddress === machine.macAddress);
+
+      if (!isCurrentMachine) return;
+
+      if (log.type === "actuator_extended") {
+        if (floorState === "raising") {
+          setFloorState("raised");
+          setHasEmptied(true);
+          if (Platform.OS !== "web") {
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          }
+        }
+      } else if (log.type === "actuator_retracted") {
+        if (floorState === "dropping") {
+          setFloorState("lowered");
+          if (Platform.OS !== "web") {
+            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          }
+        }
+      }
+    };
+
+    socket.on("automation_log", handleAutomationLog);
+    return () => {
+      socket.off("automation_log", handleAutomationLog);
+    };
+  }, [isMoving, floorState, id, machine?.macAddress]);
+
+  // Secondary stream: Telemetry STOPPED confirmation
   useEffect(() => {
     if (!isMoving || !latestTelemetry) return;
     const actObj = (latestTelemetry as Record<string, unknown>).actuators as
       | Record<string, unknown>
       | undefined;
-    if (actObj?.linear_actuator === "STOPPED") {
+    const actState = actObj?.linear_actuator as string | undefined;
+
+    if (actState === "EXTENDING" || actState === "RETRACTING") {
+      hasSeenMoving.current = true;
+    } else if (actState === "STOPPED" && hasSeenMoving.current) {
       if (floorState === "raising") {
         setFloorState("raised");
         setHasEmptied(true);
@@ -94,11 +138,11 @@ export default function LinearActuatorCollectScreen() {
     }
   }, [isMoving, latestTelemetry, floorState]);
 
-  // Fallback timer ensures movement completes if telemetry is offline or delayed
+  // Safety watchdog: Releases UI if device loses Wi-Fi or power mid-movement
   useEffect(() => {
     if (!isMoving) return;
 
-    const timer = setTimeout(() => {
+    const watchdog = setTimeout(() => {
       if (floorState === "raising") {
         setFloorState("raised");
         setHasEmptied(true);
@@ -111,13 +155,15 @@ export default function LinearActuatorCollectScreen() {
           void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }
       }
-    }, 6000);
+    }, 45000);
 
-    return () => clearTimeout(timer);
+    return () => clearTimeout(watchdog);
   }, [isMoving, floorState]);
 
   const handleActuatorToggle = useCallback(async () => {
     if (isMoving) return;
+
+    hasSeenMoving.current = false;
 
     if (Platform.OS !== "web") {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
