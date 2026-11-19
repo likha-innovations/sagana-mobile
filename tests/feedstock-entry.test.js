@@ -32,6 +32,7 @@ function render(step, weights) {
     "expo-router": { useRouter: () => ({}), useLocalSearchParams: () => ({}) },
     "lucide-react-native": new Proxy({}, { get: (_, key) => key }),
     "expo-image": { Image: "Image" },
+    "lottie-react-native": new Proxy({}, { get: () => "LottieView" }),
     "expo-haptics": {
       impactAsync: mock.fn(),
       notificationAsync: mock.fn(),

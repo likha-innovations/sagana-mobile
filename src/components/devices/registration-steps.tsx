@@ -1,4 +1,5 @@
-import { View, Text, Pressable, Platform, Linking, ActivityIndicator, Image } from 'react-native';
+import { View, Text, Pressable, Platform, Linking, ActivityIndicator, useWindowDimensions } from 'react-native';
+import LottieView from 'lottie-react-native';
 import { Info, AlertCircle, Bluetooth } from 'lucide-react-native';
 import * as IntentLauncher from 'expo-intent-launcher';
 import { Input } from '@/components/ui/input';
@@ -10,21 +11,32 @@ import type { BleStatus } from '@/hooks/use-bluetooth';
 import { useCurrentWifi } from '@/hooks';
 
 export function TurnOnStep() {
+  const { width, height } = useWindowDimensions();
+  const mascotSize = Math.min(width * 0.75, height * 0.36, 290);
+
   return (
-    <View className="flex-1 mt-4">
-      <Text className="text-2xl font-bold text-foreground">Turn on your machine</Text>
-      <Text className="text-sm text-muted-foreground mt-2 leading-relaxed">
-        Once powered on, your{' '}
-        <Text className="font-bold text-foreground">SAGANA AIVSP Machine</Text>
-        {' '}should blink 3 times in order to proceed.
-      </Text>
-      <View className="w-full h-[220px] items-center justify-center mt-8">
-        <Image
-          source={require('@/assets/icons/mascot/sagana_machine_power.png')}
-          style={{ width: '100%', height: 220 }}
-          resizeMode="contain"
-          accessibilityLabel="Turn on SAGANA machine mascot"
-        />
+    <View className="flex-1 justify-between pt-2 pb-6">
+      <View>
+        <Text className="text-2xl font-bold text-foreground">Turn on your machine</Text>
+        <Text className="text-sm text-muted-foreground mt-2 leading-relaxed">
+          Once powered on, your{' '}
+          <Text className="font-bold text-foreground">SAGANA AIVSP Machine</Text>
+          {' '}should blink 3 times in order to proceed.
+        </Text>
+      </View>
+
+      <View className="flex-1 items-center justify-center my-6">
+        <View style={{ width: mascotSize, height: mascotSize }} className="items-center justify-center">
+          <LottieView
+            source={require('@/assets/icons/mascot/onboarding/sagana_hardhat_mascot_blink.lottie')}
+            autoPlay
+            loop
+            cacheComposition
+            renderMode="HARDWARE"
+            hardwareAccelerationAndroid
+            style={{ width: '100%', height: '100%' }}
+          />
+        </View>
       </View>
     </View>
   );
@@ -339,11 +351,14 @@ export function SuccessStep() {
   return (
     <View className="flex-1 mt-4">
       <View className="w-full h-[220px] items-center justify-center mb-8">
-        <Image
-          source={require('@/assets/icons/mascot/sagana_celebrate.png')}
-          style={{ width: 220, height: 220 }}
-          resizeMode="contain"
-          accessibilityLabel="Machine registered celebration mascot"
+        <LottieView
+          source={require('@/assets/icons/mascot/onboarding/sagana_celebration.lottie')}
+          autoPlay
+          loop
+          cacheComposition
+          renderMode="HARDWARE"
+          hardwareAccelerationAndroid
+          style={{ width: '100%', height: '100%' }}
         />
       </View>
       <Text className="text-2xl font-bold text-foreground">Your machine has been registered!</Text>
