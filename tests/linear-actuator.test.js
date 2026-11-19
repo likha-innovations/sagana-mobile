@@ -114,4 +114,30 @@ describe("Linear actuator manual override & collect flow", () => {
     expect(dropping.canGoBack).toBe(false);
     expect(dropping.canToggle).toBe(false);
   });
+
+  test("actuator-storage tracks and persists floor position per machine", async () => {
+    const store = new Map();
+    const mockSecureStore = {
+      getItemAsync: async (key) => store.get(key) ?? null,
+      setItemAsync: async (key, val) => {
+        store.set(key, val);
+      },
+    };
+
+    const { getCachedFloorPosition, getFloorPosition, setFloorPosition } = load(
+      "src/lib/actuator-storage.ts",
+      {
+        "expo-secure-store": mockSecureStore,
+      },
+    );
+
+    expect(getCachedFloorPosition("machine-123")).toBe("lowered");
+    await setFloorPosition("machine-123", "raised");
+    expect(getCachedFloorPosition("machine-123")).toBe("raised");
+    expect(await getFloorPosition("machine-123")).toBe("raised");
+
+    await setFloorPosition("machine-123", "lowered");
+    expect(getCachedFloorPosition("machine-123")).toBe("lowered");
+    expect(await getFloorPosition("machine-123")).toBe("lowered");
+  });
 });

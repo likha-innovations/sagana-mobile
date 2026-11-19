@@ -18,6 +18,11 @@ import { useActiveBatch, useFinishCompostBatch } from "@/hooks/use-batches";
 import { useSocket } from "@/hooks/use-socket";
 import { getSocket } from "@/lib/socket";
 import { deviceApi } from "@/api/device.api";
+import {
+  getCachedFloorPosition,
+  getFloorPosition,
+  setFloorPosition,
+} from "@/lib/actuator-storage";
 import { colors } from "@/constants";
 import { createLogger } from "@/lib/logger";
 
@@ -44,15 +49,17 @@ export default function LinearActuatorCollectScreen() {
   const overview = overviewQuery.data;
   const { latestTelemetry } = useSocket();
 
+  const cachedFloorPos = getCachedFloorPosition(id);
   const actObj = (latestTelemetry as Record<string, unknown> | null)?.actuators as
     | Record<string, unknown>
     | undefined;
   const initialFloorPosition = actObj?.actuator_position as string | undefined;
+  const isInitiallyRaised = initialFloorPosition === "RAISED" || cachedFloorPos === "raised";
 
   const [floorState, setFloorState] = useState<FloorState>(() =>
-    initialFloorPosition === "RAISED" ? "raised" : "lowered",
+    isInitiallyRaised ? "raised" : "lowered",
   );
-  const [hasEmptied, setHasEmptied] = useState(() => initialFloorPosition === "RAISED");
+  const [hasEmptied, setHasEmptied] = useState(() => isInitiallyRaised);
   const [isSuccess, setIsSuccess] = useState(false);
 
   const initialWeight = overview?.currentWeight ?? activeBatch?.totalWeight ?? null;
@@ -67,7 +74,22 @@ export default function LinearActuatorCollectScreen() {
   const isMoving = floorState === "raising" || floorState === "dropping";
   const isFloorRaised = floorState === "raised";
 
-  const hasSeenMoving = useRef(false);
+  const lastActionTime = useRef<number>(0);
+
+  // Restore persisted floor position asynchronously from hardware storage
+  useEffect(() => {
+    let isMounted = true;
+    void getFloorPosition(id).then((savedPos) => {
+      if (!isMounted) return;
+      if (savedPos === "raised") {
+        setFloorState((prev) => (prev === "lowered" ? "raised" : prev));
+        setHasEmptied(true);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
 
   // Block Android hardware back button during actuator movement
   useEffect(() => {
@@ -82,9 +104,8 @@ export default function LinearActuatorCollectScreen() {
     }
   }, [isMoving]);
 
-  // Instant response: Listen for firmware automation event (actuator_extended / actuator_retracted)
+  // Instant response: Listen for firmware automation events (remote or physical button)
   useEffect(() => {
-    if (!isMoving) return;
     const socket = getSocket();
 
     const handleAutomationLog = (data: unknown) => {
@@ -95,20 +116,24 @@ export default function LinearActuatorCollectScreen() {
 
       if (!isCurrentMachine) return;
 
-      if (log.type === "actuator_extended") {
-        if (floorState === "raising") {
-          setFloorState("raised");
-          setHasEmptied(true);
-          if (Platform.OS !== "web") {
-            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          }
+      lastActionTime.current = Date.now();
+
+      if (log.type === "actuator_extending") {
+        setFloorState("raising");
+      } else if (log.type === "actuator_retracting") {
+        setFloorState("dropping");
+      } else if (log.type === "actuator_extended") {
+        setFloorState("raised");
+        setHasEmptied(true);
+        void setFloorPosition(id, "raised");
+        if (Platform.OS !== "web") {
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }
       } else if (log.type === "actuator_retracted") {
-        if (floorState === "dropping") {
-          setFloorState("lowered");
-          if (Platform.OS !== "web") {
-            void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          }
+        setFloorState("lowered");
+        void setFloorPosition(id, "lowered");
+        if (Platform.OS !== "web") {
+          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }
       }
     };
@@ -117,47 +142,49 @@ export default function LinearActuatorCollectScreen() {
     return () => {
       socket.off("automation_log", handleAutomationLog);
     };
-  }, [isMoving, floorState, id, machine?.macAddress]);
+  }, [id, machine?.macAddress]);
 
-  // Secondary stream: Telemetry STOPPED confirmation
+  // Secondary stream: Telemetry synchronization (e.g. after network reconnection)
   useEffect(() => {
-    if (!isMoving || !latestTelemetry) return;
-    const actObj = (latestTelemetry as Record<string, unknown>).actuators as
+    if (isMoving || !latestTelemetry) return;
+    if (Date.now() - lastActionTime.current < 5000) return;
+
+    const act = (latestTelemetry as Record<string, unknown>).actuators as
       | Record<string, unknown>
       | undefined;
-    const actState = actObj?.linear_actuator as string | undefined;
+    const actState = act?.linear_actuator as string | undefined;
+    const actPos = act?.actuator_position as string | undefined;
 
-    if (actState === "EXTENDING" || actState === "RETRACTING") {
-      hasSeenMoving.current = true;
-    } else if (actState === "STOPPED" && hasSeenMoving.current) {
-      if (floorState === "raising") {
-        setFloorState("raised");
-        setHasEmptied(true);
-        if (Platform.OS !== "web") {
-          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        }
-      } else if (floorState === "dropping") {
-        setFloorState("lowered");
-        if (Platform.OS !== "web") {
-          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        }
-      }
+    if (actState === "EXTENDING") {
+      setFloorState("raising");
+    } else if (actState === "RETRACTING") {
+      setFloorState("dropping");
+    } else if (actPos === "RAISED" && floorState !== "raised") {
+      setFloorState("raised");
+      setHasEmptied(true);
+      void setFloorPosition(id, "raised");
+    } else if (actPos === "LOWERED" && floorState !== "lowered" && !hasEmptied) {
+      setFloorState("lowered");
+      void setFloorPosition(id, "lowered");
     }
-  }, [isMoving, latestTelemetry, floorState]);
+  }, [isMoving, latestTelemetry, floorState, hasEmptied, id]);
 
-  // Calibrated watchdog (19s): Matches physical 17.5-18s stroke time
+  // Calibrated watchdog (19s): Safety fallback matching physical 17.5-18s stroke
   useEffect(() => {
     if (!isMoving) return;
 
     const watchdog = setTimeout(() => {
+      lastActionTime.current = Date.now();
       if (floorState === "raising") {
         setFloorState("raised");
         setHasEmptied(true);
+        void setFloorPosition(id, "raised");
         if (Platform.OS !== "web") {
           void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }
       } else if (floorState === "dropping") {
         setFloorState("lowered");
+        void setFloorPosition(id, "lowered");
         if (Platform.OS !== "web") {
           void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }
@@ -165,12 +192,12 @@ export default function LinearActuatorCollectScreen() {
     }, 19000);
 
     return () => clearTimeout(watchdog);
-  }, [isMoving, floorState]);
+  }, [isMoving, floorState, id]);
 
   const handleActuatorToggle = useCallback(async () => {
     if (isMoving) return;
 
-    hasSeenMoving.current = false;
+    lastActionTime.current = Date.now();
 
     if (Platform.OS !== "web") {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -203,6 +230,9 @@ export default function LinearActuatorCollectScreen() {
     if (Platform.OS !== "web") {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
+
+    // Reset persisted floor position for this machine upon completing or rejecting batch
+    void setFloorPosition(id, "lowered");
 
     if (activeBatch?.id) {
       const finalWeight = isReject ? 0 : (initialWeight ?? undefined);
