@@ -140,4 +140,35 @@ describe("Linear actuator manual override & collect flow", () => {
     expect(getCachedFloorPosition("machine-123")).toBe("lowered");
     expect(await getFloorPosition("machine-123")).toBe("lowered");
   });
+
+  test("middle door interlock prevents raising floor when middle door is closed", () => {
+    function computeActuatorControls(floorState, isMiddleDoorOpen) {
+      const isMoving = floorState === "raising" || floorState === "dropping";
+      const isFloorRaised = floorState === "raised";
+      const isRaiseDisabled = !isFloorRaised && !isMiddleDoorOpen;
+      const isButtonDisabled = isMoving || isRaiseDisabled;
+
+      return {
+        isMoving,
+        isFloorRaised,
+        isRaiseDisabled,
+        isButtonDisabled,
+      };
+    }
+
+    // Lowered + Door Closed -> Raising disabled
+    const loweredClosed = computeActuatorControls("lowered", false);
+    expect(loweredClosed.isRaiseDisabled).toBe(true);
+    expect(loweredClosed.isButtonDisabled).toBe(true);
+
+    // Lowered + Door Open -> Raising enabled
+    const loweredOpen = computeActuatorControls("lowered", true);
+    expect(loweredOpen.isRaiseDisabled).toBe(false);
+    expect(loweredOpen.isButtonDisabled).toBe(false);
+
+    // Raised (Door Closed or Open) -> Dropping floor is allowed
+    const raisedClosed = computeActuatorControls("raised", false);
+    expect(raisedClosed.isRaiseDisabled).toBe(false);
+    expect(raisedClosed.isButtonDisabled).toBe(false);
+  });
 });

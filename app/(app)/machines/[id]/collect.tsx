@@ -8,7 +8,7 @@ import {
   BackHandler,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ChevronLeft } from "lucide-react-native";
+import { ChevronLeft, AlertCircle, CheckCircle2 } from "lucide-react-native";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import { useQueryClient } from "@tanstack/react-query";
@@ -53,6 +53,10 @@ export default function LinearActuatorCollectScreen() {
   const actObj = (latestTelemetry as Record<string, unknown> | null)?.actuators as
     | Record<string, unknown>
     | undefined;
+  const doorsObj = (latestTelemetry as Record<string, unknown> | null)?.doors as
+    | Record<string, unknown>
+    | undefined;
+
   const initialFloorPosition = actObj?.actuator_position as string | undefined;
   const isInitiallyRaised = initialFloorPosition === "RAISED" || cachedFloorPos === "raised";
 
@@ -61,6 +65,10 @@ export default function LinearActuatorCollectScreen() {
   );
   const [hasEmptied, setHasEmptied] = useState(() => isInitiallyRaised);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const initialMiddleDoorOpen =
+    doorsObj?.middle_door_closed !== undefined ? !doorsObj.middle_door_closed : false;
+  const [isMiddleDoorOpen, setIsMiddleDoorOpen] = useState(initialMiddleDoorOpen);
 
   const initialWeight = overview?.currentWeight ?? activeBatch?.totalWeight ?? null;
   const displayWeight = hasEmptied ? "0 kg" : initialWeight != null ? `${initialWeight} kg` : "--";
@@ -73,6 +81,8 @@ export default function LinearActuatorCollectScreen() {
 
   const isMoving = floorState === "raising" || floorState === "dropping";
   const isFloorRaised = floorState === "raised";
+  const isRaiseDisabled = !isFloorRaised && !isMiddleDoorOpen;
+  const isButtonDisabled = isMoving || isRaiseDisabled;
 
   const lastActionTime = useRef<number>(0);
 
@@ -118,7 +128,11 @@ export default function LinearActuatorCollectScreen() {
 
       lastActionTime.current = Date.now();
 
-      if (log.type === "actuator_extending") {
+      if (log.type === "middle_door_opened") {
+        setIsMiddleDoorOpen(true);
+      } else if (log.type === "middle_door_closed") {
+        setIsMiddleDoorOpen(false);
+      } else if (log.type === "actuator_extending") {
         setFloorState("raising");
       } else if (log.type === "actuator_retracting") {
         setFloorState("dropping");
@@ -146,7 +160,16 @@ export default function LinearActuatorCollectScreen() {
 
   // Secondary stream: Telemetry synchronization (e.g. after network reconnection)
   useEffect(() => {
-    if (isMoving || !latestTelemetry) return;
+    if (!latestTelemetry) return;
+
+    const doors = (latestTelemetry as Record<string, unknown>).doors as
+      | Record<string, unknown>
+      | undefined;
+    if (doors?.middle_door_closed !== undefined) {
+      setIsMiddleDoorOpen(!doors.middle_door_closed);
+    }
+
+    if (isMoving) return;
     if (Date.now() - lastActionTime.current < 5000) return;
 
     const act = (latestTelemetry as Record<string, unknown>).actuators as
@@ -195,7 +218,7 @@ export default function LinearActuatorCollectScreen() {
   }, [isMoving, floorState, id]);
 
   const handleActuatorToggle = useCallback(async () => {
-    if (isMoving) return;
+    if (isButtonDisabled) return;
 
     lastActionTime.current = Date.now();
 
@@ -348,15 +371,101 @@ export default function LinearActuatorCollectScreen() {
           <Text className="text-xs font-sans text-muted-foreground mt-1">Current weight</Text>
         </View>
 
+        {/* Floor & Middle Door status card */}
+        <View className="mt-4 rounded-[14px] border border-border bg-card p-4 flex-row items-center justify-between">
+          <View className="flex-row items-center gap-3">
+            <View
+              className={`w-3 h-3 rounded-full ${
+                isMoving ? "bg-brand-500" : isFloorRaised ? "bg-brand-500" : "bg-neutral-300"
+              }`}
+            />
+            <View>
+              <Text className="text-xs font-sans text-muted-foreground">Floor state</Text>
+              <Text className="text-sm font-bold text-foreground">
+                {isMoving
+                  ? floorState === "raising"
+                    ? "Raising floor..."
+                    : "Dropping floor..."
+                  : isFloorRaised
+                  ? "Floor is opened (raised)"
+                  : "Floor is closed (lowered)"}
+              </Text>
+            </View>
+          </View>
+
+          {/* Middle Door indicator badge */}
+          <View
+            className={`px-3 py-1.5 rounded-full flex-row items-center gap-1.5 ${
+              isMiddleDoorOpen
+                ? "bg-brand-50 border border-brand-200"
+                : "bg-neutral-100 border border-border"
+            }`}
+          >
+            <View
+              className={`w-2 h-2 rounded-full ${
+                isMiddleDoorOpen ? "bg-brand-500" : "bg-neutral-400"
+              }`}
+            />
+            <Text
+              className={`text-xs font-semibold ${
+                isMiddleDoorOpen ? "text-brand-700" : "text-neutral-600"
+              }`}
+            >
+              Middle door: {isMiddleDoorOpen ? "Open" : "Closed"}
+            </Text>
+          </View>
+        </View>
+
+        {/* Actionable door & floor notice callout */}
+        {!isFloorRaised && !isMiddleDoorOpen && (
+          <View className="mt-3 p-4 rounded-[14px] bg-yellow-50 border border-yellow-200 flex-row items-start gap-3">
+            <AlertCircle size={20} color={colors.yellow[700]} style={{ marginTop: 2, flexShrink: 0 }} />
+            <View className="flex-1">
+              <Text className="text-sm font-bold text-neutral-900">Middle door is closed</Text>
+              <Text className="text-xs font-sans text-neutral-700 mt-1 leading-5">
+                The chamber floor cannot be raised while the middle compost door is closed. Please open the middle door on the machine to proceed.
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {!isFloorRaised && isMiddleDoorOpen && (
+          <View className="mt-3 p-4 rounded-[14px] bg-brand-50 border border-brand-200 flex-row items-start gap-3">
+            <CheckCircle2 size={20} color={colors.brand[500]} style={{ marginTop: 2, flexShrink: 0 }} />
+            <View className="flex-1">
+              <Text className="text-sm font-bold text-brand-900">Ready to raise floor</Text>
+              <Text className="text-xs font-sans text-brand-700 mt-1 leading-5">
+                Middle door is open. You can now press &quot;Raise floor&quot; to empty the curing-ready compost.
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {isFloorRaised && (
+          <View className="mt-3 p-4 rounded-[14px] bg-brand-50 border border-brand-200 flex-row items-start gap-3">
+            <CheckCircle2 size={20} color={colors.brand[500]} style={{ marginTop: 2, flexShrink: 0 }} />
+            <View className="flex-1">
+              <Text className="text-sm font-bold text-brand-900">Floor is raised</Text>
+              <Text className="text-xs font-sans text-brand-700 mt-1 leading-5">
+                The chamber floor is currently raised. Once compost collection is complete, press &quot;Drop floor&quot;.
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* Linear actuator manual control button */}
         <View className="items-center mt-6">
           <Pressable
-            disabled={isMoving}
+            disabled={isButtonDisabled}
             accessibilityRole="button"
             accessibilityLabel={getActuatorButtonText()}
-            accessibilityState={{ disabled: isMoving }}
+            accessibilityState={{ disabled: isButtonDisabled }}
             onPress={handleActuatorToggle}
-            className="min-w-[150px] min-h-[44px] px-8 rounded-full border border-brand-500 items-center justify-center active:opacity-75"
+            className={`min-w-[150px] min-h-[44px] px-8 rounded-full border items-center justify-center ${
+              isButtonDisabled && !isMoving
+                ? "border-neutral-200 bg-neutral-100 opacity-60"
+                : "border-brand-500 active:opacity-75"
+            }`}
           >
             {isMoving ? (
               <View className="flex-row items-center gap-2">
@@ -364,7 +473,13 @@ export default function LinearActuatorCollectScreen() {
                 <Text className="text-sm font-bold text-brand-700">{getActuatorButtonText()}</Text>
               </View>
             ) : (
-              <Text className="text-sm font-bold text-brand-700">{getActuatorButtonText()}</Text>
+              <Text
+                className={`text-sm font-bold ${
+                  isButtonDisabled ? "text-neutral-400" : "text-brand-700"
+                }`}
+              >
+                {getActuatorButtonText()}
+              </Text>
             )}
           </Pressable>
         </View>
