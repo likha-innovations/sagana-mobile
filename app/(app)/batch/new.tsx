@@ -274,8 +274,14 @@ export default function NewBatchScreen() {
                 </Text>
               </View>
 
-              {/* Plain Gray Box Placeholder */}
-              <View className="h-[260px] w-full rounded-2xl bg-skeleton my-auto" />
+              <View className="h-[260px] w-full items-center justify-center my-auto">
+                <Image
+                  source={require('@/assets/icons/mascot/sagana_machine_power.png')}
+                  style={{ width: '100%', height: 260 }}
+                  contentFit="contain"
+                  accessibilityLabel="Turn on SAGANA machine mascot"
+                />
+              </View>
 
               {/* Action Button */}
               <TouchableOpacity
@@ -396,8 +402,14 @@ export default function NewBatchScreen() {
                 </Text>
               </View>
 
-              {/* Plain Gray Box Placeholder */}
-              <View className="h-[260px] w-full rounded-2xl bg-skeleton my-auto" />
+              <View className="h-[260px] w-full items-center justify-center my-auto">
+                <Image
+                  source={require('@/assets/icons/mascot/sagana_machine_power.png')}
+                  style={{ width: '100%', height: 260 }}
+                  contentFit="contain"
+                  accessibilityLabel="Turn on SAGANA machine mascot"
+                />
+              </View>
 
               {/* Mutation Dispatch Button */}
               <TouchableOpacity
@@ -421,8 +433,14 @@ export default function NewBatchScreen() {
           {step === 5 && (
             <View className="flex-1 justify-between" style={{ paddingBottom: stackScrollPadding }}>
               <View>
-                {/* Top Illustration Placeholder */}
-                <View className="h-[182px] w-full rounded-2xl bg-skeleton mt-8 mb-6" />
+                <View className="h-[200px] w-full items-center justify-center mt-6 mb-4">
+                  <Image
+                    source={require('@/assets/icons/mascot/sagana_celebrate.png')}
+                    style={{ width: 200, height: 200 }}
+                    contentFit="contain"
+                    accessibilityLabel="Sagana celebration mascot"
+                  />
+                </View>
 
                 <Text className="text-[20px] font-bold text-foreground mb-2">
                   Batch has been started!

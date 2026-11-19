@@ -2,7 +2,9 @@ import { Stack } from 'expo-router';
 
 export default function AuthLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false }} initialRouteName="splash">
+      <Stack.Screen name="splash" options={{ headerShown: false }} />
+      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="barangay-code" options={{ headerShown: false }} />
       <Stack.Screen name="sign-in" options={{ headerShown: false }} />
       <Stack.Screen name="sign-up" options={{ headerShown: false }} />

@@ -72,7 +72,10 @@ function render(step, weights) {
     {
       module,
       exports: module.exports,
-      require: (name) => dependencies[name] ?? require(name),
+      require: (name) => {
+        if (name.startsWith("@/assets/")) return 1;
+        return dependencies[name] ?? require(name);
+      },
     },
     { filename },
   );

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, Pressable, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, ActivityIndicator, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthContext } from '@/context/auth-context';
 import { useDynamicLayout } from '@/hooks';
@@ -30,10 +30,13 @@ export default function ChangePasswordSuccessScreen() {
     >
       <View className="flex-1 px-4 items-center justify-between pb-10">
         <View className="w-full max-w-[380px] pt-12">
-          <View className="w-full h-[182px] bg-secondary rounded-[12px] mb-8 items-center justify-center">
-            <View className="w-16 h-16 rounded-full bg-primary items-center justify-center">
-              <Text className="text-primary-foreground text-2xl font-bold">✓</Text>
-            </View>
+          <View className="w-full h-[200px] mb-8 items-center justify-center">
+            <Image
+              source={require('@/assets/icons/mascot/sagana_celebrate.png')}
+              style={{ width: 200, height: 200 }}
+              resizeMode="contain"
+              accessibilityLabel="Sagana celebration mascot"
+            />
           </View>
 
           <View className="w-full gap-2.5">

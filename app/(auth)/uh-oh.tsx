@@ -1,4 +1,4 @@
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, Image, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 
@@ -15,9 +15,26 @@ export default function UhOhScreen() {
       className="flex-1 bg-background"
       style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
     >
-      <View className="flex-1 px-4 items-center justify-between pb-10">
-        <View className="w-full max-w-[380px] pt-12">
-          <Text className="text-[32px] font-bold text-foreground text-center mb-6">
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          paddingBottom: 40,
+        }}
+        className="px-4"
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="w-full max-w-[380px] pt-8 items-center">
+          <View className="w-[180px] h-[180px] items-center justify-center mb-4">
+            <Image
+              source={require('@/assets/icons/mascot/sagana_confused.png')}
+              style={{ width: 180, height: 180 }}
+              resizeMode="contain"
+              accessibilityLabel="Confused mascot illustration"
+            />
+          </View>
+          <Text className="text-[28px] font-bold text-foreground text-center mb-4">
             Uh-oh, we're sorry!
           </Text>
           <Text className="text-[14px] font-sans text-foreground text-center leading-6">
@@ -36,7 +53,7 @@ export default function UhOhScreen() {
             </Text>
           </Pressable>
         </View>
-      </View>
+      </ScrollView>
     </View>
   );
 }
