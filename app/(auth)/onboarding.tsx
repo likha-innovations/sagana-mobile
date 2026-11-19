@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, Pressable, useWindowDimensions } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 import LottieView from 'lottie-react-native';
 import { ProgressBar } from '@/components/auth';
 import { setOnboardingCompleted } from '@/lib/onboarding-storage';
+import { useDynamicLayout } from '@/hooks';
 
 interface Slide {
   id: string;
@@ -30,7 +31,7 @@ const SLIDES: Slide[] = [
   // Frame 15: Welcome to SAGANA!
   {
     id: 'welcome-buchikek',
-    source: require('@/assets/icons/mascot/onboarding/sagana_mascot_machine.lottie'),
+    source: require('@/assets/icons/mascot/onboarding/sagana_logo_wordmark.lottie'),
     title: 'Welcome to SAGANA!',
     description: 'I am Buchikek, your SAGANA companion! Let me walk you through what benefits you’ll get from us!',
     descHighlight: 'Buchikek',
@@ -78,7 +79,7 @@ export default function OnboardingScreen() {
   const router = useRouter();
   const [index, setIndex] = useState(0);
   const { width, height } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
+  const { headerPaddingTop, stackScrollPadding } = useDynamicLayout();
 
   const slide = SLIDES[index];
   const isFirst = index === 0;
@@ -105,8 +106,8 @@ export default function OnboardingScreen() {
       style={{
         width,
         height,
-        paddingTop: Math.max(insets.top, 16),
-        paddingBottom: Math.max(insets.bottom, 24),
+        paddingTop: headerPaddingTop,
+        paddingBottom: Math.max(stackScrollPadding, 48),
       }}
       className="bg-background justify-between"
     >

@@ -22,6 +22,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, ChevronDown, Sprout } from 'lucide-react-native';
 import { Image } from 'expo-image';
+import LottieView from 'lottie-react-native';
 import * as Haptics from 'expo-haptics';
 import { toast } from 'burnt';
 
@@ -275,11 +276,14 @@ export default function NewBatchScreen() {
               </View>
 
               <View className="h-[260px] w-full items-center justify-center my-auto">
-                <Image
-                  source={require('@/assets/icons/mascot/sagana_machine_power.png')}
-                  style={{ width: '100%', height: 260 }}
-                  contentFit="contain"
-                  accessibilityLabel="Turn on SAGANA machine mascot"
+                <LottieView
+                  source={require('@/assets/icons/mascot/onboarding/sagana_mascot_machine.lottie')}
+                  autoPlay
+                  loop
+                  cacheComposition
+                  renderMode="HARDWARE"
+                  hardwareAccelerationAndroid
+                  style={{ width: '100%', height: '100%' }}
                 />
               </View>
 
@@ -403,11 +407,14 @@ export default function NewBatchScreen() {
               </View>
 
               <View className="h-[260px] w-full items-center justify-center my-auto">
-                <Image
-                  source={require('@/assets/icons/mascot/sagana_machine_power.png')}
-                  style={{ width: '100%', height: 260 }}
-                  contentFit="contain"
-                  accessibilityLabel="Turn on SAGANA machine mascot"
+                <LottieView
+                  source={require('@/assets/icons/mascot/onboarding/sagana_puzzled_mascot_machine.lottie')}
+                  autoPlay
+                  loop
+                  cacheComposition
+                  renderMode="HARDWARE"
+                  hardwareAccelerationAndroid
+                  style={{ width: '100%', height: '100%' }}
                 />
               </View>
 
@@ -433,12 +440,15 @@ export default function NewBatchScreen() {
           {step === 5 && (
             <View className="flex-1 justify-between" style={{ paddingBottom: stackScrollPadding }}>
               <View>
-                <View className="h-[200px] w-full items-center justify-center mt-6 mb-4">
-                  <Image
-                    source={require('@/assets/icons/mascot/sagana_celebrate.png')}
-                    style={{ width: 200, height: 200 }}
-                    contentFit="contain"
-                    accessibilityLabel="Sagana celebration mascot"
+                <View className="h-[220px] w-full items-center justify-center mt-6 mb-4">
+                  <LottieView
+                    source={require('@/assets/icons/mascot/onboarding/sagana_celebration.lottie')}
+                    autoPlay
+                    loop
+                    cacheComposition
+                    renderMode="HARDWARE"
+                    hardwareAccelerationAndroid
+                    style={{ width: '100%', height: '100%' }}
                   />
                 </View>
 
