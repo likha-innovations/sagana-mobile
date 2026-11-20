@@ -6,6 +6,10 @@ import {
   Pressable,
   Modal,
   Platform,
+  TextInput,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -55,9 +59,11 @@ export default function AerationSettingsScreen() {
   );
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Temporary picker values inside modal
+  // Editable picker values inside modal
   const [tempOnMinutes, setTempOnMinutes] = useState(config.onMinutes);
   const [tempOffMinutes, setTempOffMinutes] = useState(config.offMinutes);
+  const [onInputText, setOnInputText] = useState(String(config.onMinutes));
+  const [offInputText, setOffInputText] = useState(String(config.offMinutes));
 
   useEffect(() => {
     let isMounted = true;
@@ -66,6 +72,8 @@ export default function AerationSettingsScreen() {
         setConfig(saved);
         setTempOnMinutes(saved.onMinutes);
         setTempOffMinutes(saved.offMinutes);
+        setOnInputText(String(saved.onMinutes));
+        setOffInputText(String(saved.offMinutes));
       }
     });
     return () => {
@@ -111,17 +119,78 @@ export default function AerationSettingsScreen() {
     }
     setTempOnMinutes(config.onMinutes);
     setTempOffMinutes(config.offMinutes);
+    setOnInputText(String(config.onMinutes));
+    setOffInputText(String(config.offMinutes));
     setModalVisible(true);
   }, [config.onMinutes, config.offMinutes]);
+
+  const handleStepOn = useCallback((delta: number) => {
+    setTempOnMinutes((prev) => {
+      const next = Math.max(1, Math.min(180, prev + delta));
+      setOnInputText(String(next));
+      return next;
+    });
+    if (Platform.OS !== "web") {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  }, []);
+
+  const handleStepOff = useCallback((delta: number) => {
+    setTempOffMinutes((prev) => {
+      const next = Math.max(1, Math.min(720, prev + delta));
+      setOffInputText(String(next));
+      return next;
+    });
+    if (Platform.OS !== "web") {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  }, []);
+
+  const handleChangeOnInput = useCallback((text: string) => {
+    const cleaned = text.replace(/[^0-9]/g, "");
+    setOnInputText(cleaned);
+    const parsed = parseInt(cleaned, 10);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      setTempOnMinutes(Math.min(180, parsed));
+    }
+  }, []);
+
+  const handleBlurOnInput = useCallback(() => {
+    const parsed = parseInt(onInputText, 10);
+    const clamped = Math.max(1, Math.min(180, Number.isFinite(parsed) ? parsed : 10));
+    setTempOnMinutes(clamped);
+    setOnInputText(String(clamped));
+  }, [onInputText]);
+
+  const handleChangeOffInput = useCallback((text: string) => {
+    const cleaned = text.replace(/[^0-9]/g, "");
+    setOffInputText(cleaned);
+    const parsed = parseInt(cleaned, 10);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      setTempOffMinutes(Math.min(720, parsed));
+    }
+  }, []);
+
+  const handleBlurOffInput = useCallback(() => {
+    const parsed = parseInt(offInputText, 10);
+    const clamped = Math.max(1, Math.min(720, Number.isFinite(parsed) ? parsed : 5));
+    setTempOffMinutes(clamped);
+    setOffInputText(String(clamped));
+  }, [offInputText]);
 
   const handleSaveCustomSettings = useCallback(async () => {
     if (Platform.OS !== "web") {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
+    const parsedOn = parseInt(onInputText, 10);
+    const parsedOff = parseInt(offInputText, 10);
+    const saveOn = Math.max(1, Math.min(180, Number.isFinite(parsedOn) ? parsedOn : tempOnMinutes));
+    const saveOff = Math.max(1, Math.min(720, Number.isFinite(parsedOff) ? parsedOff : tempOffMinutes));
+
     const updated: AerationConfig = {
       mode: "custom",
-      onMinutes: tempOnMinutes,
-      offMinutes: tempOffMinutes,
+      onMinutes: saveOn,
+      offMinutes: saveOff,
     };
     setConfig(updated);
     setModalVisible(false);
@@ -133,8 +202,8 @@ export default function AerationSettingsScreen() {
           action: "AERATION_CONFIG",
           payload: {
             mode: "custom",
-            onMinutes: tempOnMinutes,
-            offMinutes: tempOffMinutes,
+            onMinutes: saveOn,
+            offMinutes: saveOff,
           },
         });
       } catch (err) {
@@ -146,15 +215,22 @@ export default function AerationSettingsScreen() {
 
     toast({
       title: "Custom Mode Active",
-      message: `${tempOnMinutes} min ON / ${tempOffMinutes} min OFF configured.`,
+      message: `${saveOn} min ON / ${saveOff} min OFF configured.`,
       preset: "done",
     });
     logger.info("Saved custom aeration settings", {
       machineId: id,
-      onMinutes: tempOnMinutes,
-      offMinutes: tempOffMinutes,
+      onMinutes: saveOn,
+      offMinutes: saveOff,
     });
-  }, [id, machine?.macAddress, tempOnMinutes, tempOffMinutes]);
+  }, [
+    id,
+    machine?.macAddress,
+    onInputText,
+    offInputText,
+    tempOnMinutes,
+    tempOffMinutes,
+  ]);
 
   const isDefaultMode = config.mode === "default";
   const isCustomMode = config.mode === "custom";
@@ -349,228 +425,175 @@ export default function AerationSettingsScreen() {
         animationType="fade"
         onRequestClose={() => setModalVisible(false)}
       >
-        <View className="flex-1 bg-black/50 justify-end">
-          <Pressable
-            className="flex-1"
-            onPress={() => setModalVisible(false)}
-          />
-          <View className="bg-background rounded-t-[24px] border-t border-border px-6 pt-5 pb-8">
-            {/* Modal Header */}
-            <View className="flex-row items-center justify-between pb-4 border-b border-border">
-              <View>
-                <Text className="text-lg font-bold text-foreground">
-                  Custom Aeration Mode
-                </Text>
-                <Text className="text-xs font-sans text-muted-foreground mt-0.5">
-                  Set the duration and interval of the blower
-                </Text>
-              </View>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          className="flex-1"
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View className="flex-1 bg-black/50 justify-end">
               <Pressable
+                className="flex-1"
                 onPress={() => setModalVisible(false)}
-                accessibilityRole="button"
-                accessibilityLabel="Close"
-                className="w-10 h-10 items-center justify-center -mr-2 rounded-full active:bg-neutral-100"
-              >
-                <X size={20} color={colors.semantic.foreground} />
-              </Pressable>
-            </View>
+              />
+              <View className="bg-background rounded-t-[24px] border-t border-border px-6 pt-5 pb-8">
+                {/* Modal Header */}
+                <View className="flex-row items-center justify-between pb-4 border-b border-border">
+                  <View>
+                    <Text className="text-lg font-bold text-foreground">
+                      Custom Aeration Mode
+                    </Text>
+                    <Text className="text-xs font-sans text-muted-foreground mt-0.5">
+                      Set the duration and interval of the blower
+                    </Text>
+                  </View>
+                  <Pressable
+                    onPress={() => setModalVisible(false)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Close"
+                    className="w-10 h-10 items-center justify-center -mr-2 rounded-full active:bg-neutral-100"
+                  >
+                    <X size={20} color={colors.semantic.foreground} />
+                  </Pressable>
+                </View>
 
-            {/* ON Duration Section */}
-            <View className="mt-5">
-              <View className="flex-row items-center justify-between mb-2">
-                <Text className="text-sm font-bold text-foreground">
-                  Blower ON Duration
-                </Text>
-                <Text className="text-xs font-sans text-muted-foreground">
-                  Active aeration time
-                </Text>
-              </View>
+                {/* ON Duration Section */}
+                <View className="mt-5">
+                  <View className="flex-row items-center justify-between mb-2">
+                    <Text className="text-sm font-bold text-foreground">
+                      Blower ON Duration
+                    </Text>
+                    <Text className="text-xs font-sans text-muted-foreground">
+                      Active aeration time
+                    </Text>
+                  </View>
 
-              {/* Stepper Control */}
-              <View className="flex-row items-center justify-between bg-card rounded-[14px] border border-border p-3">
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Decrease ON duration"
-                  onPress={() => {
-                    setTempOnMinutes((prev) => Math.max(1, prev - 1));
-                    if (Platform.OS !== "web") {
-                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    }
-                  }}
-                  className="w-10 h-10 rounded-full bg-neutral-100 items-center justify-center active:opacity-75"
-                >
-                  <Minus size={18} color={colors.semantic.foreground} />
-                </Pressable>
-                <View className="items-center">
-                  <Text className="text-2xl font-bold text-foreground">
-                    {tempOnMinutes}
-                  </Text>
-                  <Text className="text-xs font-sans text-muted-foreground">
-                    minutes ON
+                  {/* Stepper & Editable Input Control */}
+                  <View className="flex-row items-center justify-between bg-card rounded-[14px] border border-border p-3">
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Decrease ON duration"
+                      onPress={() => handleStepOn(-1)}
+                      className="w-11 h-11 rounded-full bg-neutral-100 items-center justify-center active:opacity-75"
+                    >
+                      <Minus size={18} color={colors.semantic.foreground} />
+                    </Pressable>
+                    <View className="items-center flex-1 mx-3">
+                      <TextInput
+                        value={onInputText}
+                        onChangeText={handleChangeOnInput}
+                        onBlur={handleBlurOnInput}
+                        keyboardType="number-pad"
+                        maxLength={3}
+                        returnKeyType="done"
+                        selectTextOnFocus
+                        className="text-2xl font-bold text-foreground text-center min-w-[72px] py-0.5 border-b border-border"
+                      />
+                      <Text className="text-xs font-sans text-muted-foreground mt-0.5">
+                        minutes ON
+                      </Text>
+                    </View>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Increase ON duration"
+                      onPress={() => handleStepOn(1)}
+                      className="w-11 h-11 rounded-full bg-neutral-100 items-center justify-center active:opacity-75"
+                    >
+                      <Plus size={18} color={colors.semantic.foreground} />
+                    </Pressable>
+                  </View>
+                  <Text className="text-[11px] font-sans text-muted-foreground mt-1.5 ml-1">
+                    Tap number to type exact duration, or use -/+ buttons
                   </Text>
                 </View>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Increase ON duration"
-                  onPress={() => {
-                    setTempOnMinutes((prev) => Math.min(60, prev + 1));
-                    if (Platform.OS !== "web") {
-                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    }
-                  }}
-                  className="w-10 h-10 rounded-full bg-neutral-100 items-center justify-center active:opacity-75"
-                >
-                  <Plus size={18} color={colors.semantic.foreground} />
-                </Pressable>
-              </View>
 
-              {/* Quick Presets */}
-              <View className="flex-row gap-2 mt-2">
-                {[5, 10, 15, 20].map((preset) => (
-                  <Pressable
-                    key={preset}
-                    onPress={() => {
-                      setTempOnMinutes(preset);
-                      if (Platform.OS !== "web") {
-                        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      }
-                    }}
-                    className={`flex-1 py-1.5 rounded-full items-center border ${
-                      tempOnMinutes === preset
-                        ? "bg-brand-500 border-brand-500"
-                        : "bg-card border-border"
-                    }`}
-                  >
-                    <Text
-                      className={`text-xs font-bold ${
-                        tempOnMinutes === preset
-                          ? "text-primary-foreground"
-                          : "text-foreground"
-                      }`}
-                    >
-                      {preset}m
+                {/* OFF Interval Section */}
+                <View className="mt-5">
+                  <View className="flex-row items-center justify-between mb-2">
+                    <Text className="text-sm font-bold text-foreground">
+                      Blower OFF Interval
                     </Text>
-                  </Pressable>
-                ))}
-              </View>
-            </View>
+                    <Text className="text-xs font-sans text-muted-foreground">
+                      Rest interval between runs
+                    </Text>
+                  </View>
 
-            {/* OFF Interval Section */}
-            <View className="mt-5">
-              <View className="flex-row items-center justify-between mb-2">
-                <Text className="text-sm font-bold text-foreground">
-                  Blower OFF Interval
-                </Text>
-                <Text className="text-xs font-sans text-muted-foreground">
-                  Rest interval between runs
-                </Text>
-              </View>
-
-              {/* Stepper Control */}
-              <View className="flex-row items-center justify-between bg-card rounded-[14px] border border-border p-3">
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Decrease OFF interval"
-                  onPress={() => {
-                    setTempOffMinutes((prev) => Math.max(1, prev - 1));
-                    if (Platform.OS !== "web") {
-                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    }
-                  }}
-                  className="w-10 h-10 rounded-full bg-neutral-100 items-center justify-center active:opacity-75"
-                >
-                  <Minus size={18} color={colors.semantic.foreground} />
-                </Pressable>
-                <View className="items-center">
-                  <Text className="text-2xl font-bold text-foreground">
-                    {tempOffMinutes}
-                  </Text>
-                  <Text className="text-xs font-sans text-muted-foreground">
-                    minutes OFF
+                  {/* Stepper & Editable Input Control */}
+                  <View className="flex-row items-center justify-between bg-card rounded-[14px] border border-border p-3">
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Decrease OFF interval"
+                      onPress={() => handleStepOff(-1)}
+                      className="w-11 h-11 rounded-full bg-neutral-100 items-center justify-center active:opacity-75"
+                    >
+                      <Minus size={18} color={colors.semantic.foreground} />
+                    </Pressable>
+                    <View className="items-center flex-1 mx-3">
+                      <TextInput
+                        value={offInputText}
+                        onChangeText={handleChangeOffInput}
+                        onBlur={handleBlurOffInput}
+                        keyboardType="number-pad"
+                        maxLength={3}
+                        returnKeyType="done"
+                        selectTextOnFocus
+                        className="text-2xl font-bold text-foreground text-center min-w-[72px] py-0.5 border-b border-border"
+                      />
+                      <Text className="text-xs font-sans text-muted-foreground mt-0.5">
+                        minutes OFF
+                      </Text>
+                    </View>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Increase OFF interval"
+                      onPress={() => handleStepOff(1)}
+                      className="w-11 h-11 rounded-full bg-neutral-100 items-center justify-center active:opacity-75"
+                    >
+                      <Plus size={18} color={colors.semantic.foreground} />
+                    </Pressable>
+                  </View>
+                  <Text className="text-[11px] font-sans text-muted-foreground mt-1.5 ml-1">
+                    Tap number to type exact interval, or use -/+ buttons
                   </Text>
                 </View>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Increase OFF interval"
-                  onPress={() => {
-                    setTempOffMinutes((prev) => Math.min(120, prev + 1));
-                    if (Platform.OS !== "web") {
-                      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    }
-                  }}
-                  className="w-10 h-10 rounded-full bg-neutral-100 items-center justify-center active:opacity-75"
-                >
-                  <Plus size={18} color={colors.semantic.foreground} />
-                </Pressable>
-              </View>
 
-              {/* Quick Presets */}
-              <View className="flex-row gap-2 mt-2">
-                {[5, 10, 15, 30].map((preset) => (
+                {/* Cycle Preview Badge */}
+                <View className="mt-5 p-3.5 rounded-[14px] bg-brand-50 border border-brand-200 flex-row items-center justify-between">
+                  <View className="flex-row items-center gap-2">
+                    <Fan size={16} color={colors.brand[500]} />
+                    <Text className="text-xs font-sans text-brand-900">
+                      Configured Cycle Preview:
+                    </Text>
+                  </View>
+                  <Text className="text-xs font-bold text-brand-700">
+                    {tempOnMinutes} min ON / {tempOffMinutes} min OFF
+                  </Text>
+                </View>
+
+                {/* Modal Actions */}
+                <View className="flex-row gap-3 mt-6">
                   <Pressable
-                    key={preset}
-                    onPress={() => {
-                      setTempOffMinutes(preset);
-                      if (Platform.OS !== "web") {
-                        void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      }
-                    }}
-                    className={`flex-1 py-1.5 rounded-full items-center border ${
-                      tempOffMinutes === preset
-                        ? "bg-brand-500 border-brand-500"
-                        : "bg-card border-border"
-                    }`}
+                    accessibilityRole="button"
+                    accessibilityLabel="Cancel"
+                    onPress={() => setModalVisible(false)}
+                    className="flex-1 min-h-12 rounded-full border border-border items-center justify-center active:opacity-75"
                   >
-                    <Text
-                      className={`text-xs font-bold ${
-                        tempOffMinutes === preset
-                          ? "text-primary-foreground"
-                          : "text-foreground"
-                      }`}
-                    >
-                      {preset}m
+                    <Text className="text-sm font-bold text-foreground">Cancel</Text>
+                  </Pressable>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Save Settings"
+                    onPress={handleSaveCustomSettings}
+                    className="flex-1 min-h-12 rounded-full bg-primary items-center justify-center active:opacity-85"
+                  >
+                    <Text className="text-sm font-bold text-primary-foreground">
+                      Save Settings
                     </Text>
                   </Pressable>
-                ))}
+                </View>
               </View>
             </View>
-
-            {/* Cycle Preview Badge */}
-            <View className="mt-5 p-3.5 rounded-[14px] bg-brand-50 border border-brand-200 flex-row items-center justify-between">
-              <View className="flex-row items-center gap-2">
-                <Fan size={16} color={colors.brand[500]} />
-                <Text className="text-xs font-sans text-brand-900">
-                  Configured Cycle Preview:
-                </Text>
-              </View>
-              <Text className="text-xs font-bold text-brand-700">
-                {tempOnMinutes} min ON / {tempOffMinutes} min OFF
-              </Text>
-            </View>
-
-            {/* Modal Actions */}
-            <View className="flex-row gap-3 mt-6">
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Cancel"
-                onPress={() => setModalVisible(false)}
-                className="flex-1 min-h-12 rounded-full border border-border items-center justify-center active:opacity-75"
-              >
-                <Text className="text-sm font-bold text-foreground">Cancel</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Save Settings"
-                onPress={handleSaveCustomSettings}
-                className="flex-1 min-h-12 rounded-full bg-primary items-center justify-center active:opacity-85"
-              >
-                <Text className="text-sm font-bold text-primary-foreground">
-                  Save Settings
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
