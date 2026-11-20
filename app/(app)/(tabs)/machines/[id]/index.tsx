@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -28,7 +28,7 @@ import { useActiveBatch, useCompletedBatches } from "@/hooks/use-batches";
 import { useDynamicLayout } from "@/hooks";
 import { colors } from "@/constants";
 import { formatTimeAgo } from "@/lib/utils";
-import { getMachineState } from "@/lib/machine-overview";
+import { getMachineState, formatCountdownSeconds } from "@/lib/machine-overview";
 import { createLogger } from "@/lib/logger";
 import { CompostIcon } from "@/components/icons";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -41,6 +41,53 @@ import { SensorStatCard } from "@/components/devices/sensor-stat-card";
 import { getRecentCompletedBatches } from "@/lib/dashboard";
 
 const logger = createLogger("MachineDetailsScreen");
+
+function AutomationTimerText({
+  targetEndTime,
+  fallbackUntil,
+  color,
+}: {
+  targetEndTime?: string | null;
+  fallbackUntil?: string;
+  color: string;
+}) {
+  const [displayText, setDisplayText] = useState<string>(
+    fallbackUntil ?? "--",
+  );
+
+  useEffect(() => {
+    if (!targetEndTime) {
+      setDisplayText(fallbackUntil ?? "--");
+      return;
+    }
+
+    const targetMs = new Date(targetEndTime).getTime();
+    if (Number.isNaN(targetMs)) {
+      setDisplayText(fallbackUntil ?? "--");
+      return;
+    }
+
+    const compute = () => {
+      const now = Date.now();
+      const diffSec = Math.max(0, Math.round((targetMs - now) / 1000));
+      if (diffSec <= 0) {
+        setDisplayText("0:00");
+      } else {
+        setDisplayText(formatCountdownSeconds(diffSec));
+      }
+    };
+
+    compute();
+    const interval = setInterval(compute, 1000);
+    return () => clearInterval(interval);
+  }, [targetEndTime, fallbackUntil]);
+
+  return (
+    <Text className="font-bold text-lg" style={{ color }}>
+      {displayText}
+    </Text>
+  );
+}
 
 export default function MachineDetailsDashboard() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -450,12 +497,11 @@ export default function MachineDetailsDashboard() {
                               </Text>
                               <View className="flex-row items-center gap-1.5">
                                 <Clock size={16} color={color} />
-                                <Text
-                                  className="font-bold text-lg"
-                                  style={{ color }}
-                                >
-                                  {automation?.until ?? "--"}
-                                </Text>
+                                <AutomationTimerText
+                                  targetEndTime={automation?.targetEndTime}
+                                  fallbackUntil={automation?.until}
+                                  color={color}
+                                />
                               </View>
                             </View>
                             {isAeration && (

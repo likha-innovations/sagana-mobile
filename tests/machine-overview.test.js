@@ -123,3 +123,35 @@ test("settings validate required values and preserve data when a machine is miss
     (() => wifi.mutationFn({ id: "1", wifiSsid: " " }))(),
   ).rejects.toThrow();
 });
+
+test("countdown formatter and targetEndTime support in overview schema", () => {
+  expect(logic.formatCountdownSeconds(0)).toBe("0:00");
+  expect(logic.formatCountdownSeconds(-5)).toBe("0:00");
+  expect(logic.formatCountdownSeconds(59)).toBe("0:59");
+  expect(logic.formatCountdownSeconds(60)).toBe("1:00");
+  expect(logic.formatCountdownSeconds(125)).toBe("2:05");
+  expect(logic.formatCountdownSeconds(3600)).toBe("1h 0m");
+  expect(logic.formatCountdownSeconds(3665)).toBe("1h 1m");
+
+  const parsed = logic.machineOverviewSchema.safeParse({
+    machineId: "mach-1",
+    batchId: null,
+    currentWeight: 10,
+    recordedAt: new Date().toISOString(),
+    automations: [
+      {
+        kind: "aeration",
+        enabled: true,
+        until: "6:07",
+        targetEndTime: new Date(Date.now() + 367000).toISOString(),
+        remainingMs: 367000,
+      },
+      {
+        kind: "sprinkler",
+        enabled: false,
+        until: "45%",
+      },
+    ],
+  });
+  expect(parsed.success).toBe(true);
+});
