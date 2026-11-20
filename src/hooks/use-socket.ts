@@ -358,6 +358,17 @@ export function useSocket() {
       const payload = data as NotificationItem;
       if (!payload?.id) return;
 
+      // Routine automation logs should only appear in the machine settings automation logs, not notification bell
+      if (payload.type === 'automation' && payload.severity !== 'critical') {
+        void queryClient.invalidateQueries({ queryKey: ['automation-logs'] });
+        if (payload.machineId) {
+          void queryClient.invalidateQueries({
+            queryKey: ['machine-overview', payload.machineId],
+          });
+        }
+        return;
+      }
+
       // Present foreground banner via expo-notifications
       void scheduleLocalNotification(payload);
 

@@ -26,6 +26,11 @@ export function groupNotificationsByDate(
   const now = new Date();
 
   for (const item of items) {
+    // Routine automation logs should only appear in machine settings automation logs, not notification bell
+    if (item.type === 'automation' && item.severity !== 'critical') {
+      continue;
+    }
+
     const itemDate = new Date(item.createdAt);
     if (isNaN(itemDate.getTime())) {
       earlier.push(item);
