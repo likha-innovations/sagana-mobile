@@ -47,14 +47,16 @@ function AutomationTimerText({
   fallbackUntil,
   serverTime,
   color,
+  disconnected,
 }: {
   targetEndTime?: string | null;
   fallbackUntil?: string;
   serverTime?: string;
   color: string;
+  disconnected?: boolean;
 }) {
   const [displayText, setDisplayText] = useState<string>(
-    fallbackUntil ?? "--",
+    disconnected ? "--" : (fallbackUntil ?? "--"),
   );
   const activeTargetMsRef = useRef<number | null>(null);
   const serverOffsetMsRef = useRef<number>(0);
@@ -74,9 +76,9 @@ function AutomationTimerText({
 
   // Target timestamp tracking
   useEffect(() => {
-    if (!targetEndTime) {
+    if (disconnected || !targetEndTime) {
       activeTargetMsRef.current = null;
-      setDisplayText(fallbackUntil ?? "--");
+      setDisplayText(disconnected ? "--" : (fallbackUntil ?? "--"));
       return;
     }
 
@@ -88,10 +90,15 @@ function AutomationTimerText({
     }
 
     activeTargetMsRef.current = newTargetMs;
-  }, [targetEndTime, fallbackUntil]);
+  }, [targetEndTime, fallbackUntil, disconnected]);
 
   // Local monotonic 1-second countdown synchronized to server/machine time
   useEffect(() => {
+    if (disconnected) {
+      setDisplayText("--");
+      return;
+    }
+
     const tick = () => {
       if (activeTargetMsRef.current === null) {
         setDisplayText(fallbackUntil ?? "--");
@@ -112,7 +119,7 @@ function AutomationTimerText({
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [fallbackUntil]);
+  }, [fallbackUntil, disconnected]);
 
   return (
     <Text
@@ -524,14 +531,22 @@ export default function MachineDetailsDashboard() {
                                 className="font-sans text-xs"
                                 style={{ color }}
                               >
-                                {automation ? (automation.enabled ? "On" : "Off") : "--"}
+                                {state.disconnected
+                                  ? "Offline"
+                                  : automation
+                                    ? (automation.enabled ? "On" : "Off")
+                                    : "--"}
                               </Text>
                             </View>
                           </View>
                           <View className="flex-row items-center gap-3">
                             <View className="gap-0.5 items-end">
                               <Text className="font-sans text-xs text-muted-foreground">
-                                {automation ? (automation.enabled ? "On until" : "Off until") : "Until"}
+                                {state.disconnected
+                                  ? "Until"
+                                  : automation
+                                    ? (automation.enabled ? "On until" : "Off until")
+                                    : "Until"}
                               </Text>
                               <View className="flex-row items-center gap-1.5">
                                 <Clock size={16} color={color} />
@@ -540,6 +555,7 @@ export default function MachineDetailsDashboard() {
                                   fallbackUntil={automation?.until}
                                   serverTime={overview?.serverTime}
                                   color={color}
+                                  disconnected={state.disconnected}
                                 />
                               </View>
                             </View>
