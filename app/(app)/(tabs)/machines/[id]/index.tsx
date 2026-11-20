@@ -45,16 +45,32 @@ const logger = createLogger("MachineDetailsScreen");
 function AutomationTimerText({
   targetEndTime,
   fallbackUntil,
+  recordedAt,
   color,
 }: {
   targetEndTime?: string | null;
   fallbackUntil?: string;
+  recordedAt?: string;
   color: string;
 }) {
   const [displayText, setDisplayText] = useState<string>(
     fallbackUntil ?? "--",
   );
   const activeTargetMsRef = useRef<number | null>(null);
+  const serverOffsetMsRef = useRef<number>(0);
+
+  // Compensate for carrier / phone clock skew relative to server clock
+  useEffect(() => {
+    if (!recordedAt) return;
+    const serverTimeMs = new Date(recordedAt).getTime();
+    if (!Number.isNaN(serverTimeMs)) {
+      const offset = serverTimeMs - Date.now();
+      // Guard against corrupted timestamps; only apply plausible offsets (+- 120s)
+      if (Math.abs(offset) < 120000) {
+        serverOffsetMsRef.current = offset;
+      }
+    }
+  }, [recordedAt]);
 
   // Smooth target updates: ignore minor network / polling latency jitter (within 3.5s)
   useEffect(() => {
@@ -79,17 +95,17 @@ function AutomationTimerText({
     }
   }, [targetEndTime, fallbackUntil]);
 
-  // Local monotonic 1-second countdown
+  // Local monotonic 1-second countdown synchronized to server/machine time
   useEffect(() => {
     const tick = () => {
       if (activeTargetMsRef.current === null) {
         setDisplayText(fallbackUntil ?? "--");
         return;
       }
-      const now = Date.now();
+      const syncedNow = Date.now() + serverOffsetMsRef.current;
       const diffSec = Math.max(
         0,
-        Math.round((activeTargetMsRef.current - now) / 1000),
+        Math.round((activeTargetMsRef.current - syncedNow) / 1000),
       );
       if (diffSec <= 0) {
         setDisplayText("0:00");
@@ -527,6 +543,7 @@ export default function MachineDetailsDashboard() {
                                 <AutomationTimerText
                                   targetEndTime={automation?.targetEndTime}
                                   fallbackUntil={automation?.until}
+                                  recordedAt={overview?.recordedAt}
                                   color={color}
                                 />
                               </View>
