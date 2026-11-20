@@ -8,9 +8,10 @@ import {
   BackHandler,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ChevronLeft, AlertCircle, CheckCircle2 } from "lucide-react-native";
+import { ChevronLeft, AlertCircle, CheckCircle2, WifiOff } from "lucide-react-native";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
+import { toast } from "burnt";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDynamicLayout } from "@/hooks/use-layout";
 import { useMachine, useMachineOverview } from "@/hooks/use-machines";
@@ -79,12 +80,23 @@ export default function LinearActuatorCollectScreen() {
     ? "Press the button below to raise the floor of the machine, and click next once you're done."
     : "Press the button below to raise the floor of the machine, and click next once you're done.";
 
+  const isMachineOffline = machine?.status === "offline";
   const isMoving = floorState === "raising" || floorState === "dropping";
   const isFloorRaised = floorState === "raised";
   const isRaiseDisabled = !isFloorRaised && !isMiddleDoorOpen;
-  const isButtonDisabled = isMoving || isRaiseDisabled;
+  const isButtonDisabled = isMoving || isRaiseDisabled || isMachineOffline;
 
   const lastActionTime = useRef<number>(0);
+  const ackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clean up acknowledgment timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (ackTimeoutRef.current) {
+        clearTimeout(ackTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Restore persisted floor position asynchronously from hardware storage
   useEffect(() => {
@@ -119,7 +131,7 @@ export default function LinearActuatorCollectScreen() {
     const socket = getSocket();
 
     const handleAutomationLog = (data: unknown) => {
-      const log = data as { type?: string; machineId?: string; macAddress?: string };
+      const log = data as { type?: string; message?: string; machineId?: string; macAddress?: string };
       const isCurrentMachine =
         (log.machineId && log.machineId === id) ||
         (machine?.macAddress && log.macAddress === machine.macAddress);
@@ -133,10 +145,33 @@ export default function LinearActuatorCollectScreen() {
       } else if (log.type === "middle_door_closed") {
         setIsMiddleDoorOpen(false);
       } else if (log.type === "actuator_extending") {
+        if (ackTimeoutRef.current) {
+          clearTimeout(ackTimeoutRef.current);
+          ackTimeoutRef.current = null;
+        }
         setFloorState("raising");
       } else if (log.type === "actuator_retracting") {
+        if (ackTimeoutRef.current) {
+          clearTimeout(ackTimeoutRef.current);
+          ackTimeoutRef.current = null;
+        }
         setFloorState("dropping");
+      } else if (log.type === "manual_command_rejected") {
+        if (ackTimeoutRef.current) {
+          clearTimeout(ackTimeoutRef.current);
+          ackTimeoutRef.current = null;
+        }
+        setFloorState(isFloorRaised ? "raised" : "lowered");
+        toast({
+          title: "Command rejected",
+          message: log.message ?? "The machine could not perform this operation safely.",
+          preset: "error",
+        });
       } else if (log.type === "actuator_extended") {
+        if (ackTimeoutRef.current) {
+          clearTimeout(ackTimeoutRef.current);
+          ackTimeoutRef.current = null;
+        }
         setFloorState("raised");
         setHasEmptied(true);
         void setFloorPosition(id, "raised");
@@ -144,6 +179,10 @@ export default function LinearActuatorCollectScreen() {
           void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }
       } else if (log.type === "actuator_retracted") {
+        if (ackTimeoutRef.current) {
+          clearTimeout(ackTimeoutRef.current);
+          ackTimeoutRef.current = null;
+        }
         setFloorState("lowered");
         void setFloorPosition(id, "lowered");
         if (Platform.OS !== "web") {
@@ -156,7 +195,7 @@ export default function LinearActuatorCollectScreen() {
     return () => {
       socket.off("automation_log", handleAutomationLog);
     };
-  }, [id, machine?.macAddress]);
+  }, [id, machine?.macAddress, isFloorRaised]);
 
   // Secondary stream: Telemetry synchronization (e.g. after network reconnection)
   useEffect(() => {
@@ -220,32 +259,68 @@ export default function LinearActuatorCollectScreen() {
   const handleActuatorToggle = useCallback(async () => {
     if (isButtonDisabled) return;
 
+    if (isMachineOffline) {
+      toast({
+        title: "Machine is offline",
+        message: "Cannot operate the floor while the machine is disconnected from Wi-Fi.",
+        preset: "error",
+      });
+      return;
+    }
+
+    if (!machine?.macAddress) {
+      toast({
+        title: "Missing device address",
+        message: "Could not identify machine device address.",
+        preset: "error",
+      });
+      return;
+    }
+
     lastActionTime.current = Date.now();
 
     if (Platform.OS !== "web") {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
 
-    if (!isFloorRaised) {
-      setFloorState("raising");
-      if (machine?.macAddress) {
-        try {
-          await deviceApi.sendCommand(machine.macAddress, { action: "ACTUATOR_EXTEND" });
-        } catch (err) {
-          logger.warn("Failed to dispatch ACTUATOR_EXTEND", err);
-        }
-      }
-    } else {
-      setFloorState("dropping");
-      if (machine?.macAddress) {
-        try {
-          await deviceApi.sendCommand(machine.macAddress, { action: "ACTUATOR_RETRACT" });
-        } catch (err) {
-          logger.warn("Failed to dispatch ACTUATOR_RETRACT", err);
-        }
-      }
+    const targetFloorState: FloorState = isFloorRaised ? "dropping" : "raising";
+    const revertFloorState: FloorState = isFloorRaised ? "raised" : "lowered";
+    const commandAction = isFloorRaised ? "ACTUATOR_RETRACT" : "ACTUATOR_EXTEND";
+
+    setFloorState(targetFloorState);
+
+    // 4-second acknowledgment timeout guard:
+    // If the machine does not respond with actuator_extending/retracting within 4 seconds,
+    // cancel loading, revert state, and notify the user.
+    if (ackTimeoutRef.current) {
+      clearTimeout(ackTimeoutRef.current);
     }
-  }, [isMoving, isFloorRaised, machine?.macAddress]);
+    ackTimeoutRef.current = setTimeout(() => {
+      ackTimeoutRef.current = null;
+      setFloorState(revertFloorState);
+      toast({
+        title: "Machine did not respond",
+        message: "The machine did not receive the instruction. Please ensure it is powered on and connected to Wi-Fi.",
+        preset: "error",
+      });
+    }, 4000);
+
+    try {
+      await deviceApi.sendCommand(machine.macAddress, { action: commandAction });
+    } catch (err) {
+      if (ackTimeoutRef.current) {
+        clearTimeout(ackTimeoutRef.current);
+        ackTimeoutRef.current = null;
+      }
+      setFloorState(revertFloorState);
+      logger.warn(`Failed to dispatch ${commandAction}`, err);
+      toast({
+        title: "Command failed",
+        message: "Could not send instruction to server. Please check your internet connection.",
+        preset: "error",
+      });
+    }
+  }, [isButtonDisabled, isMachineOffline, machine?.macAddress, isFloorRaised]);
 
   const handleNext = useCallback(() => {
     if (!hasEmptied || isMoving || finishBatch.isPending) return;
@@ -416,8 +491,21 @@ export default function LinearActuatorCollectScreen() {
           </View>
         </View>
 
+        {/* Machine Offline notice callout */}
+        {isMachineOffline && (
+          <View className="mt-3 p-4 rounded-[14px] bg-red-50 border border-red-200 flex-row items-start gap-3">
+            <WifiOff size={20} color={colors.red[500]} style={{ marginTop: 2, flexShrink: 0 }} />
+            <View className="flex-1">
+              <Text className="text-sm font-bold text-red-900">Machine is offline</Text>
+              <Text className="text-xs font-sans text-red-700 mt-1 leading-5">
+                The machine is currently disconnected from Wi-Fi. Please check its power and network connection to operate the floor.
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* Actionable door & floor notice callout */}
-        {!isFloorRaised && !isMiddleDoorOpen && (
+        {!isMachineOffline && !isFloorRaised && !isMiddleDoorOpen && (
           <View className="mt-3 p-4 rounded-[14px] bg-yellow-50 border border-yellow-200 flex-row items-start gap-3">
             <AlertCircle size={20} color={colors.yellow[700]} style={{ marginTop: 2, flexShrink: 0 }} />
             <View className="flex-1">
@@ -429,7 +517,7 @@ export default function LinearActuatorCollectScreen() {
           </View>
         )}
 
-        {!isFloorRaised && isMiddleDoorOpen && (
+        {!isMachineOffline && !isFloorRaised && isMiddleDoorOpen && (
           <View className="mt-3 p-4 rounded-[14px] bg-brand-50 border border-brand-200 flex-row items-start gap-3">
             <CheckCircle2 size={20} color={colors.brand[500]} style={{ marginTop: 2, flexShrink: 0 }} />
             <View className="flex-1">
@@ -441,7 +529,7 @@ export default function LinearActuatorCollectScreen() {
           </View>
         )}
 
-        {isFloorRaised && (
+        {!isMachineOffline && isFloorRaised && (
           <View className="mt-3 p-4 rounded-[14px] bg-brand-50 border border-brand-200 flex-row items-start gap-3">
             <CheckCircle2 size={20} color={colors.brand[500]} style={{ marginTop: 2, flexShrink: 0 }} />
             <View className="flex-1">
@@ -478,7 +566,7 @@ export default function LinearActuatorCollectScreen() {
                   isButtonDisabled ? "text-neutral-400" : "text-brand-700"
                 }`}
               >
-                {getActuatorButtonText()}
+                {isMachineOffline && !isMoving ? "Machine offline" : getActuatorButtonText()}
               </Text>
             )}
           </Pressable>

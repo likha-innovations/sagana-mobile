@@ -171,4 +171,70 @@ describe("Linear actuator manual override & collect flow", () => {
     expect(raisedClosed.isRaiseDisabled).toBe(false);
     expect(raisedClosed.isButtonDisabled).toBe(false);
   });
+
+  test("offline guard and 4s acknowledgment timeout protect against disconnected broker", () => {
+    function computeActuatorControls(floorState, isMiddleDoorOpen, isMachineOffline) {
+      const isMoving = floorState === "raising" || floorState === "dropping";
+      const isFloorRaised = floorState === "raised";
+      const isRaiseDisabled = !isFloorRaised && !isMiddleDoorOpen;
+      const isButtonDisabled = isMoving || isRaiseDisabled || isMachineOffline;
+
+      return {
+        isMoving,
+        isButtonDisabled,
+        isMachineOffline,
+      };
+    }
+
+    // Machine offline -> button is strictly disabled
+    const offlineState = computeActuatorControls("lowered", true, true);
+    expect(offlineState.isButtonDisabled).toBe(true);
+
+    // Simulated 4-second timeout rollback logic
+    let floorState = "lowered";
+    let ackTimeout = null;
+    let toastError = null;
+
+    function handleToggle(isOnline) {
+      if (!isOnline) {
+        toastError = "Machine is offline";
+        return;
+      }
+      floorState = "raising";
+      ackTimeout = "timeout-scheduled";
+    }
+
+    function onTimeout() {
+      if (ackTimeout) {
+        floorState = "lowered";
+        toastError = "Machine did not respond";
+        ackTimeout = null;
+      }
+    }
+
+    function onAckReceived() {
+      ackTimeout = null;
+    }
+
+    // If offline when clicking, never enters raising
+    handleToggle(false);
+    expect(floorState).toBe("lowered");
+    expect(toastError).toBe("Machine is offline");
+
+    // If online when clicking, enters raising but rolls back on timeout
+    handleToggle(true);
+    expect(floorState).toBe("raising");
+    expect(ackTimeout).toBe("timeout-scheduled");
+
+    onTimeout();
+    expect(floorState).toBe("lowered");
+    expect(toastError).toBe("Machine did not respond");
+
+    // If machine acknowledges in time, timeout is cleared and raising persists
+    handleToggle(true);
+    expect(floorState).toBe("raising");
+    onAckReceived();
+    expect(ackTimeout).toBeNull();
+    expect(floorState).toBe("raising");
+  });
 });
