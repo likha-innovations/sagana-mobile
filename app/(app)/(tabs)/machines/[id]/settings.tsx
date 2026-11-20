@@ -18,6 +18,7 @@ import {
   WifiOff,
   Trash2,
   AlertCircle,
+  AlertTriangle,
   Info,
 } from "lucide-react-native";
 import {
@@ -26,6 +27,7 @@ import {
   useUpdateMachineWifi,
   useRemoveMachine,
 } from "@/hooks/use-machines";
+import { useActiveBatch } from "@/hooks/use-batches";
 import { useDynamicLayout, useCurrentWifi } from "@/hooks";
 import { useBluetooth } from "@/hooks/use-bluetooth";
 import { useToast } from "@/components/ui/toast";
@@ -53,6 +55,8 @@ export default function MachineSettingsScreen() {
 
   const query = useMachine(id);
   const machine = query.data;
+  const batchQuery = useActiveBatch(id);
+  const activeBatch = batchQuery.data;
 
   const rename = useUpdateMachineName();
   const wifi = useUpdateMachineWifi();
@@ -347,16 +351,35 @@ export default function MachineSettingsScreen() {
                   </Pressable>
 
                   <Pressable
-                    disabled
+                    disabled={!activeBatch}
                     accessibilityRole="button"
-                    accessibilityState={{ disabled: true }}
-                    accessibilityLabel="Remove current batch. Batch cancellation is not available yet."
-                    className="min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 opacity-50 bg-card"
+                    accessibilityState={{ disabled: !activeBatch }}
+                    accessibilityLabel={
+                      activeBatch
+                        ? "Reject current batch"
+                        : "No active batch to reject"
+                    }
+                    onPress={() =>
+                      router.push({
+                        pathname: "/(app)/machines/[id]/collect",
+                        params: { id, mode: "reject" },
+                      })
+                    }
+                    className={`min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 bg-card ${
+                      activeBatch ? "active:bg-muted" : "opacity-50"
+                    }`}
                   >
-                    <CompostIcon size={24} color={colors.red[500]} />
-                    <Text className="flex-1 text-sm font-sans text-destructive">
-                      Remove current batch
-                    </Text>
+                    <AlertTriangle size={24} color={colors.red[500]} />
+                    <View className="flex-1">
+                      <Text className="text-sm font-sans text-destructive">
+                        Reject current batch
+                      </Text>
+                      {!activeBatch && (
+                        <Text className="text-xs text-muted-foreground mt-0.5">
+                          No active batch in machine
+                        </Text>
+                      )}
+                    </View>
                   </Pressable>
 
                   <Pressable

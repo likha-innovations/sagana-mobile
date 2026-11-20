@@ -19,6 +19,7 @@ export default function AppLayout() {
       <Stack.Screen name="notifications" options={{ headerShown: false }} />
       <Stack.Screen name="change-password" options={{ headerShown: false }} />
       <Stack.Screen name="batch/new" options={{ headerShown: false }} />
+      <Stack.Screen name="machines/[id]/collect" options={{ headerShown: false }} />
     </Stack>
   );
 }

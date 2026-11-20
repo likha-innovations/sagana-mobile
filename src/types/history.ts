@@ -27,14 +27,7 @@ export const historyEventSchema = z.object({
   machineId: z.string(),
   batchId: z.string().nullable(),
   createdAt: z.string(),
-  type: z.enum([
-    "blower_on",
-    "blower_off",
-    "sprinkler_on",
-    "sprinkler_off",
-    "emergency_stop",
-    "ventilation_adjust",
-  ]),
+  type: z.string(),
   message: z.string(),
 });
 export type HistoryEvent = z.infer<typeof historyEventSchema>;
