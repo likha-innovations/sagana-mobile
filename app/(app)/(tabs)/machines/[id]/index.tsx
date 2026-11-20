@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -54,22 +54,43 @@ function AutomationTimerText({
   const [displayText, setDisplayText] = useState<string>(
     fallbackUntil ?? "--",
   );
+  const activeTargetMsRef = useRef<number | null>(null);
 
+  // Smooth target updates: ignore minor network / polling latency jitter (within 3.5s)
   useEffect(() => {
     if (!targetEndTime) {
+      activeTargetMsRef.current = null;
       setDisplayText(fallbackUntil ?? "--");
       return;
     }
 
-    const targetMs = new Date(targetEndTime).getTime();
-    if (Number.isNaN(targetMs)) {
+    const newTargetMs = new Date(targetEndTime).getTime();
+    if (Number.isNaN(newTargetMs)) {
+      activeTargetMsRef.current = null;
       setDisplayText(fallbackUntil ?? "--");
       return;
     }
 
-    const compute = () => {
+    if (
+      activeTargetMsRef.current === null ||
+      Math.abs(newTargetMs - activeTargetMsRef.current) > 3500
+    ) {
+      activeTargetMsRef.current = newTargetMs;
+    }
+  }, [targetEndTime, fallbackUntil]);
+
+  // Local monotonic 1-second countdown
+  useEffect(() => {
+    const tick = () => {
+      if (activeTargetMsRef.current === null) {
+        setDisplayText(fallbackUntil ?? "--");
+        return;
+      }
       const now = Date.now();
-      const diffSec = Math.max(0, Math.round((targetMs - now) / 1000));
+      const diffSec = Math.max(
+        0,
+        Math.round((activeTargetMsRef.current - now) / 1000),
+      );
       if (diffSec <= 0) {
         setDisplayText("0:00");
       } else {
@@ -77,13 +98,19 @@ function AutomationTimerText({
       }
     };
 
-    compute();
-    const interval = setInterval(compute, 1000);
+    tick();
+    const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [targetEndTime, fallbackUntil]);
+  }, [fallbackUntil]);
 
   return (
-    <Text className="font-bold text-lg" style={{ color }}>
+    <Text
+      className="font-bold text-lg text-right"
+      style={{
+        color,
+        fontVariant: ["tabular-nums"],
+      }}
+    >
       {displayText}
     </Text>
   );
