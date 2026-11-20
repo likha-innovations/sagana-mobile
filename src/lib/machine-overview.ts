@@ -16,6 +16,7 @@ export const machineOverviewSchema = z.object({
       remainingMs: z.number().nullable().optional(),
     }),
   ),
+  configuration: z.record(z.string(), z.unknown()).optional(),
 });
 export type MachineOverview = z.infer<typeof machineOverviewSchema>;
 

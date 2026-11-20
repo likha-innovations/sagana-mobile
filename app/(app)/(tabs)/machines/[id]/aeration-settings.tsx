@@ -67,6 +67,30 @@ export default function AerationSettingsScreen() {
 
   useEffect(() => {
     let isMounted = true;
+    const remoteAeration = overview?.configuration?.aeration as
+      | { mode?: "default" | "custom"; onMinutes?: number; offMinutes?: number }
+      | undefined;
+
+    if (
+      remoteAeration &&
+      (remoteAeration.mode === "default" || remoteAeration.mode === "custom") &&
+      typeof remoteAeration.onMinutes === "number" &&
+      typeof remoteAeration.offMinutes === "number"
+    ) {
+      const remoteConfig: AerationConfig = {
+        mode: remoteAeration.mode,
+        onMinutes: remoteAeration.onMinutes,
+        offMinutes: remoteAeration.offMinutes,
+      };
+      setConfig(remoteConfig);
+      setTempOnMinutes(remoteConfig.onMinutes);
+      setTempOffMinutes(remoteConfig.offMinutes);
+      setOnInputText(String(remoteConfig.onMinutes));
+      setOffInputText(String(remoteConfig.offMinutes));
+      void setAerationConfig(id, remoteConfig);
+      return;
+    }
+
     void getAerationConfig(id).then((saved) => {
       if (isMounted) {
         setConfig(saved);
@@ -79,7 +103,7 @@ export default function AerationSettingsScreen() {
     return () => {
       isMounted = false;
     };
-  }, [id]);
+  }, [id, overview?.configuration]);
 
   const handleSelectDefaultMode = useCallback(async () => {
     if (Platform.OS !== "web") {

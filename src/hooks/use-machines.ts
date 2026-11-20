@@ -183,7 +183,7 @@ export function useMachineOverview(id: string) {
   return useQuery({
     queryKey: ["machine-overview", id],
     enabled: !!id,
-    refetchInterval: 5000,
+    refetchInterval: 15000,
     queryFn: async ({ signal }) => {
       try {
         return await machineApi.getOverview(id, signal);
