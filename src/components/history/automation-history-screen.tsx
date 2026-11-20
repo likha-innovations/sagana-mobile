@@ -14,23 +14,46 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { AutomationLogCard } from "@/components/devices/automation-log-card";
 import { colors } from "@/constants";
 
-function getLogVisuals(type: HistoryEvent["type"]) {
-  if (type === "emergency_stop") {
-    return { icon: AlertTriangle, color: colors.semantic.destructive };
+function getLogVisuals(type: HistoryEvent["type"], message?: string) {
+  const isSprinkler =
+    type.startsWith("sprinkler") ||
+    type.startsWith("moisture") ||
+    (message ? message.toLowerCase().includes("sprinkler") : false);
+
+  if (
+    type === "emergency_stop" ||
+    type === "e_stop" ||
+    type === "estop_activated"
+  ) {
+    return {
+      icon: isSprinkler ? ShowerHead : Fan,
+      color: colors.semantic.destructive,
+    };
   }
-  if (type === "sprinkler_on") {
+  if (
+    type === "sprinkler_on" ||
+    type === "moisture_dosing_start" ||
+    type === "sprinkler_pulse_on"
+  ) {
     return { icon: ShowerHead, color: colors.brand[500] };
   }
-  if (type === "sprinkler_off") {
+  if (
+    type === "sprinkler_off" ||
+    type === "moisture_recovery_reached" ||
+    type === "sprinkler_pulse_rest"
+  ) {
     return { icon: ShowerHead, color: colors.gray.textIcon };
   }
-  if (type === "blower_on") {
+  if (type === "blower_on" || type === "blower_cycle_on") {
     return { icon: Fan, color: colors.brand[500] };
   }
-  if (type === "blower_off") {
+  if (type === "blower_off" || type === "blower_cycle_rest") {
     return { icon: Fan, color: colors.gray.textIcon };
   }
-  return { icon: Wind, color: colors.semantic.foreground };
+  return {
+    icon: isSprinkler ? ShowerHead : Fan,
+    color: colors.semantic.foreground,
+  };
 }
 
 export function AutomationHistoryScreen({ scope }: { scope: HistoryScope }) {
@@ -108,7 +131,7 @@ export function AutomationHistoryScreen({ scope }: { scope: HistoryScope }) {
           )}
           renderSectionFooter={() => <View className="h-5" />}
           renderItem={({ item }) => {
-            const visuals = getLogVisuals(item.type);
+            const visuals = getLogVisuals(item.type, item.message);
             return (
               <AutomationLogCard
                 icon={visuals.icon}
