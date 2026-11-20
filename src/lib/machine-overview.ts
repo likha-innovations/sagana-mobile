@@ -7,6 +7,7 @@ export const machineOverviewSchema = z.object({
   batchId: z.string().nullable(),
   currentWeight: z.number().nonnegative().nullable(),
   recordedAt: z.string().refine((val) => !Number.isNaN(Date.parse(val)), "Invalid date"),
+  serverTime: z.string().optional(),
   automations: z.array(
     z.object({
       kind: z.enum(["aeration", "sprinkler"]),

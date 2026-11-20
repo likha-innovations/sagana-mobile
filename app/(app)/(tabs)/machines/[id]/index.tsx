@@ -45,12 +45,12 @@ const logger = createLogger("MachineDetailsScreen");
 function AutomationTimerText({
   targetEndTime,
   fallbackUntil,
-  recordedAt,
+  serverTime,
   color,
 }: {
   targetEndTime?: string | null;
   fallbackUntil?: string;
-  recordedAt?: string;
+  serverTime?: string;
   color: string;
 }) {
   const [displayText, setDisplayText] = useState<string>(
@@ -61,8 +61,8 @@ function AutomationTimerText({
 
   // Compensate for carrier / phone clock skew relative to server clock
   useEffect(() => {
-    if (!recordedAt) return;
-    const serverTimeMs = new Date(recordedAt).getTime();
+    if (!serverTime) return;
+    const serverTimeMs = new Date(serverTime).getTime();
     if (!Number.isNaN(serverTimeMs)) {
       const offset = serverTimeMs - Date.now();
       // Guard against corrupted timestamps; only apply plausible offsets (+- 120s)
@@ -70,9 +70,9 @@ function AutomationTimerText({
         serverOffsetMsRef.current = offset;
       }
     }
-  }, [recordedAt]);
+  }, [serverTime]);
 
-  // Smooth target updates: ignore minor network / polling latency jitter (within 3.5s)
+  // Target timestamp tracking
   useEffect(() => {
     if (!targetEndTime) {
       activeTargetMsRef.current = null;
@@ -87,12 +87,7 @@ function AutomationTimerText({
       return;
     }
 
-    if (
-      activeTargetMsRef.current === null ||
-      Math.abs(newTargetMs - activeTargetMsRef.current) > 3500
-    ) {
-      activeTargetMsRef.current = newTargetMs;
-    }
+    activeTargetMsRef.current = newTargetMs;
   }, [targetEndTime, fallbackUntil]);
 
   // Local monotonic 1-second countdown synchronized to server/machine time
@@ -543,7 +538,7 @@ export default function MachineDetailsDashboard() {
                                 <AutomationTimerText
                                   targetEndTime={automation?.targetEndTime}
                                   fallbackUntil={automation?.until}
-                                  recordedAt={overview?.recordedAt}
+                                  serverTime={overview?.serverTime}
                                   color={color}
                                 />
                               </View>
