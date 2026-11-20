@@ -20,6 +20,7 @@ import {
 } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { toast } from "burnt";
+import { deviceApi } from "@/api/device.api";
 import { useMachine, useMachineOverview } from "@/hooks/use-machines";
 import { useDynamicLayout } from "@/hooks";
 import { colors } from "@/constants";
@@ -82,13 +83,27 @@ export default function AerationSettingsScreen() {
     };
     setConfig(updated);
     await setAerationConfig(id, updated);
+
+    if (machine?.macAddress) {
+      try {
+        await deviceApi.sendCommand(machine.macAddress, {
+          action: "AERATION_CONFIG",
+          payload: { mode: "default" },
+        });
+      } catch (err) {
+        logger.warn("Failed to dispatch default AERATION_CONFIG to device", {
+          err,
+        });
+      }
+    }
+
     toast({
       title: "Default Mode Selected",
       message: "Using standard SAGANA aeration settings.",
       preset: "done",
     });
     logger.info("Switched to default aeration mode", { machineId: id });
-  }, [config, id]);
+  }, [config, id, machine?.macAddress]);
 
   const handleOpenCustomModal = useCallback(() => {
     if (Platform.OS !== "web") {
@@ -111,6 +126,24 @@ export default function AerationSettingsScreen() {
     setConfig(updated);
     setModalVisible(false);
     await setAerationConfig(id, updated);
+
+    if (machine?.macAddress) {
+      try {
+        await deviceApi.sendCommand(machine.macAddress, {
+          action: "AERATION_CONFIG",
+          payload: {
+            mode: "custom",
+            onMinutes: tempOnMinutes,
+            offMinutes: tempOffMinutes,
+          },
+        });
+      } catch (err) {
+        logger.warn("Failed to dispatch custom AERATION_CONFIG to device", {
+          err,
+        });
+      }
+    }
+
     toast({
       title: "Custom Mode Active",
       message: `${tempOnMinutes} min ON / ${tempOffMinutes} min OFF configured.`,
@@ -121,7 +154,7 @@ export default function AerationSettingsScreen() {
       onMinutes: tempOnMinutes,
       offMinutes: tempOffMinutes,
     });
-  }, [id, tempOnMinutes, tempOffMinutes]);
+  }, [id, machine?.macAddress, tempOnMinutes, tempOffMinutes]);
 
   const isDefaultMode = config.mode === "default";
   const isCustomMode = config.mode === "custom";
