@@ -173,7 +173,11 @@ describe("Linear actuator manual override & collect flow", () => {
   });
 
   test("offline guard and 4s acknowledgment timeout protect against disconnected broker", () => {
-    function computeActuatorControls(floorState, isMiddleDoorOpen, isMachineOffline) {
+    function computeActuatorControls(
+      floorState,
+      isMiddleDoorOpen,
+      isMachineOffline,
+    ) {
       const isMoving = floorState === "raising" || floorState === "dropping";
       const isFloorRaised = floorState === "raised";
       const isRaiseDisabled = !isFloorRaised && !isMiddleDoorOpen;

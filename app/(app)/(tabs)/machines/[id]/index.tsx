@@ -9,6 +9,7 @@ import {
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import {
   ChevronLeft,
+  ChevronRight,
   Radio,
   RadioOff,
   Settings,
@@ -398,15 +399,37 @@ export default function MachineDetailsDashboard() {
                       const color = automation?.enabled
                         ? colors.brand[500]
                         : colors.gray.textIcon;
+                      const isAeration = kind === "aeration";
+                      const CardComponent = isAeration ? Pressable : View;
                       return (
-                        <View
+                        <CardComponent
                           key={kind}
                           style={{ opacity: state.disconnected ? 0.55 : 1 }}
-                          className={`rounded-[14px] border border-border p-6 gap-4 ${stacked ? "" : "flex-row items-center justify-between"}`}
+                          onPress={
+                            isAeration
+                              ? () =>
+                                  router.push({
+                                    pathname:
+                                      "/(app)/(tabs)/machines/[id]/aeration-settings",
+                                    params: { id },
+                                  })
+                              : undefined
+                          }
+                          accessibilityRole={isAeration ? "button" : undefined}
+                          accessibilityLabel={
+                            isAeration ? "Aeration settings" : undefined
+                          }
+                          className={`rounded-[14px] border border-border p-5 gap-4 ${
+                            isAeration ? "active:opacity-75" : ""
+                          } ${
+                            stacked
+                              ? ""
+                              : "flex-row items-center justify-between"
+                          }`}
                         >
-                          <View className="flex-row items-center gap-5">
+                          <View className="flex-row items-center gap-4">
                             <Icon size={24} color={color} />
-                            <View className="gap-1">
+                            <View className="gap-0.5">
                               <Text className="font-bold text-sm text-foreground">
                                 {kind === "aeration"
                                   ? "Aeration"
@@ -420,18 +443,26 @@ export default function MachineDetailsDashboard() {
                               </Text>
                             </View>
                           </View>
-                          <View className="gap-1">
-                            <Text className="font-sans text-xs text-foreground">
-                              {automation ? (automation.enabled ? "On until" : "Off until") : "Until"}
-                            </Text>
-                            <Text
-                              className="font-bold text-xl"
-                              style={{ color }}
-                            >
-                              {automation?.until ?? "--"}
-                            </Text>
+                          <View className="flex-row items-center gap-3">
+                            <View className="gap-0.5 items-end">
+                              <Text className="font-sans text-xs text-muted-foreground">
+                                {automation ? (automation.enabled ? "On until" : "Off until") : "Until"}
+                              </Text>
+                              <View className="flex-row items-center gap-1.5">
+                                <Clock size={16} color={color} />
+                                <Text
+                                  className="font-bold text-lg"
+                                  style={{ color }}
+                                >
+                                  {automation?.until ?? "--"}
+                                </Text>
+                              </View>
+                            </View>
+                            {isAeration && (
+                              <ChevronRight size={20} color={colors.semantic.foreground} />
+                            )}
                           </View>
-                        </View>
+                        </CardComponent>
                       );
                     })}
                   <UpdatedAt
