@@ -152,7 +152,8 @@ function AuthProtectedNavigation() {
     } else if (isSignedIn && destination === 'code') {
       if (!inAuthGroup || segments.at(1) !== 'barangay-code') router.replace('/(auth)/barangay-code');
     } else if (isSignedIn && destination === 'app') {
-      if (inAuthGroup) {
+      const isAlreadyOnSignUp = segments[0] === '(auth)' && segments.at(1) === 'sign-up';
+      if (inAuthGroup && !isAlreadyOnSignUp) {
         authGateLogger.info('Authenticated user with complete profile redirected to app tabs');
         router.replace('/(app)/(tabs)');
       }

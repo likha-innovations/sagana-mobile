@@ -1,4 +1,5 @@
-import { View, Text, Pressable, Platform, Linking, ActivityIndicator, useWindowDimensions } from 'react-native';
+import { useState } from 'react';
+import { View, Text, Pressable, Platform, Linking, ActivityIndicator, useWindowDimensions, Image } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { Info, AlertCircle, Bluetooth } from 'lucide-react-native';
 import * as IntentLauncher from 'expo-intent-launcher';
@@ -348,23 +349,38 @@ export function NameMachineStep({ control }: { control: Control<MachineRegistrat
 }
 
 export function SuccessStep() {
+  const [lottieError, setLottieError] = useState(false);
   return (
-    <View className="flex-1 mt-4">
-      <View className="w-full h-[220px] items-center justify-center mb-8">
-        <LottieView
-          source={require('@/assets/icons/mascot/onboarding/sagana_celebration.lottie')}
-          autoPlay
-          loop
-          cacheComposition
-          renderMode="HARDWARE"
-          hardwareAccelerationAndroid
-          style={{ width: '100%', height: '100%' }}
-        />
+    <View className="flex-1 items-center justify-center">
+      <View className="w-[264px] h-[264px] items-center justify-center mb-6">
+        {!lottieError ? (
+          <LottieView
+            source={require('@/assets/icons/mascot/onboarding/sagana_celebration.lottie')}
+            autoPlay
+            loop
+            cacheComposition
+            renderMode="HARDWARE"
+            hardwareAccelerationAndroid
+            style={{ width: 264, height: 264 }}
+            onAnimationFailure={() => setLottieError(true)}
+          />
+        ) : (
+          <Image
+            source={require('@/assets/icons/mascot/sagana_celebrate.png')}
+            style={{ width: 264, height: 264 }}
+            resizeMode="contain"
+            accessibilityLabel="Sagana Mascot"
+          />
+        )}
       </View>
-      <Text className="text-2xl font-bold text-foreground">Your machine has been registered!</Text>
-      <Text className="text-sm text-muted-foreground mt-2 leading-relaxed">
-        You can now start a compost batch using your newly registered device.
-      </Text>
+      <View className="w-full max-w-[380px] gap-2.5">
+        <Text className="text-[20px] font-bold text-foreground text-left">
+          Your machine has been registered!
+        </Text>
+        <Text className="text-[14px] font-sans text-foreground text-left leading-5">
+          You can now start a compost batch using your newly registered device.
+        </Text>
+      </View>
     </View>
   );
 }

@@ -30,6 +30,7 @@ import { useDynamicLayout } from '@/hooks/use-layout';
 import { useMachines } from '@/hooks/use-machines';
 import { useFeedstocks, useCreateCompostBatch, useCompostBatches } from '@/hooks/use-batches';
 import { getFeedstockImage } from '@/constants/feedstocks';
+import { SuccessScreen } from '@/components/ui/success-screen';
 
 type WizardStep = 1 | 2 | 3 | 4 | 5;
 
@@ -175,6 +176,17 @@ export default function NewBatchScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.replace('/(app)/(tabs)');
   };
+
+  if (step === 5) {
+    return (
+      <SuccessScreen
+        title="Batch has been started!"
+        description="Your compost batch has been initialized. You can now monitor aeration, moisture, and temperature progress through the dashboard."
+        buttonText="Done"
+        onButtonPress={handleGoToHome}
+      />
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -432,41 +444,6 @@ export default function NewBatchScreen() {
                     I have transferred the feedstocks
                   </Text>
                 )}
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* STEP 5: Success Screen */}
-          {step === 5 && (
-            <View className="flex-1 justify-between" style={{ paddingBottom: stackScrollPadding }}>
-              <View>
-                <View className="h-[220px] w-full items-center justify-center mt-6 mb-4">
-                  <LottieView
-                    source={require('@/assets/icons/mascot/onboarding/sagana_celebration.lottie')}
-                    autoPlay
-                    loop
-                    cacheComposition
-                    renderMode="HARDWARE"
-                    hardwareAccelerationAndroid
-                    style={{ width: '100%', height: '100%' }}
-                  />
-                </View>
-
-                <Text className="text-[20px] font-bold text-foreground mb-2">
-                  Batch has been started!
-                </Text>
-                <Text className="text-sm font-sans text-foreground leading-5">
-                  You can now monitor the batch through the app dashboard or your machine.
-                </Text>
-              </View>
-
-              {/* Go to Home Button */}
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={handleGoToHome}
-                className="h-[45px] rounded-full bg-primary items-center justify-center"
-              >
-                <Text className="text-sm font-bold text-[#FAF9EE]">Go to Home</Text>
               </TouchableOpacity>
             </View>
           )}

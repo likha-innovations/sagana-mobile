@@ -5,3 +5,4 @@ export * from "./error-modal";
 export * from "./date-range-picker";
 export * from "./skeleton";
 export * from "./empty-state";
+export * from "./success-screen";
