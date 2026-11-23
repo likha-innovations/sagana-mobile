@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, TextInput, Platform } from 'react-native';
+import { View, TextInput } from 'react-native';
 import { cn } from '@/lib/utils';
 import { changeOtpCode } from '@/lib/otp-input';
 
@@ -59,9 +59,8 @@ export function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInput
             onKeyPress={(e) => handleKeyPress(e, index)}
             onFocus={() => setFocusedIndex(index)}
             onBlur={() => setFocusedIndex(null)}
-            keyboardType={Platform.OS === 'ios' ? 'number-pad' : 'phone-pad'}
-            textContentType="oneTimeCode"
-            autoComplete="one-time-code"
+            inputMode="numeric"
+            keyboardType="number-pad"
             autoCapitalize="none"
             autoCorrect={false}
             spellCheck={false}

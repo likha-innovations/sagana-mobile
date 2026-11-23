@@ -113,6 +113,7 @@ export default function ForgotPasswordScreen() {
     setLoading(true);
     setEmailError(false);
     setEmailErrorMessage(null);
+    Keyboard.dismiss();
 
     try {
       if (isLoaded) {

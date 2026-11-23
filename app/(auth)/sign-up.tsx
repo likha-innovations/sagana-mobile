@@ -271,9 +271,8 @@ function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupPr
             onChangeText={(text) => handleCharChange(text, index)}
             onSelectionChange={(event) => { selections.current[index] = event.nativeEvent.selection; }}
             onKeyPress={(e) => handleKeyPress(e, index)}
-            keyboardType={Platform.OS === 'ios' ? 'number-pad' : 'phone-pad'}
-            textContentType="oneTimeCode"
-            autoComplete="one-time-code"
+            inputMode="numeric"
+            keyboardType="number-pad"
             autoCapitalize="none"
             autoCorrect={false}
             spellCheck={false}
@@ -482,6 +481,7 @@ export default function SignUpScreen() {
     setLoading(true);
     setEmailError(false);
     setEmailErrorMessage(null);
+    Keyboard.dismiss();
 
     try {
       if (isLoaded) {
