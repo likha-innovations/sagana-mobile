@@ -96,7 +96,14 @@ export default function MachineSettingsScreen() {
     if (pending) return;
     if (view === "menu") {
       resetBle();
-      router.back();
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace({
+          pathname: "/(app)/machines/[id]",
+          params: { id },
+        });
+      }
     } else if (view === "wifi-form") {
       setView("wifi-scan");
       setPassword("");

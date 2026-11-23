@@ -60,7 +60,7 @@ function renderDetail(completed, activeBatch = null, offline = false) {
     isError: false,
     refetch: jestMock.fn(),
   };
-  const { default: Screen } = load("app/(app)/(tabs)/machines/[id]/index.tsx", {
+  const { default: Screen } = load("app/(app)/machines/[id].tsx", {
     react: {
       useCallback: (fn) => fn,
       useState: (value) => [value, jestMock.fn()],
@@ -255,9 +255,7 @@ test("an active machine detail shows sensor readings and history navigation", ()
       nodes(node).some((child) => child.props?.children === "View history"),
   );
   historyLink.props.onPress();
-  expect(pushes[0].pathname).toBe(
-    "/(app)/(tabs)/machines/[id]/sensors-history",
-  );
+  expect(pushes[0].pathname).toBe("/(app)/machines/[id]/sensors-history");
 });
 
 test("an offline active machine keeps readings and automation cards without inventing their status", () => {

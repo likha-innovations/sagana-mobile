@@ -74,7 +74,12 @@ export default function NotificationsScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <HistoryHeader title="Notifications" back={true} action={markAllAction} />
+      <HistoryHeader
+        title="Notifications"
+        back={true}
+        fallbackHref="/(app)/(tabs)"
+        action={markAllAction}
+      />
 
       {notificationsQuery.isPending && notifications.length === 0 ? (
         <View className="flex-1 items-center justify-center">

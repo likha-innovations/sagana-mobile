@@ -41,6 +41,7 @@ export default function CompletedBatchScreen() {
             ? format(parseISO(batch.completionDate), "MMMM d, yyyy")
             : "Completed Batch"
         }
+        fallbackHref="/(app)/(tabs)/history"
       />
       {query.isError ? (
         <HistoryState
@@ -139,7 +140,7 @@ export default function CompletedBatchScreen() {
                 accessibilityRole="button"
                 onPress={() =>
                   router.push({
-                    pathname: "/(app)/(tabs)/history/[batchId]/sensors-history",
+                    pathname: "/(app)/history/[batchId]/sensors-history",
                     params: { batchId },
                   })
                 }
@@ -154,7 +155,7 @@ export default function CompletedBatchScreen() {
                 accessibilityRole="button"
                 onPress={() =>
                   router.push({
-                    pathname: "/(app)/(tabs)/history/[batchId]/automation-logs",
+                    pathname: "/(app)/history/[batchId]/automation-logs",
                     params: { batchId },
                   })
                 }

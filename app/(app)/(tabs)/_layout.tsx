@@ -30,7 +30,6 @@ export default function TabsLayout() {
         name="machines"
         options={{
           title: "Machines",
-          popToTopOnBlur: true,
           tabBarIcon: ({ focused, color, size }) =>
             focused ? (
               <MachinesSolid color={color} width={size} height={size} />

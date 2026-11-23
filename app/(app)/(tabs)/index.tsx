@@ -187,7 +187,7 @@ export default function DashboardScreen() {
                     batch={batch}
                     onPress={() =>
                       router.push({
-                        pathname: "/(app)/(tabs)/history/[batchId]",
+                        pathname: "/(app)/history/[batchId]",
                         params: { batchId: batch.id },
                       })
                     }
@@ -237,7 +237,7 @@ export default function DashboardScreen() {
                     }
                     onPress={() =>
                       router.push({
-                        pathname: "/(app)/(tabs)/machines/[id]",
+                        pathname: "/(app)/machines/[id]",
                         params: { id: machine.id },
                       })
                     }
