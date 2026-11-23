@@ -118,6 +118,9 @@ export default function LinearActuatorCollectScreen() {
 
   const lastActionTime = useRef<number>(0);
   const ackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Monotonically increasing command sequence — catch blocks check this to avoid
+  // acting on a stale rejection from an earlier overlapping sendCommand call.
+  const cmdSeqRef = useRef<number>(0);
 
   // Clean up acknowledgment timeout on unmount
   useEffect(() => {
@@ -266,12 +269,12 @@ export default function LinearActuatorCollectScreen() {
       setFloorState("raised");
       setHasEmptied(true);
       void setFloorPosition(id, "raised");
-    } else if (actPos === "LOWERED" && floorState !== "lowered" && !hasEmptied) {
+    } else if (actPos === "LOWERED" && floorState !== "lowered") {
       lastConfirmedPositionRef.current = "lowered";
       setFloorState("lowered");
       void setFloorPosition(id, "lowered");
     }
-  }, [isMoving, latestTelemetry, floorState, hasEmptied, id, machine?.macAddress]);
+  }, [isMoving, latestTelemetry, floorState, id, machine?.macAddress]);
 
   // Calibrated watchdog (19s): Safety fallback matching physical 17.5-18s stroke
   useEffect(() => {
@@ -279,22 +282,14 @@ export default function LinearActuatorCollectScreen() {
 
     const watchdog = setTimeout(() => {
       lastActionTime.current = Date.now();
-      if (floorState === "raising") {
-        lastConfirmedPositionRef.current = "raised";
-        setFloorState("raised");
-        setHasEmptied(true);
-        void setFloorPosition(id, "raised");
-        if (Platform.OS !== "web") {
-          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        }
-      } else if (floorState === "dropping") {
-        lastConfirmedPositionRef.current = "lowered";
-        setFloorState("lowered");
-        void setFloorPosition(id, "lowered");
-        if (Platform.OS !== "web") {
-          void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        }
-      }
+      // Watchdog expired without hardware confirmation — revert to last confirmed position
+      // so the user can retry rather than showing a false completed state.
+      setFloorState(lastConfirmedPositionRef.current);
+      toast({
+        title: "No confirmation received",
+        message: "The machine did not confirm the move completed. Check the machine and try again.",
+        preset: "error",
+      });
     }, 19000);
 
     return () => clearTimeout(watchdog);
@@ -349,9 +344,15 @@ export default function LinearActuatorCollectScreen() {
       });
     }, 4000);
 
+    // Stamp this invocation so a stale catch from a concurrent call cannot interfere.
+    cmdSeqRef.current += 1;
+    const thisCmdSeq = cmdSeqRef.current;
+
     try {
       await deviceApi.sendCommand(machine.macAddress, { action: commandAction });
     } catch (err) {
+      // Ignore rejections from superseded invocations — the newer command owns timer and state.
+      if (cmdSeqRef.current !== thisCmdSeq) return;
       if (ackTimeoutRef.current) {
         clearTimeout(ackTimeoutRef.current);
         ackTimeoutRef.current = null;
