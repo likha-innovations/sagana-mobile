@@ -50,18 +50,29 @@ export default function LinearActuatorCollectScreen() {
   const overview = overviewQuery.data;
   const { latestTelemetry } = useSocket();
 
+  const telemObj = latestTelemetry as Record<string, unknown> | null;
+  const isTelemForThisMachine =
+    telemObj != null &&
+    ((typeof telemObj.machineId === "string" && telemObj.machineId === id) ||
+      (typeof telemObj.macAddress === "string" &&
+        machine?.macAddress &&
+        telemObj.macAddress === machine.macAddress));
+
   const cachedFloorPos = getCachedFloorPosition(id);
-  const actObj = (latestTelemetry as Record<string, unknown> | null)?.actuators as
-    | Record<string, unknown>
-    | undefined;
-  const doorsObj = (latestTelemetry as Record<string, unknown> | null)?.doors as
-    | Record<string, unknown>
-    | undefined;
+  const actObj = isTelemForThisMachine
+    ? (telemObj?.actuators as Record<string, unknown> | undefined)
+    : undefined;
+  const doorsObj = isTelemForThisMachine
+    ? (telemObj?.doors as Record<string, unknown> | undefined)
+    : undefined;
 
   const initialFloorPosition = actObj?.actuator_position as string | undefined;
   const isInitiallyRaised = initialFloorPosition === "RAISED" || cachedFloorPos === "raised";
 
   const [floorState, setFloorState] = useState<FloorState>(() =>
+    isInitiallyRaised ? "raised" : "lowered",
+  );
+  const lastConfirmedPositionRef = useRef<"raised" | "lowered">(
     isInitiallyRaised ? "raised" : "lowered",
   );
   const [hasEmptied, setHasEmptied] = useState(() => isInitiallyRaised);
@@ -72,7 +83,26 @@ export default function LinearActuatorCollectScreen() {
   const [isMiddleDoorOpen, setIsMiddleDoorOpen] = useState(initialMiddleDoorOpen);
 
   const initialWeight = overview?.currentWeight ?? activeBatch?.totalWeight ?? null;
-  const displayWeight = hasEmptied ? "0 kg" : initialWeight != null ? `${initialWeight} kg` : "--";
+  const [snapshotWeight, setSnapshotWeight] = useState<number | null>(() => {
+    return typeof initialWeight === "number" && initialWeight > 0 ? initialWeight : null;
+  });
+
+  useEffect(() => {
+    if (!hasEmptied && snapshotWeight === null) {
+      const w = overview?.currentWeight ?? activeBatch?.totalWeight ?? null;
+      if (typeof w === "number" && w > 0) {
+        setSnapshotWeight(w);
+      }
+    }
+  }, [hasEmptied, snapshotWeight, overview?.currentWeight, activeBatch?.totalWeight]);
+
+  const displayWeight = hasEmptied
+    ? "0 kg"
+    : snapshotWeight != null
+      ? `${snapshotWeight} kg`
+      : initialWeight != null
+        ? `${initialWeight} kg`
+        : "--";
 
   const isReject = mode === "reject";
   const title = isReject ? "Reject current batch" : "Collect your curing-ready compost";
@@ -104,8 +134,11 @@ export default function LinearActuatorCollectScreen() {
     void getFloorPosition(id).then((savedPos) => {
       if (!isMounted) return;
       if (savedPos === "raised") {
+        lastConfirmedPositionRef.current = "raised";
         setFloorState((prev) => (prev === "lowered" ? "raised" : prev));
         setHasEmptied(true);
+      } else if (savedPos === "lowered") {
+        lastConfirmedPositionRef.current = "lowered";
       }
     });
     return () => {
@@ -161,7 +194,7 @@ export default function LinearActuatorCollectScreen() {
           clearTimeout(ackTimeoutRef.current);
           ackTimeoutRef.current = null;
         }
-        setFloorState(isFloorRaised ? "raised" : "lowered");
+        setFloorState(lastConfirmedPositionRef.current);
         toast({
           title: "Command rejected",
           message: log.message ?? "The machine could not perform this operation safely.",
@@ -172,6 +205,7 @@ export default function LinearActuatorCollectScreen() {
           clearTimeout(ackTimeoutRef.current);
           ackTimeoutRef.current = null;
         }
+        lastConfirmedPositionRef.current = "raised";
         setFloorState("raised");
         setHasEmptied(true);
         void setFloorPosition(id, "raised");
@@ -183,6 +217,7 @@ export default function LinearActuatorCollectScreen() {
           clearTimeout(ackTimeoutRef.current);
           ackTimeoutRef.current = null;
         }
+        lastConfirmedPositionRef.current = "lowered";
         setFloorState("lowered");
         void setFloorPosition(id, "lowered");
         if (Platform.OS !== "web") {
@@ -195,15 +230,22 @@ export default function LinearActuatorCollectScreen() {
     return () => {
       socket.off("automation_log", handleAutomationLog);
     };
-  }, [id, machine?.macAddress, isFloorRaised]);
+  }, [id, machine?.macAddress]);
 
   // Secondary stream: Telemetry synchronization (e.g. after network reconnection)
   useEffect(() => {
     if (!latestTelemetry) return;
 
-    const doors = (latestTelemetry as Record<string, unknown>).doors as
-      | Record<string, unknown>
-      | undefined;
+    const telemData = latestTelemetry as Record<string, unknown>;
+    const isCurrentMachine =
+      (typeof telemData.machineId === "string" && telemData.machineId === id) ||
+      (typeof telemData.macAddress === "string" &&
+        machine?.macAddress &&
+        telemData.macAddress === machine.macAddress);
+
+    if (!isCurrentMachine) return;
+
+    const doors = telemData.doors as Record<string, unknown> | undefined;
     if (doors?.middle_door_closed !== undefined) {
       setIsMiddleDoorOpen(!doors.middle_door_closed);
     }
@@ -211,9 +253,7 @@ export default function LinearActuatorCollectScreen() {
     if (isMoving) return;
     if (Date.now() - lastActionTime.current < 5000) return;
 
-    const act = (latestTelemetry as Record<string, unknown>).actuators as
-      | Record<string, unknown>
-      | undefined;
+    const act = telemData.actuators as Record<string, unknown> | undefined;
     const actState = act?.linear_actuator as string | undefined;
     const actPos = act?.actuator_position as string | undefined;
 
@@ -222,14 +262,16 @@ export default function LinearActuatorCollectScreen() {
     } else if (actState === "RETRACTING") {
       setFloorState("dropping");
     } else if (actPos === "RAISED" && floorState !== "raised") {
+      lastConfirmedPositionRef.current = "raised";
       setFloorState("raised");
       setHasEmptied(true);
       void setFloorPosition(id, "raised");
     } else if (actPos === "LOWERED" && floorState !== "lowered" && !hasEmptied) {
+      lastConfirmedPositionRef.current = "lowered";
       setFloorState("lowered");
       void setFloorPosition(id, "lowered");
     }
-  }, [isMoving, latestTelemetry, floorState, hasEmptied, id]);
+  }, [isMoving, latestTelemetry, floorState, hasEmptied, id, machine?.macAddress]);
 
   // Calibrated watchdog (19s): Safety fallback matching physical 17.5-18s stroke
   useEffect(() => {
@@ -238,6 +280,7 @@ export default function LinearActuatorCollectScreen() {
     const watchdog = setTimeout(() => {
       lastActionTime.current = Date.now();
       if (floorState === "raising") {
+        lastConfirmedPositionRef.current = "raised";
         setFloorState("raised");
         setHasEmptied(true);
         void setFloorPosition(id, "raised");
@@ -245,6 +288,7 @@ export default function LinearActuatorCollectScreen() {
           void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }
       } else if (floorState === "dropping") {
+        lastConfirmedPositionRef.current = "lowered";
         setFloorState("lowered");
         void setFloorPosition(id, "lowered");
         if (Platform.OS !== "web") {
@@ -284,7 +328,7 @@ export default function LinearActuatorCollectScreen() {
     }
 
     const targetFloorState: FloorState = isFloorRaised ? "dropping" : "raising";
-    const revertFloorState: FloorState = isFloorRaised ? "raised" : "lowered";
+    const revertFloorState: FloorState = lastConfirmedPositionRef.current;
     const commandAction = isFloorRaised ? "ACTUATOR_RETRACT" : "ACTUATOR_EXTEND";
 
     setFloorState(targetFloorState);
@@ -323,34 +367,69 @@ export default function LinearActuatorCollectScreen() {
   }, [isButtonDisabled, isMachineOffline, machine?.macAddress, isFloorRaised]);
 
   const handleNext = useCallback(() => {
-    if (!hasEmptied || isMoving || finishBatch.isPending) return;
+    if (
+      !hasEmptied ||
+      isMoving ||
+      finishBatch.isPending ||
+      batchQuery.isPending
+    ) {
+      return;
+    }
+
+    if (!activeBatch?.id) {
+      toast({
+        title: "No Active Batch",
+        message: "No active batch was found to finalize.",
+        preset: "error",
+      });
+      return;
+    }
 
     if (Platform.OS !== "web") {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
 
-    // Reset persisted floor position for this machine upon completing or rejecting batch
-    void setFloorPosition(id, "lowered");
+    const finalWeight = isReject
+      ? 0
+      : (snapshotWeight ??
+        overview?.currentWeight ??
+        activeBatch.totalWeight ??
+        undefined);
 
-    if (activeBatch?.id) {
-      const finalWeight = isReject ? 0 : (initialWeight ?? undefined);
-      finishBatch.mutate(
-        { id: activeBatch.id, finalWeight },
-        {
-          onSuccess: () => {
-            void queryClient.invalidateQueries({ queryKey: ["machine-overview", id] });
-            setIsSuccess(true);
-          },
-          onError: () => {
-            // Display success screen locally if offline or already finalized
-            setIsSuccess(true);
-          },
+    finishBatch.mutate(
+      { id: activeBatch.id, finalWeight },
+      {
+        onSuccess: () => {
+          void queryClient.invalidateQueries({
+            queryKey: ["machine-overview", id],
+          });
+          setIsSuccess(true);
         },
-      );
-    } else {
-      setIsSuccess(true);
-    }
-  }, [hasEmptied, isMoving, finishBatch, activeBatch?.id, isReject, initialWeight, queryClient, id]);
+        onError: (err) => {
+          logger.warn("Failed to finalize batch", err);
+          toast({
+            title: "Finalization Failed",
+            message:
+              err instanceof Error
+                ? err.message
+                : "Could not complete batch. Please try again.",
+            preset: "error",
+          });
+        },
+      },
+    );
+  }, [
+    hasEmptied,
+    isMoving,
+    finishBatch,
+    batchQuery.isPending,
+    activeBatch,
+    isReject,
+    snapshotWeight,
+    overview?.currentWeight,
+    queryClient,
+    id,
+  ]);
 
   const handleDone = useCallback(() => {
     if (Platform.OS !== "web") {
@@ -575,13 +654,30 @@ export default function LinearActuatorCollectScreen() {
 
       {/* Next button pinned to bottom */}
       <Pressable
-        disabled={!hasEmptied || isMoving || finishBatch.isPending}
+        disabled={
+          !hasEmptied ||
+          isMoving ||
+          finishBatch.isPending ||
+          batchQuery.isPending ||
+          !activeBatch
+        }
         accessibilityRole="button"
         accessibilityLabel="Next"
-        accessibilityState={{ disabled: !hasEmptied || isMoving || finishBatch.isPending }}
+        accessibilityState={{
+          disabled:
+            !hasEmptied ||
+            isMoving ||
+            finishBatch.isPending ||
+            batchQuery.isPending ||
+            !activeBatch,
+        }}
         onPress={handleNext}
         className={`min-h-12 rounded-full items-center justify-center ${
-          hasEmptied && !isMoving && !finishBatch.isPending
+          hasEmptied &&
+          !isMoving &&
+          !finishBatch.isPending &&
+          !batchQuery.isPending &&
+          activeBatch
             ? "bg-primary active:opacity-85"
             : "bg-brand-200 opacity-60"
         }`}

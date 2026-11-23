@@ -241,4 +241,42 @@ describe("Linear actuator manual override & collect flow", () => {
     expect(ackTimeout).toBeNull();
     expect(floorState).toBe("raising");
   });
+
+  test("restores last confirmed physical position when dropping is rejected", () => {
+    // Start: floor is raised and confirmed
+    let lastConfirmed = "raised";
+    // Operator taps drop — UI transitions to "dropping"
+    let floorState = "dropping";
+
+    // Machine sends manual_command_rejected (e.g. obstruction or interlock)
+    function onRejected() {
+      floorState = lastConfirmed;
+    }
+
+    onRejected();
+    // Must remain "raised", not flip erroneously to "lowered"
+    expect(floorState).toBe("raised");
+  });
+
+  test("snapshots weight prior to chamber extraction and retains it", () => {
+    let snapshotWeight = null;
+    let hasEmptied = false;
+
+    function onOverviewUpdate(currentWeight) {
+      if (!hasEmptied && snapshotWeight === null && currentWeight > 0) {
+        snapshotWeight = currentWeight;
+      }
+    }
+
+    // Initial reading before extraction
+    onOverviewUpdate(18.5);
+    expect(snapshotWeight).toBe(18.5);
+
+    // Chamber is emptied; sensor reading drops to 0
+    hasEmptied = true;
+    onOverviewUpdate(0);
+
+    // Retains original pre-extraction yield
+    expect(snapshotWeight).toBe(18.5);
+  });
 });

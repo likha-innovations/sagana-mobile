@@ -75,6 +75,42 @@ describe("Aeration Settings & Storage", () => {
     expect(getCachedAerationConfig("machine-abc").mode).toBe("default");
   });
 
+  test("preserves newer cached configuration when a stale read completes", async () => {
+    let resolveRead;
+    const pendingRead = new Promise((resolve) => {
+      resolveRead = resolve;
+    });
+
+    const mockSecureStore = {
+      getItemAsync: async () => pendingRead,
+      setItemAsync: async () => {},
+    };
+
+    const { getAerationConfig, setAerationConfig, getCachedAerationConfig } =
+      load("src/lib/aeration-storage.ts", {
+        "expo-secure-store": mockSecureStore,
+      });
+
+    // Start read which hangs
+    const readPromise = getAerationConfig("machine-stale");
+
+    // Immediately set a newer config in memory
+    await setAerationConfig("machine-stale", {
+      mode: "custom",
+      onMinutes: 30,
+      offMinutes: 15,
+    });
+
+    // Now resolve the older read with older values
+    resolveRead(JSON.stringify({ mode: "default", onMinutes: 10, offMinutes: 5 }));
+    const result = await readPromise;
+
+    // Must return the newer custom configuration, not the stale read
+    expect(result.mode).toBe("custom");
+    expect(result.onMinutes).toBe(30);
+    expect(getCachedAerationConfig("machine-stale").mode).toBe("custom");
+  });
+
   test("formats aeration mode display strings correctly", () => {
     function formatAerationSubtitle(config) {
       if (config.mode === "custom") {

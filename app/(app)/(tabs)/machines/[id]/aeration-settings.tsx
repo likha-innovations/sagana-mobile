@@ -83,10 +83,12 @@ export default function AerationSettingsScreen() {
         offMinutes: remoteAeration.offMinutes,
       };
       setConfig(remoteConfig);
-      setTempOnMinutes(remoteConfig.onMinutes);
-      setTempOffMinutes(remoteConfig.offMinutes);
-      setOnInputText(String(remoteConfig.onMinutes));
-      setOffInputText(String(remoteConfig.offMinutes));
+      if (!modalVisible) {
+        setTempOnMinutes(remoteConfig.onMinutes);
+        setTempOffMinutes(remoteConfig.offMinutes);
+        setOnInputText(String(remoteConfig.onMinutes));
+        setOffInputText(String(remoteConfig.offMinutes));
+      }
       void setAerationConfig(id, remoteConfig);
       return;
     }
@@ -94,47 +96,62 @@ export default function AerationSettingsScreen() {
     void getAerationConfig(id).then((saved) => {
       if (isMounted) {
         setConfig(saved);
-        setTempOnMinutes(saved.onMinutes);
-        setTempOffMinutes(saved.offMinutes);
-        setOnInputText(String(saved.onMinutes));
-        setOffInputText(String(saved.offMinutes));
+        if (!modalVisible) {
+          setTempOnMinutes(saved.onMinutes);
+          setTempOffMinutes(saved.offMinutes);
+          setOnInputText(String(saved.onMinutes));
+          setOffInputText(String(saved.offMinutes));
+        }
       }
     });
     return () => {
       isMounted = false;
     };
-  }, [id, overview?.configuration]);
+  }, [id, modalVisible, overview?.configuration]);
 
   const handleSelectDefaultMode = useCallback(async () => {
     if (Platform.OS !== "web") {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
-    const updated: AerationConfig = {
-      ...config,
-      mode: "default",
-    };
-    setConfig(updated);
-    await setAerationConfig(id, updated);
 
-    if (machine?.macAddress) {
-      try {
-        await deviceApi.sendCommand(machine.macAddress, {
-          action: "AERATION_CONFIG",
-          payload: { mode: "default" },
-        });
-      } catch (err) {
-        logger.warn("Failed to dispatch default AERATION_CONFIG to device", {
-          err,
-        });
-      }
+    if (!machine?.macAddress) {
+      toast({
+        title: "Device Unavailable",
+        message: "Machine address is not available. Please try again when connected.",
+        preset: "error",
+      });
+      return;
     }
 
-    toast({
-      title: "Default Mode Selected",
-      message: "Using standard SAGANA aeration settings.",
-      preset: "done",
-    });
-    logger.info("Switched to default aeration mode", { machineId: id });
+    try {
+      await deviceApi.sendCommand(machine.macAddress, {
+        action: "AERATION_CONFIG",
+        payload: { mode: "default" },
+      });
+
+      const updated: AerationConfig = {
+        ...config,
+        mode: "default",
+      };
+      setConfig(updated);
+      await setAerationConfig(id, updated);
+
+      toast({
+        title: "Default Mode Selected",
+        message: "Using standard SAGANA aeration settings.",
+        preset: "done",
+      });
+      logger.info("Switched to default aeration mode", { machineId: id });
+    } catch (err) {
+      logger.warn("Failed to dispatch default AERATION_CONFIG to device", {
+        err,
+      });
+      toast({
+        title: "Update Failed",
+        message: "Could not apply default settings to the machine. Please try again.",
+        preset: "error",
+      });
+    }
   }, [config, id, machine?.macAddress]);
 
   const handleOpenCustomModal = useCallback(() => {
@@ -206,47 +223,60 @@ export default function AerationSettingsScreen() {
     if (Platform.OS !== "web") {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
+
+    if (!machine?.macAddress) {
+      toast({
+        title: "Device Unavailable",
+        message: "Machine address is not available. Please try again when connected.",
+        preset: "error",
+      });
+      return;
+    }
+
     const parsedOn = parseInt(onInputText, 10);
     const parsedOff = parseInt(offInputText, 10);
     const saveOn = Math.max(1, Math.min(180, Number.isFinite(parsedOn) ? parsedOn : tempOnMinutes));
     const saveOff = Math.max(1, Math.min(720, Number.isFinite(parsedOff) ? parsedOff : tempOffMinutes));
 
-    const updated: AerationConfig = {
-      mode: "custom",
-      onMinutes: saveOn,
-      offMinutes: saveOff,
-    };
-    setConfig(updated);
-    setModalVisible(false);
-    await setAerationConfig(id, updated);
+    try {
+      await deviceApi.sendCommand(machine.macAddress, {
+        action: "AERATION_CONFIG",
+        payload: {
+          mode: "custom",
+          onMinutes: saveOn,
+          offMinutes: saveOff,
+        },
+      });
 
-    if (machine?.macAddress) {
-      try {
-        await deviceApi.sendCommand(machine.macAddress, {
-          action: "AERATION_CONFIG",
-          payload: {
-            mode: "custom",
-            onMinutes: saveOn,
-            offMinutes: saveOff,
-          },
-        });
-      } catch (err) {
-        logger.warn("Failed to dispatch custom AERATION_CONFIG to device", {
-          err,
-        });
-      }
+      const updated: AerationConfig = {
+        mode: "custom",
+        onMinutes: saveOn,
+        offMinutes: saveOff,
+      };
+      setConfig(updated);
+      setModalVisible(false);
+      await setAerationConfig(id, updated);
+
+      toast({
+        title: "Custom Mode Active",
+        message: `${saveOn} min ON / ${saveOff} min OFF configured.`,
+        preset: "done",
+      });
+      logger.info("Saved custom aeration settings", {
+        machineId: id,
+        onMinutes: saveOn,
+        offMinutes: saveOff,
+      });
+    } catch (err) {
+      logger.warn("Failed to dispatch custom AERATION_CONFIG to device", {
+        err,
+      });
+      toast({
+        title: "Update Failed",
+        message: "Could not apply custom settings to the machine. Please try again.",
+        preset: "error",
+      });
     }
-
-    toast({
-      title: "Custom Mode Active",
-      message: `${saveOn} min ON / ${saveOff} min OFF configured.`,
-      preset: "done",
-    });
-    logger.info("Saved custom aeration settings", {
-      machineId: id,
-      onMinutes: saveOn,
-      offMinutes: saveOff,
-    });
   }, [
     id,
     machine?.macAddress,

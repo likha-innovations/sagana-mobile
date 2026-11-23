@@ -45,13 +45,13 @@ const logger = createLogger("MachineDetailsScreen");
 function AutomationTimerText({
   targetEndTime,
   fallbackUntil,
-  serverTime,
+  serverOffsetMs,
   color,
   disconnected,
 }: {
   targetEndTime?: string | null;
   fallbackUntil?: string;
-  serverTime?: string;
+  serverOffsetMs?: number;
   color: string;
   disconnected?: boolean;
 }) {
@@ -59,20 +59,12 @@ function AutomationTimerText({
     disconnected ? "--" : (fallbackUntil ?? "--"),
   );
   const activeTargetMsRef = useRef<number | null>(null);
-  const serverOffsetMsRef = useRef<number>(0);
+  const serverOffsetMsRef = useRef<number>(serverOffsetMs ?? 0);
 
-  // Compensate for carrier / phone clock skew relative to server clock
+  // Retain calibrated server clock offset arrived with HTTP response
   useEffect(() => {
-    if (!serverTime) return;
-    const serverTimeMs = new Date(serverTime).getTime();
-    if (!Number.isNaN(serverTimeMs)) {
-      const offset = serverTimeMs - Date.now();
-      // Guard against corrupted timestamps; only apply plausible offsets (+- 120s)
-      if (Math.abs(offset) < 120000) {
-        serverOffsetMsRef.current = offset;
-      }
-    }
-  }, [serverTime]);
+    serverOffsetMsRef.current = serverOffsetMs ?? 0;
+  }, [serverOffsetMs]);
 
   // Target timestamp tracking
   useEffect(() => {
@@ -553,7 +545,7 @@ export default function MachineDetailsDashboard() {
                                 <AutomationTimerText
                                   targetEndTime={automation?.targetEndTime}
                                   fallbackUntil={automation?.until}
-                                  serverTime={overview?.serverTime}
+                                  serverOffsetMs={overview?.serverOffsetMs}
                                   color={color}
                                   disconnected={state.disconnected}
                                 />

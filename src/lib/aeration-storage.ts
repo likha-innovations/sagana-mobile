@@ -24,6 +24,9 @@ export async function getAerationConfig(machineId: string): Promise<AerationConf
   }
   try {
     const raw = await SecureStore.getItemAsync(`sagana_aeration_${machineId}`);
+    if (aerationMemory.has(machineId)) {
+      return aerationMemory.get(machineId)!;
+    }
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<AerationConfig>;
       const config: AerationConfig = {
