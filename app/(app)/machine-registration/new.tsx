@@ -18,6 +18,7 @@ import { useDynamicLayout, useRegisterMachine } from '@/hooks';
 import { createLogger } from '@/lib/logger';
 import { useAuthContext } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
+import { SuccessScreen } from '@/components/ui/success-screen';
 import { ApiError, machineRegistrationSchema, type MachineRegistrationInput } from '@/types';
 import { useBluetooth } from '@/hooks/use-bluetooth';
 import {
@@ -186,6 +187,11 @@ export default function AddMachineScreen() {
   const handleBack = () => {
     if (isConnectingWifi || isWriting) return;
 
+    if (step === 6) {
+      handleFinishFlow();
+      return;
+    }
+
     if (step > 1) {
       if (step === 4) {
         clearProvisioningError();
@@ -244,6 +250,17 @@ export default function AddMachineScreen() {
       handleNext();
     }
   };
+
+  if (step === 6) {
+    return (
+      <SuccessScreen
+        title="Your machine has been registered!"
+        description="You can now start a compost batch using your newly registered device."
+        buttonText="Done"
+        onButtonPress={handleFinishFlow}
+      />
+    );
+  }
 
   return (
     <KeyboardAvoidingView

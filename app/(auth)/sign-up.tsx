@@ -32,6 +32,7 @@ import { ChevronLeft, Eye, EyeOff, X, Calendar } from 'lucide-react-native';
 import { GoogleIcon } from '@/components/icons';
 import { ErrorModal } from '@/components/ui/error-modal';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
+import { SuccessScreen } from '@/components/ui/success-screen';
 import {
   PolicyBottomSheet,
   BirthdayBottomSheet,
@@ -296,7 +297,7 @@ function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupPr
 
 
 
-type SignUpStep = 'email' | 'otp' | 'password' | 'name';
+type SignUpStep = 'email' | 'otp' | 'password' | 'name' | 'success';
 
 export default function SignUpScreen() {
   const insets = useSafeAreaInsets();
@@ -431,6 +432,10 @@ export default function SignUpScreen() {
   };
 
   const handleBack = useCallback(async () => {
+    if (step === 'success') {
+      router.replace('/(app)/(tabs)');
+      return;
+    }
     if (step === 'name') {
       if (isSignedIn) {
         confirmExit();
@@ -444,7 +449,7 @@ export default function SignUpScreen() {
     } else {
       confirmExit();
     }
-  }, [step, isSignedIn, confirmExit]);
+  }, [step, isSignedIn, confirmExit, router]);
 
   useFocusEffect(useCallback(() => {
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => { void handleBack(); return true; });
@@ -691,7 +696,7 @@ export default function SignUpScreen() {
         if (completed) {
           await queryClient.invalidateQueries({ queryKey: ['signup-profile'] });
           setSignupBarangay(null);
-          router.replace('/(app)/(tabs)');
+          setStep('success');
         }
       } else {
         router.replace('/(auth)/sign-in');
@@ -732,6 +737,20 @@ export default function SignUpScreen() {
       setGoogleLoading(false);
     }
   };
+
+  if (step === 'success') {
+    const operatorName = firstName.trim() ? `Operator ${firstName.trim()}` : 'Operator';
+    return (
+      <SuccessScreen
+        title={`Welcome, ${operatorName}!`}
+        description="You will now be able to use this app to manage your SAGANA AIVSP Machines!"
+        buttonText="Take me to the homepage"
+        onButtonPress={() => {
+          router.replace('/(app)/(tabs)');
+        }}
+      />
+    );
+  }
 
   return (
     <View

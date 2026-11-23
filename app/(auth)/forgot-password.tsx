@@ -28,6 +28,7 @@ import { useAuthContext } from '@/context/auth-context';
 import { cn } from '@/lib/utils';
 
 import { ProgressBar, FloatingInputField, OtpInputGroup, PasswordRequirements, ResendTimer } from '@/components/auth';
+import { SuccessScreen } from '@/components/ui/success-screen';
 
 type FlowStep = 'email' | 'otp' | 'password' | 'success' | 'no_email_access';
 
@@ -253,6 +254,19 @@ export default function ForgotPasswordScreen() {
     }
   };
 
+  if (step === 'success') {
+    return (
+      <SuccessScreen
+        title="You are all set!"
+        description="You can now login to your account using your new password."
+        buttonText="Done"
+        onButtonPress={() => {
+          router.replace('/(auth)/sign-in');
+        }}
+      />
+    );
+  }
+
   return (
     <View
       className="flex-1 bg-background"
@@ -288,7 +302,7 @@ export default function ForgotPasswordScreen() {
                 </Pressable>
 
                 {/* Centered Progress Bar */}
-                {step !== 'no_email_access' && step !== 'success' && (
+                {step !== 'no_email_access' && (
                   <View className="absolute inset-x-0 items-center justify-center pointer-events-none">
                     <ProgressBar
                       activeStep={step === 'email' ? 1 : step === 'otp' ? 2 : 3}
@@ -470,29 +484,6 @@ export default function ForgotPasswordScreen() {
                   </View>
                 </View>
               )}
-
-              {/* --- SCREEN 4: Success Content --- */}
-              {step === 'success' && (
-                <View className="w-full">
-                  <View className="w-full h-[200px] mb-8 items-center justify-center">
-                    <Image
-                      source={require('@/assets/icons/mascot/sagana_celebrate.png')}
-                      style={{ width: 200, height: 200 }}
-                      resizeMode="contain"
-                      accessibilityLabel="Sagana celebration mascot"
-                    />
-                  </View>
-
-                  <View className="w-full gap-2.5">
-                    <Text className="text-[20px] font-bold text-foreground text-left">
-                      You are all set!
-                    </Text>
-                    <Text className="text-[14px] font-sans text-foreground text-left leading-5">
-                      You can now login to your account using your new password.
-                    </Text>
-                  </View>
-                </View>
-              )}
             </View>
 
             {/* Bottom Actions Container (Pinned at the bottom) */}
@@ -569,18 +560,6 @@ export default function ForgotPasswordScreen() {
                       Finish
                     </Text>
                   )}
-                </Pressable>
-              )}
-
-              {step === 'success' && (
-                <Pressable
-                  onPress={() => router.replace('/(auth)/sign-in')}
-                  className="w-full h-[45px] rounded-full bg-primary items-center justify-center active:opacity-90"
-                  accessibilityRole="button"
-                >
-                  <Text className="text-[14px] font-bold text-primary-foreground">
-                    Go to Log In
-                  </Text>
                 </Pressable>
               )}
             </View>
