@@ -23,6 +23,9 @@ Commit links identify the source changes, not release tags.
 
 | Commit | Change collaborators need to know |
 | --- | --- |
+| [`68a8511`](https://github.com/likha-innovations/sagana-mobile/commit/68a8511) | Hoisted detail screens (`machines/[id].tsx`, `history/[batchId].tsx`, and child routes) out of `(tabs)` into the `(app)` root stack, flattened tab roots (`machines.tsx`, `history.tsx`), removed unsupported `popToTopOnBlur: true`, and added safe fallback back navigation (`#66`). |
+| [`c974854`](https://github.com/likha-innovations/sagana-mobile/commit/c974854) | Standardized 264x264 Lottie success screens with fallback mascot graphic across Sign-Up, Forgot Password, Change Password, and Batch Creation (`#67`). |
+| [`48d7829`](https://github.com/likha-innovations/sagana-mobile/commit/48d7829) | Implemented Aeration Settings screen with custom cycle modal and Linear Actuator manual collection flow with middle-door safety interlock (`#65`). |
 | [`3c74745`](https://github.com/likha-innovations/sagana-mobile/commit/3c74745) | Updated Expo packages to compatible `~57.0.31` set. |
 | [`216ac08`](https://github.com/likha-innovations/sagana-mobile/commit/216ac08) | Machine registration gracefully handles BLE friendly name write failure and completes backend registration. |
 | [`8306de3`](https://github.com/likha-innovations/sagana-mobile/commit/8306de3) | Handle `machine_added` Socket.IO event for real-time list sync in TanStack Query. |
