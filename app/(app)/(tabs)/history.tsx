@@ -117,7 +117,7 @@ export default function HistoryScreen() {
               batch={item}
               onPress={() =>
                 router.push({
-                  pathname: "/(app)/(tabs)/history/[batchId]",
+                  pathname: "/(app)/history/[batchId]",
                   params: { batchId: item.id },
                 })
               }

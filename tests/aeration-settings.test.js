@@ -102,7 +102,9 @@ describe("Aeration Settings & Storage", () => {
     });
 
     // Now resolve the older read with older values
-    resolveRead(JSON.stringify({ mode: "default", onMinutes: 10, offMinutes: 5 }));
+    resolveRead(
+      JSON.stringify({ mode: "default", onMinutes: 10, offMinutes: 5 }),
+    );
     const result = await readPromise;
 
     // Must return the newer custom configuration, not the stale read

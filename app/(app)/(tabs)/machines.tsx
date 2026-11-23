@@ -105,7 +105,7 @@ export default function MachinesListScreen() {
                   }
                   onPress={() =>
                     router.push({
-                      pathname: "/(app)/(tabs)/machines/[id]",
+                      pathname: "/(app)/machines/[id]",
                       params: { id: machine.id },
                     })
                   }

@@ -302,7 +302,16 @@ export default function AerationSettingsScreen() {
         {/* Header */}
         <View className="flex-row items-center mb-6">
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace({
+                  pathname: "/(app)/machines/[id]",
+                  params: { id },
+                });
+              }
+            }}
             accessibilityRole="button"
             accessibilityLabel="Back"
             className="min-h-12 min-w-12 items-center justify-center -ml-3 active:opacity-75"

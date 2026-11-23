@@ -184,7 +184,13 @@ export default function MachineDetailsDashboard() {
         style={{ paddingTop: Math.max(headerPaddingTop, 48) }}
       >
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/(app)/(tabs)/machines");
+            }
+          }}
           accessibilityRole="button"
           accessibilityLabel="Back"
           className="min-h-12 min-w-12 items-center justify-center -ml-3"
@@ -216,7 +222,7 @@ export default function MachineDetailsDashboard() {
               className="min-h-12 min-w-12 items-center justify-center"
               onPress={() =>
                 router.push({
-                  pathname: "/(app)/(tabs)/machines/[id]/settings",
+                  pathname: "/(app)/machines/[id]/settings",
                   params: { id },
                 })
               }
@@ -299,7 +305,7 @@ export default function MachineDetailsDashboard() {
               ) : lastCompleted ? (
                 <View className="gap-3">
                   <Text className="text-base font-bold text-foreground">Last completed batch</Text>
-                  <CompletedBatchCard batch={lastCompleted} onPress={() => router.push({ pathname: "/(app)/(tabs)/history/[batchId]", params: { batchId: lastCompleted.id } })} />
+                  <CompletedBatchCard batch={lastCompleted} onPress={() => router.push({ pathname: "/(app)/history/[batchId]", params: { batchId: lastCompleted.id } })} />
                 </View>
               ) : null}
             </>
@@ -438,7 +444,7 @@ export default function MachineDetailsDashboard() {
                     <Pressable
                       className="min-h-12 justify-center"
                       accessibilityRole="button"
-                      onPress={() => router.push({ pathname: "/(app)/(tabs)/machines/[id]/sensors-history", params: { id } })}
+                      onPress={() => router.push({ pathname: "/(app)/machines/[id]/sensors-history", params: { id } })}
                     >
                       <Text className="font-bold text-sm text-primary">View history</Text>
                     </Pressable>
@@ -466,7 +472,7 @@ export default function MachineDetailsDashboard() {
                       onPress={() =>
                         router.push({
                           pathname:
-                            "/(app)/(tabs)/machines/[id]/automation-logs",
+                            "/(app)/machines/[id]/automation-logs",
                           params: { id },
                         })
                       }
@@ -494,7 +500,7 @@ export default function MachineDetailsDashboard() {
                               ? () =>
                                   router.push({
                                     pathname:
-                                      "/(app)/(tabs)/machines/[id]/aeration-settings",
+                                      "/(app)/machines/[id]/aeration-settings",
                                     params: { id },
                                   })
                               : undefined

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { View, Text, Pressable, useWindowDimensions } from "react-native";
 import { ChevronLeft } from "lucide-react-native";
-import { useRouter } from "expo-router";
+import { useRouter, type Href } from "expo-router";
 import { useDynamicLayout } from "@/hooks/use-layout";
 import { colors } from "@/constants";
 
@@ -9,15 +9,32 @@ export function HistoryHeader({
   title,
   back = true,
   action,
+  onBack,
+  fallbackHref,
 }: {
   title: string;
   back?: boolean;
   action?: ReactNode;
+  onBack?: () => void;
+  fallbackHref?: Href;
 }) {
   const router = useRouter();
   const { width, fontScale } = useWindowDimensions();
   const stack = width < 360 || fontScale > 1.2;
   const { headerPaddingTop } = useDynamicLayout();
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+      return;
+    }
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace(fallbackHref ?? "/(app)/(tabs)/history");
+    }
+  };
+
   return (
     <View
       style={{ paddingTop: Math.max(headerPaddingTop, 48) }}
@@ -34,7 +51,7 @@ export function HistoryHeader({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Go back"
-            onPress={() => router.back()}
+            onPress={handleBack}
             className="min-h-12 min-w-12 items-start justify-center"
           >
             <ChevronLeft size={24} color={colors.semantic.foreground} />

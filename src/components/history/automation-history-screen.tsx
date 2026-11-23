@@ -7,6 +7,7 @@ import { useDynamicLayout } from "@/hooks/use-layout";
 import { historyRange, groupHistoryEvents } from "@/lib/history";
 import { formatTimeAgo } from "@/lib/utils";
 import type { DateRange, HistoryScope, HistoryEvent } from "@/types/history";
+import type { Href } from "expo-router";
 import { HistoryHeader } from "@/components/history/history-header";
 import { HistoryDateFilter } from "@/components/history/history-date-filter";
 import { HistoryState } from "@/components/history/history-state";
@@ -66,6 +67,11 @@ export function AutomationHistoryScreen({ scope }: { scope: HistoryScope }) {
     <View className="flex-1 bg-background">
       <HistoryHeader
         title="Automation Logs"
+        fallbackHref={
+          (scope.kind === "machine"
+            ? `/machines/${scope.machineId}`
+            : `/history/${scope.batchId}`) as Href
+        }
         action={
           query.exists && (
             <HistoryDateFilter

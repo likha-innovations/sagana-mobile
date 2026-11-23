@@ -9,7 +9,9 @@ sagana-mobile/
 ├── app/                       # Expo Router screens and layouts
 │   ├── (auth)/                # Sign-in, sign-up, reset, fallback
 │   ├── (app)/                 # Protected screens
-│   │   ├── (tabs)/            # Home, Machines stack, Account
+│   │   ├── (tabs)/            # Flat Home, Machines, History, Account tab roots
+│   │   ├── machines/          # Machine detail and child feature screens (hoisted)
+│   │   ├── history/           # Batch detail and child feature screens (hoisted)
 │   │   ├── batch/             # New compost batch wizard
 │   │   ├── machine-registration/ # BLE registration wizard
 │   │   ├── change-password/   # Current, new, success

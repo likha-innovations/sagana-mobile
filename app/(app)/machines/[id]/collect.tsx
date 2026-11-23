@@ -502,7 +502,17 @@ export default function LinearActuatorCollectScreen() {
         {/* Header */}
         <Pressable
           disabled={isMoving}
-          onPress={() => !isMoving && router.back()}
+          onPress={() => {
+            if (isMoving) return;
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace({
+                pathname: "/(app)/machines/[id]",
+                params: { id },
+              });
+            }
+          }}
           accessibilityRole="button"
           accessibilityLabel="Back"
           className={`min-h-12 min-w-12 items-center justify-center -ml-3 self-start ${
