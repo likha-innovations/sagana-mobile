@@ -64,6 +64,7 @@ function loadSuccessScreen() {
       require: (name) => {
         if (
           name.includes("sagana_celebration.lottie") ||
+          name.includes("sagana_welcome.png") ||
           name.includes("sagana_celebrate.png")
         ) {
           return `asset-${name}`;
@@ -78,7 +79,7 @@ function loadSuccessScreen() {
 }
 
 describe("SuccessScreen Component", () => {
-  test("renders LottieView by default with 264x264 dimensions", () => {
+  test("renders LottieView by default with 264x264 dimensions and centered text", () => {
     const { SuccessScreen } = loadSuccessScreen();
     const onPress = mock.fn();
 
@@ -97,21 +98,21 @@ describe("SuccessScreen Component", () => {
     // Check inner children
     const inner = container.children;
     expect(inner.type).toBe("View");
-    const [graphicSection, bottomContainer] = inner.props.children;
+    const [centerSection, buttonContainer] = inner.props.children;
 
     // Graphic section has 264x264 container
-    const graphicBox = graphicSection.props.children;
+    const [graphicBox, textBlock] = centerSection.props.children;
     expect(graphicBox.props.className).toContain("w-[264px]");
     expect(graphicBox.props.className).toContain("h-[264px]");
 
     // Verify typography and CTA button
-    const [textBlock, button] = bottomContainer.props.children;
     const [titleEl, descEl] = textBlock.props.children;
 
     expect(titleEl.props.children).toBe("Welcome, Operator Neo!");
     expect(descEl.props.children).toBe(
       "You will now be able to use this app to manage your SAGANA AIVSP Machines!",
     );
+    const button = buttonContainer.props.children;
     expect(button.props.accessibilityRole).toBe("button");
   });
 
@@ -127,8 +128,8 @@ describe("SuccessScreen Component", () => {
     });
 
     const inner = element.props.children;
-    const [, bottomContainer] = inner.props.children;
-    const [, button] = bottomContainer.props.children;
+    const [, buttonContainer] = inner.props.children;
+    const button = buttonContainer.props.children;
 
     button.props.onPress();
     expect(onPress).toHaveBeenCalledTimes(1);
@@ -148,8 +149,8 @@ describe("SuccessScreen Component", () => {
     });
 
     const inner = element.props.children;
-    const [, bottomContainer] = inner.props.children;
-    const [, button] = bottomContainer.props.children;
+    const [, buttonContainer] = inner.props.children;
+    const button = buttonContainer.props.children;
 
     button.props.onPress();
     expect(onPress).not.toHaveBeenCalled();

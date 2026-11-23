@@ -21,6 +21,7 @@ export interface SuccessScreenProps {
   buttonText: string;
   onButtonPress: () => void;
   loading?: boolean;
+  alignText?: 'center' | 'left';
   lottieSource?: string | AnimationObject | { uri: string };
   fallbackImageSource?: ImageSourcePropType;
   style?: StyleProp<ViewStyle>;
@@ -34,8 +35,9 @@ export function SuccessScreen({
   buttonText,
   onButtonPress,
   loading = false,
+  alignText = 'center',
   lottieSource = require('@/assets/icons/mascot/onboarding/sagana_celebration.lottie'),
-  fallbackImageSource = require('@/assets/icons/mascot/sagana_celebrate.png'),
+  fallbackImageSource = require('@/assets/icons/mascot/sagana_welcome.png'),
   style,
   className,
   testID = 'success-screen',
@@ -58,14 +60,14 @@ export function SuccessScreen({
       style={[
         {
           paddingTop: Math.max(insets.top, 48),
-          paddingBottom: Math.max(insets.bottom, 32),
+          paddingBottom: Math.max(insets.bottom, 48),
         },
         style,
       ]}
     >
-      <View className="flex-1 px-4 items-center justify-between pb-6">
-        {/* Figma Standard Graphic Box: 264px x 264px centered */}
-        <View className="flex-1 items-center justify-center">
+      <View className="flex-1 px-4 items-center justify-between pb-4">
+        {/* Center Section: Mascot + Typography grouped with 24px gap */}
+        <View className="flex-1 w-full max-w-[380px] items-center justify-center gap-6">
           <View className="w-[264px] h-[264px] items-center justify-center">
             {!lottieError && lottieSource ? (
               <LottieView
@@ -87,27 +89,37 @@ export function SuccessScreen({
               />
             )}
           </View>
-        </View>
 
-        {/* Figma Standard Bottom Action Container: 188px fixed layout */}
-        <View className="w-full max-w-[380px] min-h-[188px] justify-between pb-2">
-          {/* Typography block with 10px gap */}
-          <View className="gap-2.5">
+          {/* Typography Block: Centered matching Figma Frame 123 */}
+          <View
+            className={cn(
+              'w-full gap-2.5',
+              alignText === 'center' ? 'items-center px-2' : 'items-start'
+            )}
+          >
             <Text
               testID={`${testID}-title`}
-              className="text-[20px] font-bold text-foreground text-left"
+              className={cn(
+                'text-[20px] font-bold text-foreground',
+                alignText === 'center' ? 'text-center' : 'text-left'
+              )}
             >
               {title}
             </Text>
             <Text
               testID={`${testID}-description`}
-              className="text-[14px] font-sans text-foreground text-left leading-5"
+              className={cn(
+                'text-[14px] font-sans text-foreground leading-5',
+                alignText === 'center' ? 'text-center' : 'text-left'
+              )}
             >
               {description}
             </Text>
           </View>
+        </View>
 
-          {/* Primary CTA button (45px pill) */}
+        {/* Bottom Action: Primary CTA Button */}
+        <View className="w-full max-w-[380px] pt-4">
           <Pressable
             testID={`${testID}-button`}
             onPress={handlePress}
