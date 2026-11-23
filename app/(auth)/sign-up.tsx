@@ -271,10 +271,12 @@ function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupPr
             onChangeText={(text) => handleCharChange(text, index)}
             onSelectionChange={(event) => { selections.current[index] = event.nativeEvent.selection; }}
             onKeyPress={(e) => handleKeyPress(e, index)}
-            inputMode="numeric"
-            keyboardType="number-pad"
+            keyboardType={Platform.OS === 'ios' ? 'number-pad' : 'phone-pad'}
             textContentType="oneTimeCode"
-            autoComplete="sms-otp"
+            autoComplete="one-time-code"
+            autoCapitalize="none"
+            autoCorrect={false}
+            spellCheck={false}
             accessibilityLabel={`One-time code digit ${index + 1} of 6`}
             textAlign="center"
             className={cn(
