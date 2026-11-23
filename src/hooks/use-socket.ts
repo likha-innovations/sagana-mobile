@@ -253,6 +253,11 @@ export function useSocket() {
         return old;
       });
 
+      // Invalidate overview query so device twin changes sync immediately
+      void queryClient.invalidateQueries({
+        queryKey: ['machine-overview', payload.machineId],
+      });
+
       addLog({
         type: 'connection',
         title: `Machine renamed: ${payload.name ?? payload.machineId}`,
@@ -336,6 +341,11 @@ export function useSocket() {
       // Drop stale cache so the query refetches and the new log appears instantly
       void queryClient.invalidateQueries({ queryKey: ['automation-logs'] });
 
+      // Invalidate overview query so automation state flips instantly with 0ms delay
+      void queryClient.invalidateQueries({
+        queryKey: ['machine-overview', payload.machineId],
+      });
+
       addLog({
         type: 'telemetry',
         title: 'Automation log received',
@@ -347,6 +357,17 @@ export function useSocket() {
     const onNotification = (data: unknown) => {
       const payload = data as NotificationItem;
       if (!payload?.id) return;
+
+      // Routine automation logs should only appear in the machine settings automation logs, not notification bell
+      if (payload.type === 'automation' && payload.severity !== 'critical') {
+        void queryClient.invalidateQueries({ queryKey: ['automation-logs'] });
+        if (payload.machineId) {
+          void queryClient.invalidateQueries({
+            queryKey: ['machine-overview', payload.machineId],
+          });
+        }
+        return;
+      }
 
       // Present foreground banner via expo-notifications
       void scheduleLocalNotification(payload);

@@ -32,6 +32,11 @@ export function useCurrentWifi() {
           setIsFetching(false);
           return null;
         }
+
+        // Android 13+ (API 33+) requires NEARBY_WIFI_DEVICES to read SSID via WifiManager
+        if ((Platform.Version as number) >= 33) {
+          await PermissionsAndroid.request('android.permission.NEARBY_WIFI_DEVICES' as never);
+        }
       }
 
       const state = await NetInfo.fetch();

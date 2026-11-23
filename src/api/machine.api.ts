@@ -35,12 +35,22 @@ export const machineApi = {
   getOverview: async (
     id: string,
     signal?: AbortSignal,
-  ): Promise<MachineOverview> =>
-    machineOverviewSchema.parse(
-      await api.get<unknown>(`/machines/${encodeURIComponent(id)}/overview`, {
-        signal,
-      }),
-    ),
+  ): Promise<MachineOverview> => {
+    const raw = await api.get<unknown>(
+      `/machines/${encodeURIComponent(id)}/overview`,
+      { signal },
+    );
+    const parsed = machineOverviewSchema.parse(raw);
+    if (parsed.serverTime) {
+      const serverTimeMs = new Date(parsed.serverTime).getTime();
+      const arrivalMs = Date.now();
+      if (!Number.isNaN(serverTimeMs)) {
+        const rawOffset = serverTimeMs - arrivalMs;
+        parsed.serverOffsetMs = Math.abs(rawOffset) < 120000 ? rawOffset : 0;
+      }
+    }
+    return parsed;
+  },
   getAutomationLogs: async (
     id: string,
     params?: {
