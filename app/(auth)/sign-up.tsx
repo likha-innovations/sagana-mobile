@@ -36,6 +36,7 @@ import { SuccessScreen } from '@/components/ui/success-screen';
 import {
   PolicyBottomSheet,
   BirthdayBottomSheet,
+  PasswordRequirements,
   type BirthdayBottomSheetRef,
 } from '@/components/auth';
 import { useAuthContext, InvalidBarangayCodeError, MissingSignupRequirementsError } from '@/context/auth-context';
@@ -344,7 +345,6 @@ export default function SignUpScreen() {
   const [passwordError, setPasswordError] = useState(false);
   const [confirmPasswordError, setConfirmPasswordError] = useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = useState<string | null>(null);
-  const [failedRequirements, setFailedRequirements] = useState<string[]>([]);
   const passwordRef = useRef<TextInput>(null);
   const confirmPasswordRef = useRef<TextInput>(null);
 
@@ -547,47 +547,41 @@ export default function SignUpScreen() {
 
   // --- Step 3: Validate Password ---
   const handleNextPassword = () => {
-    
+    // Missing input check
     if (!password || !confirmPassword) {
       if (!password) setPasswordError(true);
       if (!confirmPassword) setConfirmPasswordError(true);
       setPasswordErrorMessage('Please enter and confirm your password');
-      setFailedRequirements([]);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
-    const isAtLeast8 = password.length >= 8;
+    // Password requirements check (12+ characters, number, symbol)
+    const isAtLeast12 = password.length >= 12;
     const hasNumber = /\d/.test(password);
     const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
-    if (!isAtLeast8 || !hasNumber || !hasSymbol) {
-      const unmet = [];
-      if (!isAtLeast8) unmet.push('At least 8+ characters');
-      if (!hasNumber) unmet.push('Must have a number (0–9)');
-      if (!hasSymbol) unmet.push('Must have a special symbol (e.g., !@#$)');
-
+    if (!isAtLeast12 || !hasNumber || !hasSymbol) {
       setPasswordError(true);
       setConfirmPasswordError(false);
       setPasswordErrorMessage("Password doesn't meet requirements");
-      setFailedRequirements(unmet);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
+    // Password mismatch check
     if (password !== confirmPassword) {
       setPasswordError(false);
       setConfirmPasswordError(true);
-      setPasswordErrorMessage("Passwords doesn't match");
-      setFailedRequirements([]);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setPasswordErrorMessage("Passwords don't match");
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
     setPasswordError(false);
     setConfirmPasswordError(false);
     setPasswordErrorMessage(null);
-    setFailedRequirements([]);
+    Keyboard.dismiss();
     setStep('name');
   };
 
@@ -959,7 +953,6 @@ export default function SignUpScreen() {
                         setPassword(text);
                         if (passwordError) setPasswordError(false);
                         if (passwordErrorMessage) setPasswordErrorMessage(null);
-                        if (failedRequirements.length > 0) setFailedRequirements([]);
                       }}
                       hasError={passwordError}
                       isPassword
@@ -975,7 +968,6 @@ export default function SignUpScreen() {
                         setConfirmPassword(text);
                         if (confirmPasswordError) setConfirmPasswordError(false);
                         if (passwordErrorMessage) setPasswordErrorMessage(null);
-                        if (failedRequirements.length > 0) setFailedRequirements([]);
                       }}
                       hasError={confirmPasswordError}
                       isPassword
@@ -991,31 +983,11 @@ export default function SignUpScreen() {
                       </Text>
                     )}
 
-                    {/* Specific Failed Requirement Bullets */}
-                    {failedRequirements.length > 0 && (
-                      <View className="w-full mt-1 pl-2">
-                        {failedRequirements.map((req, idx) => (
-                          <Text key={idx} className="text-[13px] font-sans text-destructive leading-6">
-                            • {req}
-                          </Text>
-                        ))}
-                      </View>
-                    )}
-
-                    {/* Checklist Requirements matching Figma */}
-                    {!passwordErrorMessage && (
-                      <View className="w-full mt-2 pl-2">
-                        <Text className="text-[13px] font-sans text-[#96958F] leading-6">
-                          • At least 8+ characters
-                        </Text>
-                        <Text className="text-[13px] font-sans text-[#96958F] leading-6">
-                          • Must have a number (0–9)
-                        </Text>
-                        <Text className="text-[13px] font-sans text-[#96958F] leading-6">
-                          • Must have a special symbol (e.g., !@#$)
-                        </Text>
-                      </View>
-                    )}
+                    {/* Real-time Checklist Requirements */}
+                    <PasswordRequirements
+                      password={password}
+                      hasAttemptedSubmit={passwordError}
+                    />
                   </View>
                 </View>
               )}
@@ -1154,7 +1126,8 @@ export default function SignUpScreen() {
               {step === 'password' && (
                 <Pressable
                   onPress={handleNextPassword}
-                  className="w-full h-[50px] rounded-full bg-primary items-center justify-center active:opacity-90"
+                  disabled={loading || !password || !confirmPassword}
+                  className="w-full h-[50px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
                   accessibilityRole="button"
                 >
                   <Text className="text-[15px] font-bold text-primary-foreground">
