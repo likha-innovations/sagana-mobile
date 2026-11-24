@@ -1,4 +1,5 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
+import { Text } from "@/components/ui/text";
 import {
   AlertTriangle,
   Power,
@@ -72,7 +73,7 @@ export function NotificationCard({
       accessibilityRole="button"
       accessibilityLabel={`${notification.title}: ${notification.message}`}
       onPress={() => onPress?.(notification)}
-      className="bg-card rounded-[14px] border border-border/40 p-4 px-4 flex-row items-center gap-4 mb-3 active:opacity-75"
+      className="bg-card rounded-card border border-border/40 p-4 px-4 flex-row items-center gap-4 mb-3 active:opacity-75"
     >
       <View
         className="w-10 h-10 rounded-full items-center justify-center"
@@ -81,10 +82,10 @@ export function NotificationCard({
         <Icon size={20} color={visuals.color} strokeWidth={2} />
       </View>
       <View className="flex-1 gap-1">
-        <Text className="text-[14px] font-medium text-foreground leading-5">
+        <Text className="text-sm font-medium text-foreground leading-5">
           {notification.message}
         </Text>
-        <Text className="text-[12px] text-muted-foreground font-sans">
+        <Text className="text-xs text-muted-foreground font-sans">
           {formatTimeAgo(notification.createdAt)}
         </Text>
       </View>

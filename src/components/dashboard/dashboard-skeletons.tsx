@@ -12,12 +12,12 @@ export function MetricSkeletons({ stacked }: { stacked: boolean }) {
     >
       <View className="gap-3" style={stacked ? undefined : { flex: 212 }}>
         {[0, 1].map((index) => (
-          <Skeleton key={index} className="min-h-[114px] grow rounded-[14px]" />
+          <Skeleton key={index} className="min-h-28.5 grow rounded-card" />
         ))}
       </View>
       <View className="gap-3" style={stacked ? undefined : { flex: 156 }}>
         {[0, 1, 2].map((index) => (
-          <Skeleton key={index} className="min-h-[72px] rounded-[14px]" />
+          <Skeleton key={index} className="min-h-18 rounded-card" />
         ))}
       </View>
     </View>
@@ -36,7 +36,7 @@ export function CompletedBatchSkeletons() {
       {[0, 1, 2].map((index) => (
         <View
           key={index}
-          className="min-h-[76px] flex-row items-center gap-6 rounded-[14px] border border-border bg-card px-6 py-4"
+          className="min-h-19 flex-row items-center gap-6 rounded-card border border-border bg-card px-6 py-4"
         >
           <Skeleton className="h-6 w-6" />
           <View className="flex-1 gap-2">

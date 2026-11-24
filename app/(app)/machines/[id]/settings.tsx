@@ -322,7 +322,7 @@ export default function MachineSettingsScreen() {
             className="gap-3"
           >
             {[0, 1, 2, 3].map((item) => (
-              <Skeleton key={item} className="h-[60px] rounded-lg" />
+              <Skeleton key={item} className="h-15 rounded-lg" />
             ))}
           </View>
         ) : (
@@ -333,7 +333,7 @@ export default function MachineSettingsScreen() {
                   <Pressable
                     accessibilityRole="button"
                     onPress={openRename}
-                    className="min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 bg-card active:bg-muted"
+                    className="min-h-15 rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 bg-card active:bg-muted"
                   >
                     <PencilLine size={24} color={colors.semantic.foreground} />
                     <Text className="flex-1 text-sm font-sans text-foreground">
@@ -344,7 +344,7 @@ export default function MachineSettingsScreen() {
                   <Pressable
                     accessibilityRole="button"
                     onPress={openWifiScan}
-                    className="min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 bg-card active:bg-muted"
+                    className="min-h-15 rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 bg-card active:bg-muted"
                   >
                     <Wifi size={24} color={colors.semantic.foreground} />
                     <View className="flex-1">
@@ -372,7 +372,7 @@ export default function MachineSettingsScreen() {
                         params: { id, mode: "reject" },
                       })
                     }
-                    className={`min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 bg-card ${
+                    className={`min-h-15 rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 bg-card ${
                       activeBatch ? "active:bg-muted" : "opacity-50"
                     }`}
                   >
@@ -392,7 +392,7 @@ export default function MachineSettingsScreen() {
                   <Pressable
                     accessibilityRole="button"
                     onPress={() => setRemoveVisible(true)}
-                    className="min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 bg-card active:bg-muted"
+                    className="min-h-15 rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 bg-card active:bg-muted"
                   >
                     <Trash2 size={24} color={colors.red[500]} />
                     <Text className="flex-1 text-sm font-sans text-destructive">
@@ -415,7 +415,7 @@ export default function MachineSettingsScreen() {
                     }}
                     error={error}
                     editable={!pending}
-                    controlClassName="rounded-[14px]"
+                    controlClassName="rounded-card"
                     autoCapitalize="words"
                     returnKeyType="done"
                     onSubmitEditing={saveRename}
@@ -447,7 +447,7 @@ export default function MachineSettingsScreen() {
 
               {view === "wifi-form" && (
                 <View className="flex-1 mt-2">
-                  <View className="rounded-[14px] border border-border p-4 gap-2 mb-4 bg-card">
+                  <View className="rounded-card border border-border p-4 gap-2 mb-4 bg-card">
                     <Text className="text-xs text-muted-foreground">
                       Target Machine:
                     </Text>
@@ -515,7 +515,7 @@ export default function MachineSettingsScreen() {
                     editable={!pending}
                     autoCapitalize="none"
                     autoCorrect={false}
-                    controlClassName="rounded-[14px]"
+                    controlClassName="rounded-card"
                   />
 
                   <Input
@@ -531,7 +531,7 @@ export default function MachineSettingsScreen() {
                     editable={!pending}
                     autoCapitalize="none"
                     autoCorrect={false}
-                    controlClassName="rounded-[14px]"
+                    controlClassName="rounded-card"
                   />
 
                   <View className="mt-6">

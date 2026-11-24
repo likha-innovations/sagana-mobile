@@ -75,7 +75,7 @@ export default function CompletedBatchScreen() {
                   size={24}
                   color={colors.semantic.primaryForeground}
                 />
-                <Text className="text-[14px] font-bold text-primary-foreground">
+                <Text className="text-sm font-bold text-primary-foreground">
                   Batch completed!
                 </Text>
               </LinearGradient>
@@ -96,18 +96,18 @@ export default function CompletedBatchScreen() {
                 ].map((item) => (
                   <View
                     key={item.label}
-                    className="min-h-[97px] flex-1 items-center justify-center gap-1 rounded-[14px] border border-border p-6"
+                    className="min-h-24.5 flex-1 items-center justify-center gap-1 rounded-card border border-border p-6"
                   >
-                    <Text className="text-[20px] font-bold text-foreground">
+                    <Text className="text-xl font-bold text-foreground">
                       {item.value}
                     </Text>
-                    <Text className="text-center text-[12px] font-sans text-foreground">
+                    <Text className="text-center text-xs font-sans text-foreground">
                       {item.label}
                     </Text>
                   </View>
                 ))}
               </View>
-              <View className="gap-3 rounded-[14px] border border-border p-6">
+              <View className="gap-3 rounded-card border border-border p-6">
                 {[
                   ["Batch ID", batch.batchCode],
                   ["Machine used", batch.machineName],
@@ -125,10 +125,10 @@ export default function CompletedBatchScreen() {
                     key={label}
                     className="flex-row flex-wrap justify-between gap-x-4 gap-y-1"
                   >
-                    <Text className="text-[14px] font-sans text-foreground">
+                    <Text className="text-sm font-sans text-foreground">
                       {label}
                     </Text>
-                    <Text className="shrink text-[14px] font-bold text-foreground">
+                    <Text className="shrink text-sm font-bold text-foreground">
                       {value}
                     </Text>
                   </View>
@@ -144,10 +144,10 @@ export default function CompletedBatchScreen() {
                     params: { batchId },
                   })
                 }
-                className="min-h-[60px] flex-row items-center gap-4 rounded-[8px] border border-input px-4 py-3"
+                className="min-h-15 flex-row items-center gap-4 rounded-lg border border-input px-4 py-3"
               >
                 <ChartSpline size={20} color={colors.semantic.foreground} />
-                <Text className="flex-1 text-[14px] font-sans text-foreground">
+                <Text className="flex-1 text-sm font-sans text-foreground">
                   View sensor readings history
                 </Text>
               </Pressable>
@@ -159,22 +159,22 @@ export default function CompletedBatchScreen() {
                     params: { batchId },
                   })
                 }
-                className="min-h-[60px] flex-row items-center gap-4 rounded-[8px] border border-input px-4 py-3"
+                className="min-h-15 flex-row items-center gap-4 rounded-lg border border-input px-4 py-3"
               >
                 <ListClock size={20} color={colors.semantic.foreground} />
-                <Text className="flex-1 text-[14px] font-sans text-foreground">
+                <Text className="flex-1 text-sm font-sans text-foreground">
                   View automation logs
                 </Text>
               </Pressable>
             </View>
             <View className="gap-4">
-              <Text className="text-[16px] font-bold text-foreground">
+              <Text className="text-base font-bold text-foreground">
                 Feedstocks
               </Text>
               {batch.feedstocks.length ? (
                 <FeedstockGrid feedstocks={batch.feedstocks} />
               ) : (
-                <Text className="text-[14px] font-sans text-foreground">
+                <Text className="text-sm font-sans text-foreground">
                   No feedstocks recorded for this batch.
                 </Text>
               )}

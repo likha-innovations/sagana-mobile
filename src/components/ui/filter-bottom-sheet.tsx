@@ -118,8 +118,8 @@ export const FilterBottomSheet = forwardRef<
               <Text
                 className={
                   selection === option
-                    ? "text-[14px] font-bold text-foreground"
-                    : "text-[14px] font-sans text-foreground"
+                    ? "text-sm font-bold text-foreground"
+                    : "text-sm font-sans text-foreground"
                 }
               >
                 {option}
@@ -131,7 +131,7 @@ export const FilterBottomSheet = forwardRef<
             onPress={() => onSelectFilter("Custom range")}
             className="min-h-12 flex-row items-center justify-between px-8 py-3"
           >
-            <Text className="text-[14px] font-sans text-foreground">
+            <Text className="text-sm font-sans text-foreground">
               Filter by date range
             </Text>
             <ChevronRight size={20} color={colors.semantic.foreground} />
@@ -144,7 +144,7 @@ export const FilterBottomSheet = forwardRef<
               }}
               size="lg"
             >
-              <Text className="text-[14px] font-bold text-primary-foreground">
+              <Text className="text-sm font-bold text-primary-foreground">
                 Apply filter
               </Text>
             </Button>

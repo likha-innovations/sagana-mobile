@@ -313,7 +313,7 @@ export default function AddMachineScreen() {
             {step === 5 && <NameMachineStep control={control} />}
             {step === 6 && <SuccessStep />}
 
-            <View className="flex-1 min-h-[40px]" />
+            <View className="flex-1 min-h-10" />
 
             <View className="mt-auto pt-4">
               <Button

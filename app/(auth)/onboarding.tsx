@@ -113,12 +113,12 @@ export default function OnboardingScreen() {
     >
       {/* Top Bar */}
       <View className="w-full h-11 flex-row items-center justify-between px-4 relative">
-        <View className="w-[30px] h-[30px] justify-center">
+        <View className="w-7.5 h-7.5 justify-center">
           {!isFirst && (
             <Pressable
               onPress={() => setIndex((i) => i - 1)}
               hitSlop={12}
-              className="w-[30px] h-[30px] items-center justify-center -ml-1 active:opacity-60"
+              className="w-7.5 h-7.5 items-center justify-center -ml-1 active:opacity-60"
               accessibilityRole="button"
               accessibilityLabel="Go back"
             >
@@ -136,11 +136,11 @@ export default function OnboardingScreen() {
         <Pressable
           onPress={handleFinish}
           hitSlop={12}
-          className="h-[30px] items-center justify-center active:opacity-60"
+          className="h-7.5 items-center justify-center active:opacity-60"
           accessibilityRole="button"
           accessibilityLabel="Skip onboarding"
         >
-          <Text className="font-bold text-[16px] text-primary" style={{ fontFamily: 'SpotifyMix-Bold' }}>
+          <Text className="font-bold text-base text-primary" style={{ fontFamily: 'SpotifyMix-Bold' }}>
             Skip
           </Text>
         </Pressable>
@@ -173,7 +173,7 @@ export default function OnboardingScreen() {
       {/* Bottom Content & CTA */}
       <View className="w-full px-5">
         <View className="gap-2.5 mb-8">
-          <Text className="text-[20px] font-bold text-foreground text-left" style={{ fontFamily: 'SpotifyMix-Bold' }}>
+          <Text className="text-xl font-bold text-foreground text-left" style={{ fontFamily: 'SpotifyMix-Bold' }}>
             {slide.titleHighlight ? (
               <>
                 {slide.title.split(slide.titleHighlight)[0]}
@@ -186,7 +186,7 @@ export default function OnboardingScreen() {
           </Text>
 
           {slide.description && (
-            <Text className="text-[14px] text-foreground text-left leading-5" style={{ fontFamily: 'SpotifyMix-Regular' }}>
+            <Text className="text-sm text-foreground text-left leading-5" style={{ fontFamily: 'SpotifyMix-Regular' }}>
               {slide.descHighlight ? (
                 <>
                   {slide.description.split(slide.descHighlight)[0]}
@@ -204,11 +204,11 @@ export default function OnboardingScreen() {
 
         <Pressable
           onPress={handleNext}
-          className="w-full h-[50px] rounded-full bg-primary items-center justify-center active:opacity-90 shadow-sm"
+          className="w-full h-12.5 rounded-full bg-primary items-center justify-center active:opacity-90 shadow-sm"
           accessibilityRole="button"
           accessibilityLabel={slide.cta}
         >
-          <Text className="font-bold text-[16px] text-primary-foreground" style={{ fontFamily: 'SpotifyMix-Bold' }}>
+          <Text className="font-bold text-base text-primary-foreground" style={{ fontFamily: 'SpotifyMix-Bold' }}>
             {slide.cta}
           </Text>
         </Pressable>

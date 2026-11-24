@@ -1,11 +1,11 @@
 import { forwardRef, type ReactNode, type ElementRef } from 'react';
 import {
   Pressable,
-  Text,
   ActivityIndicator,
   Platform,
   type PressableProps,
 } from 'react-native';
+import { Text } from '@/components/ui/text';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as Haptics from 'expo-haptics';
 import { cn } from '@/lib/utils';

@@ -67,8 +67,8 @@ export function SuccessScreen({
     >
       <View className="flex-1 px-4 items-center justify-between pb-4">
         {/* Center Section: Mascot + Typography grouped with 24px gap */}
-        <View className="flex-1 w-full max-w-[380px] items-center justify-center gap-6">
-          <View className="w-[264px] h-[264px] items-center justify-center">
+        <View className="flex-1 w-full max-w-95 items-center justify-center gap-6">
+          <View className="w-66 h-66 items-center justify-center">
             {!lottieError && lottieSource ? (
               <LottieView
                 source={lottieSource}
@@ -100,7 +100,7 @@ export function SuccessScreen({
             <Text
               testID={`${testID}-title`}
               className={cn(
-                'text-[20px] font-bold text-foreground',
+                'text-xl font-bold text-foreground',
                 alignText === 'center' ? 'text-center' : 'text-left'
               )}
             >
@@ -109,7 +109,7 @@ export function SuccessScreen({
             <Text
               testID={`${testID}-description`}
               className={cn(
-                'text-[14px] font-sans text-foreground leading-5',
+                'text-sm font-sans text-foreground leading-5',
                 alignText === 'center' ? 'text-center' : 'text-left'
               )}
             >
@@ -119,18 +119,18 @@ export function SuccessScreen({
         </View>
 
         {/* Bottom Action: Primary CTA Button */}
-        <View className="w-full max-w-[380px] pt-4">
+        <View className="w-full max-w-95 pt-4">
           <Pressable
             testID={`${testID}-button`}
             onPress={handlePress}
             disabled={loading}
-            className="w-full h-[45px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+            className="w-full h-11.25 rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
             accessibilityRole="button"
           >
             {loading ? (
               <ActivityIndicator color="#FAF9EE" size="small" />
             ) : (
-              <Text className="text-[14px] font-bold text-primary-foreground">
+              <Text className="text-sm font-bold text-primary-foreground">
                 {buttonText}
               </Text>
             )}

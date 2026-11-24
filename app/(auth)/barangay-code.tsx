@@ -244,12 +244,12 @@ export default function BarangayCodeScreen() {
             accessibilityState={{ disabled: loading || !isCompleteBarangayCode(code), busy: loading }}
             onPress={() => void validateCode()}
             disabled={loading || !isCompleteBarangayCode(code)}
-            className="w-full h-[50px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+            className="w-full h-12.5 rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
           >
             {loading ? (
               <ActivityIndicator color="#FAF9EE" size="small" />
             ) : (
-              <Text className="text-[15px] font-bold text-primary-foreground">
+              <Text className="text-15 font-bold text-primary-foreground">
                 {error ? "Try again" : "Next"}
               </Text>
             )}

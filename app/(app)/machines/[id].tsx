@@ -260,13 +260,13 @@ export default function MachineDetailsDashboard() {
             accessibilityLabel="Loading machine details"
             className="gap-3"
           >
-            <Skeleton className="h-[130px] rounded-[14px]" />
+            <Skeleton className="h-32.5 rounded-card" />
             <View className="flex-row gap-3">
-              <Skeleton className="flex-1 h-24 rounded-[14px]" />
-              <Skeleton className="flex-1 h-24 rounded-[14px]" />
+              <Skeleton className="flex-1 h-24 rounded-card" />
+              <Skeleton className="flex-1 h-24 rounded-card" />
             </View>
-            <Skeleton className="h-40 rounded-[14px]" />
-            <Skeleton className="h-48 rounded-[14px]" />
+            <Skeleton className="h-40 rounded-card" />
+            <Skeleton className="h-48 rounded-card" />
           </View>
         ) : (
           machine &&
@@ -295,7 +295,7 @@ export default function MachineDetailsDashboard() {
                 }
               />
               {completedQuery.isPending ? (
-                <Skeleton className="h-24 rounded-[14px]" />
+                <Skeleton className="h-24 rounded-card" />
               ) : completedQuery.isError ? (
                 <HistoryState
                   message="Could not load the previous batch."
@@ -357,7 +357,7 @@ export default function MachineDetailsDashboard() {
                           }
                         >
                           <View
-                            className="h-[18px] w-[18px] rounded-full bg-primary-foreground"
+                            className="h-4.5 w-4.5 rounded-full bg-primary-foreground"
                             style={{
                               opacity:
                                 phase !== null && step <= phase ? 1 : 0.3,
@@ -383,7 +383,7 @@ export default function MachineDetailsDashboard() {
                     ].map((stat) => (
                       <View
                         key={stat.label}
-                        className="flex-1 rounded-[14px] border border-border p-6 items-center gap-2"
+                        className="flex-1 rounded-card border border-border p-6 items-center gap-2"
                       >
                         <Text className="text-xl font-bold text-foreground">
                           {stat.value}
@@ -394,7 +394,7 @@ export default function MachineDetailsDashboard() {
                       </View>
                     ))}
                   </View>
-                  <View className="rounded-[14px] border border-border p-6 gap-3">
+                  <View className="rounded-card border border-border p-6 gap-3">
                     {[
                       ["Batch ID", batch.batchCode],
                       ["Machine used", machine.name],
@@ -509,7 +509,7 @@ export default function MachineDetailsDashboard() {
                           accessibilityLabel={
                             isAeration ? "Aeration settings" : undefined
                           }
-                          className={`rounded-[14px] border border-border p-5 gap-4 ${
+                          className={`rounded-card border border-border p-5 gap-4 ${
                             isAeration ? "active:opacity-75" : ""
                           } ${
                             stacked

@@ -146,7 +146,7 @@ export default function EditProfileScreen() {
               >
                 <ChevronLeft size={24} color="#414141" />
               </TouchableOpacity>
-              <Text className="text-[16px] font-bold text-foreground">
+              <Text className="text-base font-bold text-foreground">
                 Profile Information
               </Text>
             </View>
@@ -158,7 +158,7 @@ export default function EditProfileScreen() {
                 disabled={isPending}
                 className="p-2 -mr-2"
               >
-                <Text className="text-[16px] font-bold text-primary">Save</Text>
+                <Text className="text-base font-bold text-primary">Save</Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity

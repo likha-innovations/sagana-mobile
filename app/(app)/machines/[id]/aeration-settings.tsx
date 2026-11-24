@@ -324,7 +324,7 @@ export default function AerationSettingsScreen() {
         </View>
 
         {/* Current Overview Status Card */}
-        <View className="rounded-[14px] border border-border bg-card p-5 gap-3.5 mb-6">
+        <View className="rounded-card border border-border bg-card p-5 gap-3.5 mb-6">
           {/* Machine Name */}
           <View className="flex-row items-center justify-between">
             <Text className="text-xs font-sans text-muted-foreground">
@@ -380,7 +380,7 @@ export default function AerationSettingsScreen() {
             accessibilityLabel="Default Mode"
             accessibilityState={{ selected: isDefaultMode }}
             onPress={handleSelectDefaultMode}
-            className={`rounded-[14px] p-4 flex-row items-center justify-between mb-3 border ${
+            className={`rounded-card p-4 flex-row items-center justify-between mb-3 border ${
               isDefaultMode
                 ? "border-brand-500 bg-brand-50/50"
                 : "border-border bg-card active:opacity-75"
@@ -425,7 +425,7 @@ export default function AerationSettingsScreen() {
             accessibilityLabel="Custom Mode"
             accessibilityState={{ selected: isCustomMode }}
             onPress={handleOpenCustomModal}
-            className={`rounded-[14px] p-4 border ${
+            className={`rounded-card p-4 border ${
               isCustomMode
                 ? "border-brand-500 bg-brand-50/50"
                 : "border-border bg-card active:opacity-75"
@@ -531,7 +531,7 @@ export default function AerationSettingsScreen() {
                   </View>
 
                   {/* Stepper & Editable Input Control */}
-                  <View className="flex-row items-center justify-between bg-card rounded-[14px] border border-border p-3">
+                  <View className="flex-row items-center justify-between bg-card rounded-card border border-border p-3">
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel="Decrease ON duration"
@@ -549,7 +549,7 @@ export default function AerationSettingsScreen() {
                         maxLength={3}
                         returnKeyType="done"
                         selectTextOnFocus
-                        className="text-2xl font-bold text-foreground text-center min-w-[72px] py-0.5 border-b border-border"
+                        className="text-2xl font-bold text-foreground text-center min-w-18 py-0.5 border-b border-border"
                       />
                       <Text className="text-xs font-sans text-muted-foreground mt-0.5">
                         minutes ON
@@ -564,7 +564,7 @@ export default function AerationSettingsScreen() {
                       <Plus size={18} color={colors.semantic.foreground} />
                     </Pressable>
                   </View>
-                  <Text className="text-[11px] font-sans text-muted-foreground mt-1.5 ml-1">
+                  <Text className="text-11 font-sans text-muted-foreground mt-1.5 ml-1">
                     Tap number to type exact duration, or use -/+ buttons
                   </Text>
                 </View>
@@ -581,7 +581,7 @@ export default function AerationSettingsScreen() {
                   </View>
 
                   {/* Stepper & Editable Input Control */}
-                  <View className="flex-row items-center justify-between bg-card rounded-[14px] border border-border p-3">
+                  <View className="flex-row items-center justify-between bg-card rounded-card border border-border p-3">
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel="Decrease OFF interval"
@@ -599,7 +599,7 @@ export default function AerationSettingsScreen() {
                         maxLength={3}
                         returnKeyType="done"
                         selectTextOnFocus
-                        className="text-2xl font-bold text-foreground text-center min-w-[72px] py-0.5 border-b border-border"
+                        className="text-2xl font-bold text-foreground text-center min-w-18 py-0.5 border-b border-border"
                       />
                       <Text className="text-xs font-sans text-muted-foreground mt-0.5">
                         minutes OFF
@@ -614,13 +614,13 @@ export default function AerationSettingsScreen() {
                       <Plus size={18} color={colors.semantic.foreground} />
                     </Pressable>
                   </View>
-                  <Text className="text-[11px] font-sans text-muted-foreground mt-1.5 ml-1">
+                  <Text className="text-11 font-sans text-muted-foreground mt-1.5 ml-1">
                     Tap number to type exact interval, or use -/+ buttons
                   </Text>
                 </View>
 
                 {/* Cycle Preview Badge */}
-                <View className="mt-5 p-3.5 rounded-[14px] bg-brand-50 border border-brand-200 flex-row items-center justify-between">
+                <View className="mt-5 p-3.5 rounded-card bg-brand-50 border border-brand-200 flex-row items-center justify-between">
                   <View className="flex-row items-center gap-2">
                     <Fan size={16} color={colors.brand[500]} />
                     <Text className="text-xs font-sans text-brand-900">

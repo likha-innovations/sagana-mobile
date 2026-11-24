@@ -1,4 +1,5 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
+import { Text } from "@/components/ui/text";
 import { useRouter } from "expo-router";
 import { Bell } from "lucide-react-native";
 import { colors } from "@/constants";
@@ -21,7 +22,7 @@ export function NotificationBell() {
         <Bell size={24} color={colors.semantic.foreground} />
         {hasUnread && (
           <View className="absolute -top-1 -right-1.5 min-w-4.5 h-4.5 px-1 bg-destructive border-[1.5px] border-background rounded-full items-center justify-center z-10">
-            <Text className="text-[10px] font-bold text-white text-center leading-none">
+            <Text className="text-10 font-bold text-white text-center leading-none">
               {unreadCount > 99 ? "99+" : unreadCount}
             </Text>
           </View>

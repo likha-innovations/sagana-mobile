@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, Text, SectionList } from "react-native";
+import { View, SectionList } from "react-native";
+import { Text } from "@/components/ui/text";
 import { format, parseISO } from "date-fns";
 import { Fan, ShowerHead, AlertTriangle, Wind } from "lucide-react-native";
 import { useHistory } from "@/hooks/use-history";
@@ -131,7 +132,7 @@ export function AutomationHistoryScreen({ scope }: { scope: HistoryScope }) {
             paddingBottom: scrollPaddingBottom,
           }}
           renderSectionHeader={({ section }) => (
-            <Text className="mb-4 text-[16px] font-bold text-foreground">
+            <Text className="mb-4 text-base font-bold text-foreground">
               {section.title}
             </Text>
           )}

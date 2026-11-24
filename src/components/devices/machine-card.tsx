@@ -1,4 +1,5 @@
-import { View, Text, Pressable, useWindowDimensions } from "react-native";
+import { View, Pressable, useWindowDimensions } from "react-native";
+import { Text } from "@/components/ui/text";
 import {
   ChevronRight,
   Radio,
@@ -74,7 +75,7 @@ export function MachineCard({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`Open ${machine.name}${isOffline ? ", offline" : ""}`}
-      className="bg-card rounded-[14px] border border-border px-4 py-6"
+      className="bg-card rounded-card border border-border px-4 py-6"
     >
       {/* Header */}
       <View className="flex-row items-center justify-between mb-4">
@@ -87,7 +88,7 @@ export function MachineCard({
           <Text
             numberOfLines={2}
             ellipsizeMode="tail"
-            className="flex-1 text-[14px] font-bold text-foreground"
+            className="flex-1 text-sm font-bold text-foreground"
           >
             {machine.name}
           </Text>
@@ -100,7 +101,7 @@ export function MachineCard({
       </View>
 
       {isOffline && (
-        <Text className="mb-3 text-[12px] font-sans text-foreground">
+        <Text className="mb-3 text-xs font-sans text-foreground">
           Offline · readings may be outdated
         </Text>
       )}
@@ -110,7 +111,7 @@ export function MachineCard({
         {/* Temp */}
         <View
           style={{ flexBasis: wrapSensors ? "47%" : 0, flexGrow: 1 }}
-          className="min-h-[99px] items-center justify-center border border-border rounded-[8px] px-1 py-3"
+          className="min-h-25 items-center justify-center border border-border rounded-lg px-1 py-3"
         >
           <Thermometer size={24} color={tempColor} className="mb-2" />
           <Text
@@ -122,7 +123,7 @@ export function MachineCard({
           </Text>
           <Text
             numberOfLines={1}
-            className="text-[12px] font-sans text-foreground mt-0.5 text-center"
+            className="text-xs font-sans text-foreground mt-0.5 text-center"
           >
             Temp.
           </Text>
@@ -131,7 +132,7 @@ export function MachineCard({
         {/* Moisture */}
         <View
           style={{ flexBasis: wrapSensors ? "47%" : 0, flexGrow: 1 }}
-          className="min-h-[99px] items-center justify-center border border-border rounded-[8px] px-1 py-3"
+          className="min-h-25 items-center justify-center border border-border rounded-lg px-1 py-3"
         >
           <Droplets size={24} color={moistureColor} className="mb-2" />
           <Text
@@ -143,7 +144,7 @@ export function MachineCard({
           </Text>
           <Text
             numberOfLines={1}
-            className="text-[12px] font-sans text-foreground mt-0.5 text-center"
+            className="text-xs font-sans text-foreground mt-0.5 text-center"
           >
             Moisture
           </Text>
@@ -152,7 +153,7 @@ export function MachineCard({
         {/* O2 */}
         <View
           style={{ flexBasis: wrapSensors ? "47%" : 0, flexGrow: 1 }}
-          className="min-h-[99px] items-center justify-center border border-border rounded-[8px] px-1 py-3"
+          className="min-h-25 items-center justify-center border border-border rounded-lg px-1 py-3"
         >
           <Wind size={24} color={o2Color} className="mb-2" />
           <Text
@@ -164,7 +165,7 @@ export function MachineCard({
           </Text>
           <Text
             numberOfLines={1}
-            className="text-[12px] font-sans text-foreground mt-0.5 text-center"
+            className="text-xs font-sans text-foreground mt-0.5 text-center"
           >
             O2
           </Text>
@@ -173,7 +174,7 @@ export function MachineCard({
         {/* CO2 */}
         <View
           style={{ flexBasis: wrapSensors ? "47%" : 0, flexGrow: 1 }}
-          className="min-h-[99px] items-center justify-center border border-border rounded-[8px] px-1 py-3"
+          className="min-h-25 items-center justify-center border border-border rounded-lg px-1 py-3"
         >
           <Cloud size={24} color={co2Color} className="mb-2" />
           <Text
@@ -186,7 +187,7 @@ export function MachineCard({
           </Text>
           <Text
             numberOfLines={1}
-            className="text-[12px] font-sans text-foreground mt-0.5 text-center"
+            className="text-xs font-sans text-foreground mt-0.5 text-center"
           >
             CO2
           </Text>
@@ -197,14 +198,14 @@ export function MachineCard({
       <View className="flex-row flex-wrap items-center justify-between gap-3 pt-1">
         <View className="flex-row items-center gap-2">
           <CompostIcon size={18} color={phaseIconColor} />
-          <Text className={`text-[13px] font-bold ${phaseColorClass}`}>
+          <Text className={`text-13 font-bold ${phaseColorClass}`}>
             {phaseText}
           </Text>
         </View>
 
         <View className="flex-row items-center gap-1.5">
           <Clock size={14} color={colors.gray.textIcon} />
-          <Text className="text-[13px] font-medium text-muted-foreground">
+          <Text className="text-13 font-medium text-muted-foreground">
             {timeAgo}
           </Text>
         </View>

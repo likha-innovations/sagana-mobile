@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, Text, useWindowDimensions } from "react-native";
+import { View, useWindowDimensions } from "react-native";
+import { Text } from "@/components/ui/text";
 import { type LucideIcon } from "lucide-react-native";
 import { LineChart, type lineDataItem } from "react-native-gifted-charts";
 import { format, parseISO } from "date-fns";
@@ -49,7 +50,7 @@ export function SensorTrendGraph({
   const belowZero = Math.ceil(Math.abs(Math.min(0, ...values)) / stepValue);
 
   return (
-    <View className="bg-card rounded-[14px] border border-border px-4 py-5 gap-4">
+    <View className="bg-card rounded-card border border-border px-4 py-5 gap-4">
       <View className="flex-row items-center gap-2">
         <Icon size={20} color={iconColor} strokeWidth={1.8} />
         <Text className="flex-1 text-base font-bold text-foreground">

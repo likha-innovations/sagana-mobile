@@ -55,12 +55,12 @@ export default function ProfileScreen() {
       >
         <View className="gap-8">
           {/* Header */}
-          <Text className="text-[32px] font-bold text-foreground">
+          <Text className="text-3xl font-bold text-foreground">
             Account
           </Text>
 
           {/* User Card */}
-          <View className="flex-row items-center p-4 bg-card border border-border rounded-[14px] gap-4">
+          <View className="flex-row items-center p-4 bg-card border border-border rounded-card gap-4">
             <LinearGradient
               colors={[colors.gradient.statCard.colors[0], colors.gradient.statCard.colors[1]]}
               start={{ x: 0, y: 0 }}
@@ -68,14 +68,14 @@ export default function ProfileScreen() {
               style={{ borderRadius: 28 }}
               className="w-14 h-14 items-center justify-center"
             >
-              <Text className="text-[20px] font-bold text-background">{userInitials}</Text>
+              <Text className="text-xl font-bold text-background">{userInitials}</Text>
             </LinearGradient>
             
             <View className="flex-1 gap-1">
-              <Text className="text-[14px] font-bold text-foreground">
+              <Text className="text-sm font-bold text-foreground">
                 {user?.fullName || 'Neo Isaiah D. Nimo'}
               </Text>
-              <Text className="text-[14px] text-foreground font-sans">
+              <Text className="text-sm text-foreground font-sans">
                 {barangayName}
               </Text>
             </View>
@@ -88,20 +88,20 @@ export default function ProfileScreen() {
               onPress={() => {
                 router.push('/edit-profile' as any);
               }}
-              className="flex-row items-center h-[60px] px-4.5 bg-card border border-border rounded-[8px] gap-4"
+              className="flex-row items-center h-15 px-4.5 bg-card border border-border rounded-lg gap-4"
             >
               <View className="mr-1">
                 <UserIcon size={18} color="#96958F" />
               </View>
-              <Text className="text-[14px] text-foreground font-sans flex-1">
+              <Text className="text-sm text-foreground font-sans flex-1">
                 Profile Information
               </Text>
             </TouchableOpacity>
 
             {isGoogleUser ? (
-              <View className="flex-row items-center h-[60px] px-4.5 bg-card border border-border rounded-[8px] gap-4">
+              <View className="flex-row items-center h-15 px-4.5 bg-card border border-border rounded-lg gap-4">
                 <GoogleIcon size={18} />
-                <Text className="text-[14px] text-foreground font-sans flex-1">
+                <Text className="text-sm text-foreground font-sans flex-1">
                   Signed in with Google
                 </Text>
               </View>
@@ -111,10 +111,10 @@ export default function ProfileScreen() {
                 onPress={() => {
                   router.push('/change-password/current-password');
                 }}
-                className="flex-row items-center h-[60px] px-4.5 bg-card border border-border rounded-[8px] gap-4"
+                className="flex-row items-center h-15 px-4.5 bg-card border border-border rounded-lg gap-4"
               >
                 <Lock size={18} color="#96958F" />
-                <Text className="text-[14px] text-foreground font-sans flex-1">
+                <Text className="text-sm text-foreground font-sans flex-1">
                   Change Password
                 </Text>
               </TouchableOpacity>
@@ -127,9 +127,9 @@ export default function ProfileScreen() {
             onPress={() => {
               setIsLogoutModalVisible(true);
             }}
-            className="h-[45px] bg-destructive/[0.08] rounded-full items-center justify-center mt-4"
+            className="h-11.25 bg-destructive/[0.08] rounded-full items-center justify-center mt-4"
           >
-            <Text className="text-[14px] font-bold text-destructive">
+            <Text className="text-sm font-bold text-destructive">
               Log Out
             </Text>
           </TouchableOpacity>
@@ -144,12 +144,12 @@ export default function ProfileScreen() {
         onRequestClose={() => setIsLogoutModalVisible(false)}
       >
         <View className="flex-1 bg-black/40 items-center justify-center px-6">
-          <View className="w-full bg-card border border-border rounded-[14px] p-6 gap-6 items-center shadow-md">
+          <View className="w-full bg-card border border-border rounded-card p-6 gap-6 items-center shadow-md">
             <View className="gap-2.5 items-center">
-              <Text className="text-[14px] font-bold text-foreground">
+              <Text className="text-sm font-bold text-foreground">
                 Log Out?
               </Text>
-              <Text className="text-[14px] text-foreground font-sans text-center">
+              <Text className="text-sm text-foreground font-sans text-center">
                 You can still log in anytime.
               </Text>
             </View>
@@ -158,9 +158,9 @@ export default function ProfileScreen() {
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() => setIsLogoutModalVisible(false)}
-                className="flex-1 h-[45px] bg-secondary rounded-full items-center justify-center"
+                className="flex-1 h-11.25 bg-secondary rounded-full items-center justify-center"
               >
-                <Text className="text-[14px] font-bold text-foreground">
+                <Text className="text-sm font-bold text-foreground">
                   Cancel
                 </Text>
               </TouchableOpacity>
@@ -168,9 +168,9 @@ export default function ProfileScreen() {
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={handleLogout}
-                className="flex-1 h-[45px] bg-destructive rounded-full items-center justify-center"
+                className="flex-1 h-11.25 bg-destructive rounded-full items-center justify-center"
               >
-                <Text className="text-[14px] font-bold text-primary-foreground">
+                <Text className="text-sm font-bold text-primary-foreground">
                   Log Out
                 </Text>
               </TouchableOpacity>

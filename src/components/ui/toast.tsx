@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '@/components/ui/text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CheckCircle, XCircle } from 'lucide-react-native';
 import Animated, {
@@ -71,7 +72,7 @@ export function Toast() {
       ]}
     >
       <View
-        className={`flex-row items-center px-4 py-3.5 rounded-[8px] gap-3 shadow-sm ${
+        className={`flex-row items-center px-4 py-3.5 rounded-lg gap-3 shadow-sm ${
           type === 'success' ? 'bg-primary' : 'bg-destructive'
         }`}
       >
@@ -80,7 +81,7 @@ export function Toast() {
         ) : (
           <XCircle color="white" size={20} />
         )}
-        <Text className="text-white font-medium text-[14px] flex-1">
+        <Text className="text-white font-medium text-sm flex-1">
           {message}
         </Text>
       </View>

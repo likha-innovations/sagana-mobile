@@ -1,5 +1,6 @@
 import { useRef } from "react";
-import { Pressable, Text } from "react-native";
+import { Pressable } from "react-native";
+import { Text } from "@/components/ui/text";
 import { BottomSheetModal } from "@gorhom/bottom-sheet";
 import { ChevronDown } from "lucide-react-native";
 import { FilterBottomSheet } from "@/components/ui/filter-bottom-sheet";
@@ -34,7 +35,7 @@ export function HistoryDateFilter({
         onPress={() => filters.current?.present()}
         className="min-h-12 max-w-full flex-row items-center gap-1"
       >
-        <Text className="shrink text-[16px] font-bold text-foreground">
+        <Text className="shrink text-base font-bold text-foreground">
           {selected}
         </Text>
         <ChevronDown size={20} color={colors.semantic.foreground} />
