@@ -47,6 +47,51 @@ Fonts load from `assets/fonts/` through `expo-font`. No Google-font package is n
 
 The root layout still registers `Montserrat-*` compatibility aliases, but they point to Spotify Mix files.
 
+### Typography Scale & Line Heights
+
+Always use semantic font tokens rather than arbitrary pixel classes (`text-[14px]` is forbidden). Tokens are configured in `global.css` with unitless line heights to prevent descender clipping on Spotify Mix:
+
+| Token | Size | Line Height | Equivalent |
+| --- | --- | --- | --- |
+| `text-10` | `0.625rem` (10px) | `1.2` | Badge labels, micro captions |
+| `text-11` | `0.6875rem` (11px) | `1.25` | Timestamps, secondary tags |
+| `text-xs` | `0.75rem` (12px) | `1.35` | Helper text, metadata |
+| `text-13` | `0.8125rem` (13px) | `1.38` | Dense list items, secondary cards |
+| `text-sm` | `0.875rem` (14px) | `1.4` | Standard UI body, form inputs |
+| `text-15` | `0.9375rem` (15px) | `1.4` | Prominent body, table items |
+| `text-base` | `1rem` (16px) | `1.45` | Primary body, button labels |
+| `text-lg` | `1.125rem` (18px) | `1.4` | Card titles, subheadings |
+| `text-xl` | `1.25rem` (20px) | `1.35` | Section headers |
+| `text-22` | `1.375rem` (22px) | `1.3` | Stat values |
+| `text-2xl` | `1.5rem` (24px) | `1.25` | Screen titles |
+| `text-28` | `1.75rem` (28px) | `1.2` | Large metric callouts |
+| `text-32` / `text-3xl` | `2rem` (32px) | `1.2` | Hero metrics |
+
+### Text Scaling & Accessibility
+
+Use `<Text>` from `@/components/ui/text` instead of raw React Native `<Text>`. It applies `maxFontSizeMultiplier = 1.15` by default to prevent large system accessibility font scales from overflowing cards, badges, and tab bars while keeping text accessible.
+
+## Border Radii & Spacing
+
+Always use existing tokens instead of arbitrary brackets (`rounded-[14px]` or `min-h-[99px]` are forbidden).
+
+### Border Radii
+| Token | Value | Common Usage |
+| --- | --- | --- |
+| `rounded-md` | `0.375rem` (6px) | Badges, small chips |
+| `rounded-lg` | `0.5rem` (8px) | Inner card elements, small inputs |
+| `rounded-xl` | `0.75rem` (12px) | Action sheets, standard inputs |
+| `rounded-card` | `0.875rem` (14px) | Machine cards, stat cards, metric containers |
+| `rounded-2xl` | `1rem` (16px) | Dialog modals, primary surfaces |
+| `rounded-3xl` | `1.5rem` (24px) | Large hero containers |
+| `rounded-full` | `9999px` | Buttons, avatars, pill badges |
+
+### Spacing Scale
+- `--spacing` is set to `0.25rem` (4px).
+- Use standard Tailwind utility steps (`p-4` = 16px, `gap-3` = 12px, `h-13` = 52px, `w-66` = 264px).
+- Arbitrary dimension classes like `min-h-[99px]` must be mapped to the closest Tailwind spacing step (`min-h-25` = 100px).
+
+
 ## Components and feedback
 
 1. Reuse `Button`, `Input`, and `Card` from `src/components/ui/`. `Button` uses `cva`, rounded-full styling, six variants, four sizes, and `loading`, `disabled` and opt-in `haptic` props. Not every component uses `cva` or `@rn-primitives`.

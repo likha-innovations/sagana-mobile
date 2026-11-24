@@ -23,6 +23,14 @@ The project agent is `mobile-ui`, defined in `.codex/agents/mobile-ui.toml`.
 
 Example request: "Use mobile-ui to implement the machine settings screen from this Figma reference. Reuse existing components and verify keyboard, error, and loading states."
 
+## Design tokens & styling rules
+
+- **Mandatory Semantic Tokens (No Arbitrary Brackets)**: Always use existing design tokens defined in `global.css` (`@theme`). Never write arbitrary bracketed pixel classes for typography or border radii.
+  - **Typography**: Strictly use semantic tokens (`text-10`, `text-11`, `text-xs`, `text-13`, `text-sm`, `text-15`, `text-base`, `text-lg`, `text-xl`, `text-22`, `text-2xl`, `text-28`, `text-32`, `text-3xl`). Do NOT use `text-[14px]` or other arbitrary pixel font sizes — arbitrary classes omit unitless line-heights and clip SpotifyMix font descenders.
+  - **Border Radii**: Strictly use semantic tokens (`rounded-md` [6px], `rounded-lg` [8px], `rounded-xl` [12px], `rounded-card` [14px], `rounded-2xl` [16px], `rounded-3xl` [24px], `rounded-full`). Do NOT use `rounded-[14px]` or arbitrary pixel radii.
+  - **Spacing & Dimensions**: Use standard Tailwind spacing scale (`px / 4`, e.g., `p-4`, `gap-3`, `h-12`, `w-66`, `min-h-25`) rather than `[...px]` brackets (`min-h-[99px]`). Only 1px hairlines (`border-[1px]`) and percentages (`w-[48%]`) are exempt.
+  - **Text Primitive**: Use `<Text>` from `@/components/ui/text` for shared UI primitives and dense layout components to enforce `maxFontSizeMultiplier={1.15}` and protect layouts from breaking under large accessibility scaling.
+
 ## Source map
 
 - `app/`: Expo Router screens/layouts. Tabs are Home, Machines and Account; batch, registration, profile editing and password flows also exist outside tabs.
