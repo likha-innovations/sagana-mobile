@@ -1,4 +1,5 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
+import { Text } from "@/components/ui/text";
 import { Box, Calendar, Weight } from "lucide-react-native";
 import { differenceInCalendarDays, format } from "date-fns";
 import { CompostIcon } from "@/components/icons";
@@ -24,11 +25,11 @@ export function CompletedBatchCard({
       accessibilityLabel={
         onPress ? `View batch ${batch.batchCode}` : undefined
       }
-      className="flex-row items-center gap-6 rounded-[14px] border border-border bg-card px-6 py-4"
+      className="flex-row items-center gap-6 rounded-2xl border border-border bg-card px-6 py-4"
     >
       <CompostIcon size={24} color={colors.brand[500]} />
       <View className="flex-1 gap-2">
-        <Text className="text-[14px] font-bold text-foreground">
+        <Text className="text-sm font-bold text-foreground">
           {format(new Date(batch.completionDate), "MMMM d, yyyy")}
         </Text>
         <View className="flex-row flex-wrap gap-x-4 gap-y-2">
@@ -39,7 +40,7 @@ export function CompletedBatchCard({
           ].map(({ Icon, text }) => (
             <View key={text} className="flex-row items-center gap-1.5">
               <Icon size={12} color={colors.semantic.foreground} />
-              <Text className="text-[12px] font-sans text-foreground">
+              <Text className="text-xs font-sans text-foreground">
                 {text}
               </Text>
             </View>

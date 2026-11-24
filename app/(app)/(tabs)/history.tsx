@@ -103,11 +103,11 @@ export default function HistoryScreen() {
                 autoCorrect={false}
                 returnKeyType="search"
                 containerClassName="mb-0"
-                controlClassName="rounded-[14px] border-[1.5px] border-border"
+                controlClassName="rounded-2xl border-[1.5px] border-border"
                 className="font-sans"
                 trailingIcon={<Search size={20} color={colors.gray.textIcon} />}
               />
-              <Text className="text-[16px] font-bold text-foreground">
+              <Text className="text-base font-bold text-foreground">
                 Completed Batches
               </Text>
             </View>

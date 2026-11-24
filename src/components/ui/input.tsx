@@ -47,7 +47,7 @@ export const Input = forwardRef<TextInput, InputProps>(
       <View className={cn("w-full mb-3.5", containerClassName)}>
         <View
           className={cn(
-            "w-full min-h-[58px] flex-row items-center rounded-2xl border px-4 transition-all py-2",
+            "w-full min-h-14.5 flex-row items-center rounded-2xl border px-4 transition-all py-2",
             error
               ? "border-destructive bg-destructive/5"
               : isFocused

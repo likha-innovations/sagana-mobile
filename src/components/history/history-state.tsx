@@ -1,4 +1,5 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
+import { Text } from "@/components/ui/text";
 import { CircleAlert } from "lucide-react-native";
 import { colors } from "@/constants";
 
@@ -15,7 +16,7 @@ export function HistoryState({
     <View
       className={
         onRetry
-          ? "gap-3 rounded-[14px] border border-brand-200 bg-brand-50 px-5 py-5"
+          ? "gap-3 rounded-2xl border border-brand-200 bg-brand-50 px-5 py-5"
           : "gap-2 px-4 py-6"
       }
     >
@@ -24,7 +25,7 @@ export function HistoryState({
         <View className="flex-1 gap-1">
           <Text
             accessibilityLiveRegion="polite"
-            className="text-[14px] font-bold text-foreground"
+            className="text-sm font-bold text-foreground"
           >
             {message}
           </Text>
@@ -43,7 +44,7 @@ export function HistoryState({
           onPress={onRetry}
           className="min-h-12 self-start justify-center rounded-lg bg-brand-700 px-5"
         >
-          <Text className="text-[14px] font-bold text-primary-foreground">
+          <Text className="text-sm font-bold text-primary-foreground">
             {retrying ? "Retrying…" : "Retry"}
           </Text>
         </Pressable>

@@ -135,13 +135,13 @@ export default function CurrentPasswordScreen() {
           className="flex-1"
         >
           <View className="flex-1 px-4 items-center justify-between pb-10">
-            <View className="w-full max-w-[380px] items-center pt-4">
+            <View className="w-full max-w-95 items-center pt-4">
               {/* Header with back button and progress bar */}
               <View className="w-full h-11 flex-row items-center justify-between relative mb-6">
                 <Pressable
                   onPress={() => router.back()}
                   hitSlop={12}
-                  className="w-[30px] h-[30px] items-center justify-center -ml-1"
+                  className="w-7.5 h-7.5 items-center justify-center -ml-1"
                   accessibilityRole="button"
                   accessibilityLabel="Back to Profile"
                 >
@@ -151,15 +151,15 @@ export default function CurrentPasswordScreen() {
                 <View className="absolute inset-x-0 items-center justify-center pointer-events-none">
                   <ProgressBar activeStep={1} totalSteps={2} />
                 </View>
-                <View className="w-[30px]" />
+                <View className="w-7.5" />
               </View>
 
               {/* Title & Description */}
               <View className="w-full gap-2.5 mb-8 mt-2">
-                <Text className="text-[20px] font-bold text-foreground text-left">
+                <Text className="text-xl font-bold text-foreground text-left">
                   Enter current password
                 </Text>
-                <Text className="text-[14px] font-sans text-foreground text-left leading-5">
+                <Text className="text-sm font-sans text-foreground text-left leading-5">
                   To protect your account, please enter your current password.
                 </Text>
               </View>
@@ -182,7 +182,7 @@ export default function CurrentPasswordScreen() {
                 />
 
                 {currentPasswordErrorMessage && (
-                  <Text className="text-[13px] font-sans text-destructive mt-1 ml-1 text-left">
+                  <Text className="text-xs font-sans text-destructive mt-1 ml-1 text-left">
                     {currentPasswordErrorMessage}
                   </Text>
                 )}
@@ -193,7 +193,7 @@ export default function CurrentPasswordScreen() {
                   hitSlop={10}
                   className="self-end mt-2"
                 >
-                  <Text className="text-[13px] font-sans text-primary">
+                  <Text className="text-xs font-sans text-primary">
                     Forgot password?
                   </Text>
                 </Pressable>
@@ -201,17 +201,17 @@ export default function CurrentPasswordScreen() {
             </View>
 
             {/* Bottom Next Button */}
-            <View className="w-full max-w-[380px]">
+            <View className="w-full max-w-95">
               <Pressable
                 onPress={handleNext}
                 disabled={loading || !currentPassword.trim()}
-                className="w-full h-[45px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+                className="w-full h-11.25 rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
                 accessibilityRole="button"
               >
                 {loading ? (
                   <ActivityIndicator color="#FAF9EE" size="small" />
                 ) : (
-                  <Text className="text-[14px] font-bold text-primary-foreground">
+                  <Text className="text-sm font-bold text-primary-foreground">
                     Next
                   </Text>
                 )}
@@ -231,18 +231,18 @@ export default function CurrentPasswordScreen() {
         }}
       >
         <View className="flex-1 bg-black/50 items-center justify-center px-6">
-          <View className="w-full max-w-[340px] bg-card border border-border rounded-[14px] p-6 gap-5 shadow-lg">
+          <View className="w-full max-w-85 bg-card border border-border rounded-2xl p-6 gap-5 shadow-lg">
             <View className="gap-2 items-center">
-              <Text className="text-[18px] font-bold text-foreground text-center">
+              <Text className="text-lg font-bold text-foreground text-center">
                 Forgot password?
               </Text>
-              <Text className="text-[13px] font-sans text-muted-foreground text-center leading-5">
+              <Text className="text-xs font-sans text-muted-foreground text-center leading-5">
                 To reset your password, your current session will end and an OTP will be sent to:
               </Text>
-              <Text className="text-[14px] font-bold text-foreground text-center mt-1">
+              <Text className="text-sm font-bold text-foreground text-center mt-1">
                 {userEmail}
               </Text>
-              <Text className="text-[13px] font-sans text-muted-foreground text-center leading-5 mt-1">
+              <Text className="text-xs font-sans text-muted-foreground text-center leading-5 mt-1">
                 Do you want to proceed?
               </Text>
             </View>
@@ -251,9 +251,9 @@ export default function CurrentPasswordScreen() {
               <Pressable
                 onPress={() => setIsForgotModalVisible(false)}
                 disabled={forgotLoading}
-                className="flex-1 h-[42px] rounded-full bg-secondary items-center justify-center active:opacity-80"
+                className="flex-1 h-10.5 rounded-full bg-secondary items-center justify-center active:opacity-80"
               >
-                <Text className="text-[14px] font-bold text-foreground">
+                <Text className="text-sm font-bold text-foreground">
                   Cancel
                 </Text>
               </Pressable>
@@ -261,12 +261,12 @@ export default function CurrentPasswordScreen() {
               <Pressable
                 onPress={handleProceedForgotPassword}
                 disabled={forgotLoading}
-                className="flex-1 h-[42px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+                className="flex-1 h-10.5 rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
               >
                 {forgotLoading ? (
                   <ActivityIndicator color="#FAF9EE" size="small" />
                 ) : (
-                  <Text className="text-[14px] font-bold text-primary-foreground">
+                  <Text className="text-sm font-bold text-primary-foreground">
                     Continue
                   </Text>
                 )}

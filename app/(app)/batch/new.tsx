@@ -211,7 +211,7 @@ export default function NewBatchScreen() {
                 {[1, 2, 3, 4].map((s) => (
                   <View
                     key={s}
-                    className={`h-[6px] w-[34px] rounded-full ${
+                    className={`h-1.5 w-8.5 rounded-full ${
                       s <= step ? 'bg-primary' : 'bg-[#DCDBD5]'
                     }`}
                   />
@@ -226,7 +226,7 @@ export default function NewBatchScreen() {
           {step === 1 && (
             <View className="flex-1 justify-between" style={{ paddingBottom: stackScrollPadding }}>
               <View>
-                <Text className="text-[20px] font-bold text-foreground">
+                <Text className="text-xl font-bold text-foreground">
                   Select available machine
                 </Text>
                 <Text className="text-sm font-sans text-foreground mt-1 mb-8">
@@ -237,7 +237,7 @@ export default function NewBatchScreen() {
                 <TouchableOpacity
                   activeOpacity={0.8}
                   onPress={() => machineModalRef.current?.present()}
-                  className={`h-[58px] rounded-2xl border-[1.5px] px-4 flex-row items-center justify-between bg-card ${
+                  className={`h-14.5 rounded-2xl border-[1.5px] px-4 flex-row items-center justify-between bg-card ${
                     machineError ? 'border-destructive' : 'border-border'
                   }`}
                 >
@@ -268,7 +268,7 @@ export default function NewBatchScreen() {
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={handleStep1Next}
-                className="h-[45px] rounded-full bg-primary items-center justify-center"
+                className="h-11.25 rounded-full bg-primary items-center justify-center"
               >
                 <Text className="text-sm font-bold text-[#FAF9EE]">Next</Text>
               </TouchableOpacity>
@@ -279,7 +279,7 @@ export default function NewBatchScreen() {
           {step === 2 && (
             <View className="flex-1 justify-between" style={{ paddingBottom: stackScrollPadding }}>
               <View>
-                <Text className="text-[20px] font-bold text-foreground">
+                <Text className="text-xl font-bold text-foreground">
                   Make sure your machine is on
                 </Text>
                 <Text className="text-sm font-sans text-foreground mt-1 mb-8">
@@ -287,7 +287,7 @@ export default function NewBatchScreen() {
                 </Text>
               </View>
 
-              <View className="h-[260px] w-full items-center justify-center my-auto">
+              <View className="h-65 w-full items-center justify-center my-auto">
                 <LottieView
                   source={require('@/assets/icons/mascot/onboarding/sagana_mascot_machine.lottie')}
                   autoPlay
@@ -303,7 +303,7 @@ export default function NewBatchScreen() {
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={handleStep2Next}
-                className="h-[45px] rounded-full bg-primary items-center justify-center"
+                className="h-11.25 rounded-full bg-primary items-center justify-center"
               >
                 <Text className="text-sm font-bold text-[#FAF9EE]">
                   My machine is now turned on
@@ -320,7 +320,7 @@ export default function NewBatchScreen() {
                 keyboardShouldPersistTaps="handled"
                 contentContainerStyle={{ paddingBottom: stackScrollPadding + 60 }}
               >
-                <Text className="text-[20px] font-bold text-foreground">
+                <Text className="text-xl font-bold text-foreground">
                   What are your feedstocks?
                 </Text>
                 <Text className="text-sm font-sans text-foreground mt-1 mb-6">
@@ -352,17 +352,17 @@ export default function NewBatchScreen() {
                           style={{ width: `${100 / columns}%` }}
                           className="items-center px-1 mb-8"
                         >
-                          <View className="h-[76px] w-[76px] items-center justify-center">
+                          <View className="h-19 w-19 items-center justify-center">
                             {image ? (
                               <Image source={image} style={{ width: 72, height: 72 }} contentFit="contain" accessible={false} />
                             ) : (
                               <Sprout size={32} color="#718619" />
                             )}
                           </View>
-                          <Text className="text-xs font-sans text-foreground text-center mt-2 mb-3 min-h-[36px]">
+                          <Text className="text-xs font-sans text-foreground text-center mt-2 mb-3 min-h-9">
                             {feedstock.name}
                           </Text>
-                          <View className="w-full max-w-[110px] min-h-12 flex-row items-center rounded-xl border border-border px-3">
+                          <View className="w-full max-w-27.5 min-h-12 flex-row items-center rounded-xl border border-border px-3">
                             <TextInput
                               accessibilityLabel={`${feedstock.name} weight in kilograms`}
                               keyboardType="decimal-pad"
@@ -390,7 +390,7 @@ export default function NewBatchScreen() {
                   activeOpacity={0.8}
                   disabled={!isStep3Valid}
                   onPress={handleStep3Next}
-                  className={`h-[45px] rounded-full items-center justify-center ${
+                  className={`h-11.25 rounded-full items-center justify-center ${
                     isStep3Valid ? 'bg-primary' : 'bg-secondary'
                   }`}
                 >
@@ -410,7 +410,7 @@ export default function NewBatchScreen() {
           {step === 4 && (
             <View className="flex-1 justify-between" style={{ paddingBottom: stackScrollPadding }}>
               <View>
-                <Text className="text-[20px] font-bold text-foreground">
+                <Text className="text-xl font-bold text-foreground">
                   Transfer the feedstocks to the machine
                 </Text>
                 <Text className="text-sm font-sans text-foreground mt-1 mb-8">
@@ -418,7 +418,7 @@ export default function NewBatchScreen() {
                 </Text>
               </View>
 
-              <View className="h-[260px] w-full items-center justify-center my-auto">
+              <View className="h-65 w-full items-center justify-center my-auto">
                 <LottieView
                   source={require('@/assets/icons/mascot/onboarding/sagana_puzzled_mascot_machine.lottie')}
                   autoPlay
@@ -435,7 +435,7 @@ export default function NewBatchScreen() {
                 activeOpacity={0.8}
                 disabled={createBatchMutation.isPending}
                 onPress={handleStep4Submit}
-                className="h-[45px] rounded-full bg-primary items-center justify-center"
+                className="h-11.25 rounded-full bg-primary items-center justify-center"
               >
                 {createBatchMutation.isPending ? (
                   <ActivityIndicator color="#FAF9EE" />
@@ -490,7 +490,7 @@ export default function NewBatchScreen() {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                       }}
                       activeOpacity={0.7}
-                      className={`h-[60px] rounded-2xl border border-border px-4 flex-row items-center justify-between mb-3 bg-card ${
+                      className={`h-15 rounded-2xl border border-border px-4 flex-row items-center justify-between mb-3 bg-card ${
                         !isAvailable ? 'opacity-70' : ''
                       }`}
                     >

@@ -32,7 +32,7 @@ export function ErrorModal({
       >
         <Pressable
           onPress={(e) => e.stopPropagation()}
-          className="w-full max-w-[320px] bg-card rounded-3xl p-6 items-center shadow-2xl border border-border/40"
+          className="w-full max-w-80 bg-card rounded-3xl p-6 items-center shadow-2xl border border-border/40"
         >
           <Text className="text-base font-bold text-foreground text-center">
             {title}

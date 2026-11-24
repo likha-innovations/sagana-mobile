@@ -352,7 +352,7 @@ export function SuccessStep() {
   const [lottieError, setLottieError] = useState(false);
   return (
     <View className="flex-1 items-center justify-center">
-      <View className="w-[264px] h-[264px] items-center justify-center mb-6">
+      <View className="w-66 h-66 items-center justify-center mb-6">
         {!lottieError ? (
           <LottieView
             source={require('@/assets/icons/mascot/onboarding/sagana_celebration.lottie')}
@@ -373,11 +373,11 @@ export function SuccessStep() {
           />
         )}
       </View>
-      <View className="w-full max-w-[380px] gap-2.5">
-        <Text className="text-[20px] font-bold text-foreground text-left">
+      <View className="w-full max-w-95 gap-2.5">
+        <Text className="text-xl font-bold text-foreground text-left">
           Your machine has been registered!
         </Text>
-        <Text className="text-[14px] font-sans text-foreground text-left leading-5">
+        <Text className="text-sm font-sans text-foreground text-left leading-5">
           You can now start a compost batch using your newly registered device.
         </Text>
       </View>

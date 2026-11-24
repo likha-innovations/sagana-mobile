@@ -1,4 +1,5 @@
-import { View, Text } from "react-native";
+import { View } from "react-native";
+import { Text } from "@/components/ui/text";
 
 export interface GradientMetricCardProps {
   value: string | number;
@@ -20,19 +21,19 @@ export function GradientMetricCard({
         <Text
           className={
             unit
-              ? "text-[28px] font-bold text-primary-foreground"
-              : "text-[20px] font-bold text-primary-foreground"
+              ? "text-3xl font-bold text-primary-foreground"
+              : "text-xl font-bold text-primary-foreground"
           }
         >
           {value}
         </Text>
         {unit && (
-          <Text className="text-[14px] font-bold text-primary-foreground">
+          <Text className="text-sm font-bold text-primary-foreground">
             {unit}
           </Text>
         )}
       </View>
-      <Text className="text-[12px] font-sans text-primary-foreground">
+      <Text className="text-xs font-sans text-primary-foreground">
         {label}
       </Text>
     </View>

@@ -106,7 +106,7 @@ function WheelColumn({
             style={{ height: ITEM_HEIGHT }}
             className="items-center justify-center px-1"
           >
-            <Text className="text-[16px] font-medium text-foreground text-center">
+            <Text className="text-base font-medium text-foreground text-center">
               {item}
             </Text>
           </View>

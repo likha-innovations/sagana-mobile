@@ -195,13 +195,13 @@ function AuthProtectedNavigation() {
               <Text className="text-foreground text-xl font-bold text-center">
                 You are offline
               </Text>
-              <Text className="text-muted-foreground text-sm text-center max-w-[280px]">
+              <Text className="text-muted-foreground text-sm text-center max-w-70">
                 Please connect to the internet to load your account and continue.
               </Text>
               <Pressable
                 accessibilityRole="button"
                 onPress={() => void profile.refetch()}
-                className="mt-4 px-6 py-3 rounded-full bg-primary items-center justify-center active:opacity-90 w-full max-w-[280px]"
+                className="mt-4 px-6 py-3 rounded-full bg-primary items-center justify-center active:opacity-90 w-full max-w-70"
               >
                 <Text className="text-primary-foreground font-bold text-sm">Try again</Text>
               </Pressable>

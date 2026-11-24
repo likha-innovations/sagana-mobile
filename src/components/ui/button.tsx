@@ -1,11 +1,11 @@
 import { forwardRef, type ReactNode, type ElementRef } from 'react';
 import {
   Pressable,
-  Text,
   ActivityIndicator,
   Platform,
   type PressableProps,
 } from 'react-native';
+import { Text } from '@/components/ui/text';
 import { cva, type VariantProps } from 'class-variance-authority';
 import * as Haptics from 'expo-haptics';
 import { cn } from '@/lib/utils';
@@ -68,6 +68,7 @@ export interface ButtonProps
   haptic?: boolean;
   className?: string;
   textClassName?: string;
+  maxFontSizeMultiplier?: number | null;
 }
 
 export const Button = forwardRef<ElementRef<typeof Pressable>, ButtonProps>(
@@ -82,6 +83,7 @@ export const Button = forwardRef<ElementRef<typeof Pressable>, ButtonProps>(
       haptic = false,
       className,
       textClassName,
+      maxFontSizeMultiplier = 1.3,
       onPress,
       ...props
     },
@@ -109,7 +111,10 @@ export const Button = forwardRef<ElementRef<typeof Pressable>, ButtonProps>(
             color={variant === 'outline' || variant === 'ghost' ? '#718619' : '#FAF9EE'}
           />
         ) : typeof children === 'string' || title ? (
-          <Text className={cn(buttonTextVariants({ variant, size }), textClassName)}>
+          <Text
+            maxFontSizeMultiplier={maxFontSizeMultiplier}
+            className={cn(buttonTextVariants({ variant, size }), textClassName)}
+          >
             {title ?? children}
           </Text>
         ) : (

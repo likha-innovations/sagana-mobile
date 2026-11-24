@@ -43,7 +43,7 @@ export function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInput
   };
 
   return (
-    <View className="w-full flex-row justify-between items-center max-w-[380px]">
+    <View className="w-full flex-row justify-between items-center max-w-95">
       {[0, 1, 2, 3, 4, 5].map((index) => {
         const digit = code[index] || '';
         const isFocused = focusedIndex === index;
@@ -67,7 +67,7 @@ export function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInput
             accessibilityLabel={`One-time code digit ${index + 1} of 6`}
             textAlign="center"
             className={cn(
-              'w-[52px] h-[61px] rounded-[14px] border-[1.5px] bg-background text-[24px] font-bold text-foreground',
+              'w-13 h-15.25 rounded-2xl border-[1.5px] bg-background text-2xl font-bold text-foreground',
               hasError
                 ? 'border-destructive text-destructive'
                 : isFocused || digit

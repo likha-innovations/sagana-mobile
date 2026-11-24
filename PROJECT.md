@@ -31,6 +31,8 @@ Mobile client for Sagana platform built with Expo SDK 57, React 19, React Native
   - AuthGate: Redirects unauthenticated users to `/(auth)/sign-in` and authenticated users to `/(app)/(tabs)`.
 - **UI & Styling**:
   - Styled with Uniwind (Tailwind CSS v4) utility classes (`className`) and CSS tokens in `global.css`.
+  - **Semantic Tokens Only**: Always use design tokens from `global.css` (`@theme`). Arbitrary bracketed pixel classes (`text-[14px]`, `rounded-[14px]`, `min-h-[99px]`) are forbidden. Use semantic typography (`text-xs`..`text-3xl`), border radii (`rounded-md`..`rounded-3xl`, `rounded-card`), and standard Tailwind spacing (`p-4`, `h-12`).
+  - **Accessible Text**: Shared UI components use `<Text>` from `@/components/ui/text` which defaults to `maxFontSizeMultiplier = 1.15`.
   - Icons strictly imported from `lucide-react-native` (or custom SVGs in `src/components/icons/`).
   - Safe area metrics handled exclusively via `useSafeAreaInsets()` (legacy `<SafeAreaView>` is banned).
   - Tactile feedback with `expo-haptics` and toast notifications via `burnt`.
@@ -63,3 +65,4 @@ Mobile client for Sagana platform built with Expo SDK 57, React 19, React Native
 - **Expo SDK 57 & React 19 Alignment**: Never install `@types/react-native` (built-in types used) or deprecated `@clerk/clerk-expo` (use `@clerk/expo` Core 3). Always install native modules via `npx expo install`.
 - **Typed Native Fetch**: Replaced Axios with `apiFetch<T>()` to eliminate bundle bloat and ensure zero external HTTP runtime vulnerabilities.
 - **Zod-first Types**: Inferred types from Zod schemas to guarantee 1:1 parity with `sagana-backend` DTOs without duplicating interfaces.
+- **Semantic Design Tokens over Arbitrary Pixel Brackets**: Replaced all `text-[Npx]` and `rounded-[Npx]` arbitrary classes with semantic Tailwind v4 `@theme` tokens in `global.css` (e.g. `text-xs` through `text-3xl`, `rounded-card`). Arbitrary text classes omitted line heights and clipped font descenders on custom fonts, while semantic tokens provide consistent vertical rhythm and scale cleanly across iOS and Android device densities. Fixed viewport scaling multipliers (`--ui-scale` / `s(...)`) were rejected in favor of native platform density handling.

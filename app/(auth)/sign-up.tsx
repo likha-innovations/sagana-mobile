@@ -123,7 +123,7 @@ function FloatingInputField({
         }
       }}
       className={cn(
-        'w-full h-[58px] rounded-2xl border-[1.5px] px-5 flex-row items-center justify-between bg-background transition-colors',
+        'w-full h-14.5 rounded-2xl border-[1.5px] px-5 flex-row items-center justify-between bg-background transition-colors',
         hasError
           ? 'border-destructive bg-destructive/[0.03]'
           : isFocused
@@ -145,7 +145,7 @@ function FloatingInputField({
         >
           <Text
             className={cn(
-              'text-[14px] select-none',
+              'text-sm select-none',
               hasError
                 ? 'text-destructive font-medium'
                 : 'text-muted-foreground'
@@ -173,7 +173,7 @@ function FloatingInputField({
           style={{
             paddingTop: isFloating ? 14 : 0,
           }}
-          className="text-[14px] font-sans text-foreground p-0 m-0 w-full h-full"
+          className="text-sm font-sans text-foreground p-0 m-0 w-full h-full"
         />
       </View>
 
@@ -259,7 +259,7 @@ function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupPr
   };
 
   return (
-    <View className="w-full flex-row justify-between items-center gap-1.5 sm:gap-2 max-w-[380px]">
+    <View className="w-full flex-row justify-between items-center gap-1.5 sm:gap-2 max-w-95">
       {[0, 1, 2, 3, 4, 5].map((index) => {
         const digit = code[index] || '';
         return (
@@ -280,7 +280,7 @@ function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupPr
             accessibilityLabel={`One-time code digit ${index + 1} of 6`}
             textAlign="center"
             className={cn(
-              'flex-1 max-w-[50px] aspect-[50/58] rounded-2xl border-[1.5px] bg-background text-[22px] font-bold text-foreground p-0',
+              'flex-1 max-w-12.5 aspect-[50/58] rounded-2xl border-[1.5px] bg-background text-2xl font-bold text-foreground p-0',
               hasError
                 ? 'border-destructive text-destructive'
                 : digit
@@ -773,7 +773,7 @@ export default function SignUpScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <View className="w-full max-w-[380px] items-center">
+            <View className="w-full max-w-95 items-center">
               {/* Header Navigation Bar */}
               <View className="w-full h-11 flex-row items-center justify-between relative mb-6">
                 <Pressable
@@ -793,7 +793,7 @@ export default function SignUpScreen() {
               {step === 'email' && (
                 <View className="w-full">
                   <View className="w-full mb-6">
-                    <Text className="text-[20px] font-bold text-foreground text-left">
+                    <Text className="text-xl font-bold text-foreground text-left">
                       Create your account
                     </Text>
                   </View>
@@ -826,7 +826,7 @@ export default function SignUpScreen() {
                     {/* Divider: or continue with */}
                     <View className="w-full flex-row items-center justify-between my-2">
                       <View className="flex-1 h-[1px] bg-border" />
-                      <Text className="text-[13px] font-sans text-muted-foreground px-3">
+                      <Text className="text-sm font-sans text-muted-foreground px-3">
                         or continue with
                       </Text>
                       <View className="flex-1 h-[1px] bg-border" />
@@ -836,7 +836,7 @@ export default function SignUpScreen() {
                     <Pressable
                       onPress={handleGooglePress}
                       disabled={loading || googleLoading}
-                      className="w-full h-[50px] rounded-full bg-secondary flex-row items-center justify-center gap-2.5 active:opacity-85 disabled:opacity-60"
+                      className="w-full h-12.5 rounded-full bg-secondary flex-row items-center justify-center gap-2.5 active:opacity-85 disabled:opacity-60"
                       accessibilityRole="button"
                       accessibilityLabel="Sign up with Google"
                     >
@@ -845,7 +845,7 @@ export default function SignUpScreen() {
                       ) : (
                         <>
                           <GoogleIcon size={18} />
-                          <Text className="text-[15px] font-bold text-foreground">
+                          <Text className="text-base font-bold text-foreground">
                             Google
                           </Text>
                         </>
@@ -878,10 +878,10 @@ export default function SignUpScreen() {
               {step === 'otp' && (
                 <View className="w-full">
                   <View className="w-full gap-2 mb-6">
-                    <Text className="text-[20px] font-bold text-foreground text-left">
+                    <Text className="text-xl font-bold text-foreground text-left">
                       Enter one-time code
                     </Text>
-                    <Text className="text-[14px] font-sans text-foreground text-left leading-5">
+                    <Text className="text-sm font-sans text-foreground text-left leading-5">
                       Kindly check your email for an OTP and enter it here.
                     </Text>
                   </View>
@@ -915,7 +915,7 @@ export default function SignUpScreen() {
                       disabled={resendCooldown > 0}
                       className="py-1"
                     >
-                      <Text className="text-[14px] font-medium text-foreground">
+                      <Text className="text-sm font-medium text-foreground">
                         <Text className="text-[#96958F] font-sans">Didn’t receive any code? </Text>
                         <Text
                           className={cn(
@@ -937,10 +937,10 @@ export default function SignUpScreen() {
               {step === 'password' && (
                 <View className="w-full">
                   <View className="w-full gap-2.5 mb-8">
-                    <Text className="text-[20px] font-bold text-foreground text-left">
+                    <Text className="text-xl font-bold text-foreground text-left">
                       Enter new password
                     </Text>
-                    <Text className="text-[14px] font-sans text-foreground text-left leading-5">
+                    <Text className="text-sm font-sans text-foreground text-left leading-5">
                       Enter and confirm the password you wish to use for this account.
                     </Text>
                   </View>
@@ -978,7 +978,7 @@ export default function SignUpScreen() {
 
                     {/* Inline Error Message */}
                     {passwordErrorMessage && (
-                      <Text className="text-[14px] font-sans text-destructive mt-1 ml-1 text-left">
+                      <Text className="text-sm font-sans text-destructive mt-1 ml-1 text-left">
                         {passwordErrorMessage}
                       </Text>
                     )}
@@ -996,7 +996,7 @@ export default function SignUpScreen() {
               {step === 'name' && (
                 <View className="w-full">
                   <View className="w-full mb-6">
-                    <Text className="text-[20px] font-bold text-foreground text-left">
+                    <Text className="text-xl font-bold text-foreground text-left">
                       Who are you?
                     </Text>
                   </View>
@@ -1088,18 +1088,18 @@ export default function SignUpScreen() {
             </View>
 
             {/* Bottom Actions Container (Pinned at the bottom) */}
-            <View className="w-full max-w-[380px] pt-6 pb-2">
+            <View className="w-full max-w-95 pt-6 pb-2">
               {step === 'email' && (
                 <Pressable
                   onPress={handleNextEmail}
                   disabled={loading}
-                  className="w-full h-[50px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+                  className="w-full h-12.5 rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
                   accessibilityRole="button"
                 >
                   {loading ? (
                     <ActivityIndicator color="#FAF9EE" size="small" />
                   ) : (
-                    <Text className="text-[15px] font-bold text-primary-foreground">
+                    <Text className="text-base font-bold text-primary-foreground">
                       Next
                     </Text>
                   )}
@@ -1110,13 +1110,13 @@ export default function SignUpScreen() {
                 <Pressable
                   onPress={handleVerifyOtp}
                   disabled={loading}
-                  className="w-full h-[50px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+                  className="w-full h-12.5 rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
                   accessibilityRole="button"
                 >
                   {loading ? (
                     <ActivityIndicator color="#FAF9EE" size="small" />
                   ) : (
-                    <Text className="text-[15px] font-bold text-primary-foreground">
+                    <Text className="text-base font-bold text-primary-foreground">
                       Next
                     </Text>
                   )}
@@ -1127,10 +1127,10 @@ export default function SignUpScreen() {
                 <Pressable
                   onPress={handleNextPassword}
                   disabled={loading || !password || !confirmPassword}
-                  className="w-full h-[50px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+                  className="w-full h-12.5 rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
                   accessibilityRole="button"
                 >
-                  <Text className="text-[15px] font-bold text-primary-foreground">
+                  <Text className="text-base font-bold text-primary-foreground">
                     Next
                   </Text>
                 </Pressable>
@@ -1140,13 +1140,13 @@ export default function SignUpScreen() {
                 <Pressable
                   onPress={handleNextName}
                   disabled={loading}
-                  className="w-full h-[50px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+                  className="w-full h-12.5 rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
                   accessibilityRole="button"
                 >
                   {loading ? (
                     <ActivityIndicator color="#FAF9EE" size="small" />
                   ) : (
-                    <Text className="text-[15px] font-bold text-primary-foreground">
+                    <Text className="text-base font-bold text-primary-foreground">
                       Finish
                     </Text>
                   )}

@@ -139,7 +139,7 @@ export default function ChangePasswordNewScreen() {
           className="flex-1"
         >
           <View className="flex-1 px-4 items-center justify-between pb-10">
-            <View className="w-full max-w-[380px] items-center pt-4">
+            <View className="w-full max-w-95 items-center pt-4">
               {/* Header with back button and progress bar */}
               <View className="w-full h-11 flex-row items-center justify-between relative mb-6">
                 <Pressable
@@ -148,7 +148,7 @@ export default function ChangePasswordNewScreen() {
                     router.back();
                   }}
                   hitSlop={12}
-                  className="w-[30px] h-[30px] items-center justify-center -ml-1"
+                  className="w-7.5 h-7.5 items-center justify-center -ml-1"
                   accessibilityRole="button"
                   accessibilityLabel="Back to Current Password"
                 >
@@ -158,15 +158,15 @@ export default function ChangePasswordNewScreen() {
                 <View className="absolute inset-x-0 items-center justify-center pointer-events-none">
                   <ProgressBar activeStep={2} totalSteps={2} />
                 </View>
-                <View className="w-[30px]" />
+                <View className="w-7.5" />
               </View>
 
               {/* Title & Description */}
               <View className="w-full gap-2.5 mb-8 mt-2">
-                <Text className="text-[20px] font-bold text-foreground text-left">
+                <Text className="text-xl font-bold text-foreground text-left">
                   Enter new password
                 </Text>
-                <Text className="text-[14px] font-sans text-foreground text-left leading-5">
+                <Text className="text-sm font-sans text-foreground text-left leading-5">
                   Enter and confirm the new password you wish to use for this account.
                 </Text>
               </View>
@@ -205,7 +205,7 @@ export default function ChangePasswordNewScreen() {
 
                 {/* Inline Error Message */}
                 {passwordErrorMessage && (
-                  <Text className="text-[13px] font-sans text-destructive mt-1 ml-1 text-left">
+                  <Text className="text-xs font-sans text-destructive mt-1 ml-1 text-left">
                     {passwordErrorMessage}
                   </Text>
                 )}
@@ -219,17 +219,17 @@ export default function ChangePasswordNewScreen() {
             </View>
 
             {/* Bottom Finish Button */}
-            <View className="w-full max-w-[380px]">
+            <View className="w-full max-w-95">
               <Pressable
                 onPress={handleFinish}
                 disabled={loading || !newPassword || !confirmPassword}
-                className="w-full h-[45px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+                className="w-full h-11.25 rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
                 accessibilityRole="button"
               >
                 {loading ? (
                   <ActivityIndicator color="#FAF9EE" size="small" />
                 ) : (
-                  <Text className="text-[14px] font-bold text-primary-foreground">
+                  <Text className="text-sm font-bold text-primary-foreground">
                     Finish
                   </Text>
                 )}

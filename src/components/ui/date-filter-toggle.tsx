@@ -1,4 +1,5 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Pressable } from "react-native";
+import { Text } from "@/components/ui/text";
 import { ChevronLeft, ChevronRight } from "lucide-react-native";
 import { colors } from "@/constants";
 
@@ -27,7 +28,7 @@ export function DateFilterToggle({
     <View
       className={
         prominent
-          ? "w-full flex-row justify-between items-center rounded-t-[14px] bg-primary px-2 py-1"
+          ? "w-full flex-row justify-between items-center rounded-t-card bg-primary px-2 py-1"
           : "flex-row items-center rounded-full border border-border bg-card px-2 py-1 shadow-md"
       }
     >
@@ -54,7 +55,7 @@ export function DateFilterToggle({
       >
         <Text
           style={{ color }}
-          className="text-center text-[14px] font-sans"
+          className="text-center text-sm font-sans"
         >
           {label}
         </Text>

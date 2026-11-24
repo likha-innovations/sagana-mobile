@@ -29,6 +29,7 @@ function render(points, fontScale = 1, width = 280) {
         neutral: { 300: "#8E8E87" },
       },
     },
+    "@/components/ui/text": { Text: "Text" },
   };
   vm.runInNewContext(code, {
     module,

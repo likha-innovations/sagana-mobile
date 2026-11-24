@@ -73,6 +73,7 @@ function renderDetail(completed, activeBatch = null, offline = false) {
       Alert: {},
       useWindowDimensions: () => ({ width: 390, fontScale: 1 }),
     },
+    "@/components/ui/text": { Text: "Text" },
     "react/jsx-runtime": require("react/jsx-runtime"),
     "expo-router": {
       useFocusEffect: () => {},
@@ -295,6 +296,7 @@ test("machine cards show sensor readings and a fallback for an empty phase", () 
       Pressable: "Pressable",
       useWindowDimensions: () => ({ width: 390, fontScale: 1 }),
     },
+    "@/components/ui/text": { Text: "Text" },
     "react/jsx-runtime": require("react/jsx-runtime"),
     "lucide-react-native": icons,
     "@/components/icons": { CompostIcon: "CompostIcon" },
@@ -324,6 +326,7 @@ test("machine cards show sensor readings and a fallback for an empty phase", () 
 test("data errors show a retry action and disable it while retrying", () => {
   const { HistoryState } = load("src/components/history/history-state.tsx", {
     "react-native": { View: "View", Text: "Text", Pressable: "Pressable" },
+    "@/components/ui/text": { Text: "Text" },
     "react/jsx-runtime": require("react/jsx-runtime"),
     "lucide-react-native": icons,
     "@/constants": { colors },

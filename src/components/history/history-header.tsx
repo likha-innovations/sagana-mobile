@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { View, Text, Pressable, useWindowDimensions } from "react-native";
+import { View, Pressable, useWindowDimensions } from "react-native";
+import { Text } from "@/components/ui/text";
 import { ChevronLeft } from "lucide-react-native";
 import { useRouter, type Href } from "expo-router";
 import { useDynamicLayout } from "@/hooks/use-layout";
@@ -61,8 +62,8 @@ export function HistoryHeader({
           accessibilityRole="header"
           className={
             back
-              ? "flex-1 text-[16px] font-bold text-foreground"
-              : "flex-1 text-[32px] font-bold text-foreground"
+              ? "flex-1 text-base font-bold text-foreground"
+              : "flex-1 text-3xl font-bold text-foreground"
           }
         >
           {title}
