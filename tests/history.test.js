@@ -241,6 +241,7 @@ function sheetHarness(file, exportName) {
     },
     "@/constants": { colors },
     "@/lib/history": h,
+    "@/components/ui/text": { Text: "Text" },
     "./button": { Button: "Button" },
   })[exportName];
   return (props) => {

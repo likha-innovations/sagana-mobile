@@ -47,6 +47,7 @@ function loadSuccessScreen() {
     "@/lib/utils": {
       cn: (...args) => args.filter(Boolean).join(" "),
     },
+    "@/components/ui/text": { Text: "Text" },
   };
 
   const codeText = ts.transpileModule(fs.readFileSync(filename, "utf8"), {
@@ -102,8 +103,8 @@ describe("SuccessScreen Component", () => {
 
     // Graphic section has 264x264 container
     const [graphicBox, textBlock] = centerSection.props.children;
-    expect(graphicBox.props.className).toContain("w-[264px]");
-    expect(graphicBox.props.className).toContain("h-[264px]");
+    expect(graphicBox.props.className).toContain("w-66");
+    expect(graphicBox.props.className).toContain("h-66");
 
     // Verify typography and CTA button
     const [titleEl, descEl] = textBlock.props.children;
