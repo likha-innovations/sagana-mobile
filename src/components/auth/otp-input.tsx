@@ -67,7 +67,7 @@ export function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInput
             accessibilityLabel={`One-time code digit ${index + 1} of 6`}
             textAlign="center"
             className={cn(
-              'w-13 h-15.25 rounded-card border-[1.5px] bg-background text-2xl font-bold text-foreground',
+              'w-13 h-15.25 rounded-2xl border-[1.5px] bg-background text-2xl font-bold text-foreground',
               hasError
                 ? 'border-destructive text-destructive'
                 : isFocused || digit

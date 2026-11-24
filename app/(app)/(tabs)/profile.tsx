@@ -60,7 +60,7 @@ export default function ProfileScreen() {
           </Text>
 
           {/* User Card */}
-          <View className="flex-row items-center p-4 bg-card border border-border rounded-card gap-4">
+          <View className="flex-row items-center p-4 bg-card border border-border rounded-2xl gap-4">
             <LinearGradient
               colors={[colors.gradient.statCard.colors[0], colors.gradient.statCard.colors[1]]}
               start={{ x: 0, y: 0 }}
@@ -144,7 +144,7 @@ export default function ProfileScreen() {
         onRequestClose={() => setIsLogoutModalVisible(false)}
       >
         <View className="flex-1 bg-black/40 items-center justify-center px-6">
-          <View className="w-full bg-card border border-border rounded-card p-6 gap-6 items-center shadow-md">
+          <View className="w-full bg-card border border-border rounded-2xl p-6 gap-6 items-center shadow-md">
             <View className="gap-2.5 items-center">
               <Text className="text-sm font-bold text-foreground">
                 Log Out?

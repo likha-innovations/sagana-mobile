@@ -182,7 +182,7 @@ export default function CurrentPasswordScreen() {
                 />
 
                 {currentPasswordErrorMessage && (
-                  <Text className="text-13 font-sans text-destructive mt-1 ml-1 text-left">
+                  <Text className="text-xs font-sans text-destructive mt-1 ml-1 text-left">
                     {currentPasswordErrorMessage}
                   </Text>
                 )}
@@ -193,7 +193,7 @@ export default function CurrentPasswordScreen() {
                   hitSlop={10}
                   className="self-end mt-2"
                 >
-                  <Text className="text-13 font-sans text-primary">
+                  <Text className="text-xs font-sans text-primary">
                     Forgot password?
                   </Text>
                 </Pressable>
@@ -231,18 +231,18 @@ export default function CurrentPasswordScreen() {
         }}
       >
         <View className="flex-1 bg-black/50 items-center justify-center px-6">
-          <View className="w-full max-w-85 bg-card border border-border rounded-card p-6 gap-5 shadow-lg">
+          <View className="w-full max-w-85 bg-card border border-border rounded-2xl p-6 gap-5 shadow-lg">
             <View className="gap-2 items-center">
               <Text className="text-lg font-bold text-foreground text-center">
                 Forgot password?
               </Text>
-              <Text className="text-13 font-sans text-muted-foreground text-center leading-5">
+              <Text className="text-xs font-sans text-muted-foreground text-center leading-5">
                 To reset your password, your current session will end and an OTP will be sent to:
               </Text>
               <Text className="text-sm font-bold text-foreground text-center mt-1">
                 {userEmail}
               </Text>
-              <Text className="text-13 font-sans text-muted-foreground text-center leading-5 mt-1">
+              <Text className="text-xs font-sans text-muted-foreground text-center leading-5 mt-1">
                 Do you want to proceed?
               </Text>
             </View>

@@ -103,7 +103,7 @@ export default function HistoryScreen() {
                 autoCorrect={false}
                 returnKeyType="search"
                 containerClassName="mb-0"
-                controlClassName="rounded-card border-[1.5px] border-border"
+                controlClassName="rounded-2xl border-[1.5px] border-border"
                 className="font-sans"
                 trailingIcon={<Search size={20} color={colors.gray.textIcon} />}
               />

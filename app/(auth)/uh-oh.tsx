@@ -34,7 +34,7 @@ export default function UhOhScreen() {
               accessibilityLabel="Confused mascot illustration"
             />
           </View>
-          <Text className="text-28 font-bold text-foreground text-center mb-4">
+          <Text className="text-3xl font-bold text-foreground text-center mb-4">
             Uh-oh, we're sorry!
           </Text>
           <Text className="text-sm font-sans text-foreground text-center leading-6">

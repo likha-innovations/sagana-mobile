@@ -22,7 +22,7 @@ export function SensorStatCard({
         width: width < 360 || fontScale > 1.2 ? "100%" : "48%",
         flexGrow: 1,
       }}
-      className="min-h-35 bg-card rounded-card border border-border py-6 px-3 gap-3 items-center justify-center"
+      className="min-h-35 bg-card rounded-2xl border border-border py-6 px-3 gap-3 items-center justify-center"
     >
       <Icon size={24} color={iconColor} strokeWidth={1.5} />
       <Text className="text-xl font-bold" style={{ color: iconColor }}>

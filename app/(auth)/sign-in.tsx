@@ -389,7 +389,7 @@ export default function SignInScreen() {
                   {loading ? (
                     <ActivityIndicator color="#FAF9EE" size="small" />
                   ) : (
-                    <Text className="text-15 font-bold text-primary-foreground">
+                    <Text className="text-base font-bold text-primary-foreground">
                       Log in
                     </Text>
                   )}
@@ -429,7 +429,7 @@ export default function SignInScreen() {
                   ) : (
                     <>
                       <GoogleIcon size={18} />
-                      <Text className="text-15 font-bold text-foreground">
+                      <Text className="text-base font-bold text-foreground">
                         Google
                       </Text>
                     </>
@@ -446,7 +446,7 @@ export default function SignInScreen() {
                 className="w-full h-12.5 rounded-full border-[1.5px] border-primary bg-transparent items-center justify-center active:opacity-80 disabled:opacity-60"
                 accessibilityRole="button"
               >
-                <Text className="text-15 font-bold text-primary">
+                <Text className="text-base font-bold text-primary">
                   Don't have an account?
                 </Text>
               </Pressable>

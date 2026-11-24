@@ -415,7 +415,7 @@ export default function MachineSettingsScreen() {
                     }}
                     error={error}
                     editable={!pending}
-                    controlClassName="rounded-card"
+                    controlClassName="rounded-2xl"
                     autoCapitalize="words"
                     returnKeyType="done"
                     onSubmitEditing={saveRename}
@@ -447,7 +447,7 @@ export default function MachineSettingsScreen() {
 
               {view === "wifi-form" && (
                 <View className="flex-1 mt-2">
-                  <View className="rounded-card border border-border p-4 gap-2 mb-4 bg-card">
+                  <View className="rounded-2xl border border-border p-4 gap-2 mb-4 bg-card">
                     <Text className="text-xs text-muted-foreground">
                       Target Machine:
                     </Text>
@@ -515,7 +515,7 @@ export default function MachineSettingsScreen() {
                     editable={!pending}
                     autoCapitalize="none"
                     autoCorrect={false}
-                    controlClassName="rounded-card"
+                    controlClassName="rounded-2xl"
                   />
 
                   <Input
@@ -531,7 +531,7 @@ export default function MachineSettingsScreen() {
                     editable={!pending}
                     autoCapitalize="none"
                     autoCorrect={false}
-                    controlClassName="rounded-card"
+                    controlClassName="rounded-2xl"
                   />
 
                   <View className="mt-6">

@@ -21,7 +21,7 @@ export function GradientMetricCard({
         <Text
           className={
             unit
-              ? "text-28 font-bold text-primary-foreground"
+              ? "text-3xl font-bold text-primary-foreground"
               : "text-xl font-bold text-primary-foreground"
           }
         >

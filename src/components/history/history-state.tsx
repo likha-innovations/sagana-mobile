@@ -16,7 +16,7 @@ export function HistoryState({
     <View
       className={
         onRetry
-          ? "gap-3 rounded-card border border-brand-200 bg-brand-50 px-5 py-5"
+          ? "gap-3 rounded-2xl border border-brand-200 bg-brand-50 px-5 py-5"
           : "gap-2 px-4 py-6"
       }
     >

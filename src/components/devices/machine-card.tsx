@@ -75,7 +75,7 @@ export function MachineCard({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={`Open ${machine.name}${isOffline ? ", offline" : ""}`}
-      className="bg-card rounded-card border border-border px-4 py-6"
+      className="bg-card rounded-2xl border border-border px-4 py-6"
     >
       {/* Header */}
       <View className="flex-row items-center justify-between mb-4">
@@ -198,14 +198,14 @@ export function MachineCard({
       <View className="flex-row flex-wrap items-center justify-between gap-3 pt-1">
         <View className="flex-row items-center gap-2">
           <CompostIcon size={18} color={phaseIconColor} />
-          <Text className={`text-13 font-bold ${phaseColorClass}`}>
+          <Text className={`text-xs font-bold ${phaseColorClass}`}>
             {phaseText}
           </Text>
         </View>
 
         <View className="flex-row items-center gap-1.5">
           <Clock size={14} color={colors.gray.textIcon} />
-          <Text className="text-13 font-medium text-muted-foreground">
+          <Text className="text-xs font-medium text-muted-foreground">
             {timeAgo}
           </Text>
         </View>

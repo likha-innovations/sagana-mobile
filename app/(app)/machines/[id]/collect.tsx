@@ -531,13 +531,13 @@ export default function LinearActuatorCollectScreen() {
         </View>
 
         {/* Weight display card */}
-        <View className="rounded-card border border-border bg-card p-6 items-center justify-center">
+        <View className="rounded-2xl border border-border bg-card p-6 items-center justify-center">
           <Text className="text-2xl font-bold text-foreground">{displayWeight}</Text>
           <Text className="text-xs font-sans text-muted-foreground mt-1">Current weight</Text>
         </View>
 
         {/* Floor & Middle Door status card */}
-        <View className="mt-4 rounded-card border border-border bg-card p-4 flex-row items-center justify-between">
+        <View className="mt-4 rounded-2xl border border-border bg-card p-4 flex-row items-center justify-between">
           <View className="flex-row items-center gap-3">
             <View
               className={`w-3 h-3 rounded-full ${
@@ -583,7 +583,7 @@ export default function LinearActuatorCollectScreen() {
 
         {/* Machine Offline notice callout */}
         {isMachineOffline && (
-          <View className="mt-3 p-4 rounded-card bg-red-50 border border-red-200 flex-row items-start gap-3">
+          <View className="mt-3 p-4 rounded-2xl bg-red-50 border border-red-200 flex-row items-start gap-3">
             <WifiOff size={20} color={colors.red[500]} style={{ marginTop: 2, flexShrink: 0 }} />
             <View className="flex-1">
               <Text className="text-sm font-bold text-red-900">Machine is offline</Text>
@@ -596,7 +596,7 @@ export default function LinearActuatorCollectScreen() {
 
         {/* Actionable door & floor notice callout */}
         {!isMachineOffline && !isFloorRaised && !isMiddleDoorOpen && (
-          <View className="mt-3 p-4 rounded-card bg-yellow-50 border border-yellow-200 flex-row items-start gap-3">
+          <View className="mt-3 p-4 rounded-2xl bg-yellow-50 border border-yellow-200 flex-row items-start gap-3">
             <AlertCircle size={20} color={colors.yellow[700]} style={{ marginTop: 2, flexShrink: 0 }} />
             <View className="flex-1">
               <Text className="text-sm font-bold text-neutral-900">Middle door is closed</Text>
@@ -608,7 +608,7 @@ export default function LinearActuatorCollectScreen() {
         )}
 
         {!isMachineOffline && !isFloorRaised && isMiddleDoorOpen && (
-          <View className="mt-3 p-4 rounded-card bg-brand-50 border border-brand-200 flex-row items-start gap-3">
+          <View className="mt-3 p-4 rounded-2xl bg-brand-50 border border-brand-200 flex-row items-start gap-3">
             <CheckCircle2 size={20} color={colors.brand[500]} style={{ marginTop: 2, flexShrink: 0 }} />
             <View className="flex-1">
               <Text className="text-sm font-bold text-brand-900">Ready to raise floor</Text>
@@ -620,7 +620,7 @@ export default function LinearActuatorCollectScreen() {
         )}
 
         {!isMachineOffline && isFloorRaised && (
-          <View className="mt-3 p-4 rounded-card bg-brand-50 border border-brand-200 flex-row items-start gap-3">
+          <View className="mt-3 p-4 rounded-2xl bg-brand-50 border border-brand-200 flex-row items-start gap-3">
             <CheckCircle2 size={20} color={colors.brand[500]} style={{ marginTop: 2, flexShrink: 0 }} />
             <View className="flex-1">
               <Text className="text-sm font-bold text-brand-900">Floor is raised</Text>

@@ -280,7 +280,7 @@ function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupPr
             accessibilityLabel={`One-time code digit ${index + 1} of 6`}
             textAlign="center"
             className={cn(
-              'flex-1 max-w-12.5 aspect-[50/58] rounded-2xl border-[1.5px] bg-background text-22 font-bold text-foreground p-0',
+              'flex-1 max-w-12.5 aspect-[50/58] rounded-2xl border-[1.5px] bg-background text-2xl font-bold text-foreground p-0',
               hasError
                 ? 'border-destructive text-destructive'
                 : digit
@@ -826,7 +826,7 @@ export default function SignUpScreen() {
                     {/* Divider: or continue with */}
                     <View className="w-full flex-row items-center justify-between my-2">
                       <View className="flex-1 h-[1px] bg-border" />
-                      <Text className="text-13 font-sans text-muted-foreground px-3">
+                      <Text className="text-sm font-sans text-muted-foreground px-3">
                         or continue with
                       </Text>
                       <View className="flex-1 h-[1px] bg-border" />
@@ -845,7 +845,7 @@ export default function SignUpScreen() {
                       ) : (
                         <>
                           <GoogleIcon size={18} />
-                          <Text className="text-15 font-bold text-foreground">
+                          <Text className="text-base font-bold text-foreground">
                             Google
                           </Text>
                         </>
@@ -1099,7 +1099,7 @@ export default function SignUpScreen() {
                   {loading ? (
                     <ActivityIndicator color="#FAF9EE" size="small" />
                   ) : (
-                    <Text className="text-15 font-bold text-primary-foreground">
+                    <Text className="text-base font-bold text-primary-foreground">
                       Next
                     </Text>
                   )}
@@ -1116,7 +1116,7 @@ export default function SignUpScreen() {
                   {loading ? (
                     <ActivityIndicator color="#FAF9EE" size="small" />
                   ) : (
-                    <Text className="text-15 font-bold text-primary-foreground">
+                    <Text className="text-base font-bold text-primary-foreground">
                       Next
                     </Text>
                   )}
@@ -1130,7 +1130,7 @@ export default function SignUpScreen() {
                   className="w-full h-12.5 rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
                   accessibilityRole="button"
                 >
-                  <Text className="text-15 font-bold text-primary-foreground">
+                  <Text className="text-base font-bold text-primary-foreground">
                     Next
                   </Text>
                 </Pressable>
@@ -1146,7 +1146,7 @@ export default function SignUpScreen() {
                   {loading ? (
                     <ActivityIndicator color="#FAF9EE" size="small" />
                   ) : (
-                    <Text className="text-15 font-bold text-primary-foreground">
+                    <Text className="text-base font-bold text-primary-foreground">
                       Finish
                     </Text>
                   )}

@@ -22,7 +22,7 @@ export function NotificationBell() {
         <Bell size={24} color={colors.semantic.foreground} />
         {hasUnread && (
           <View className="absolute -top-1 -right-1.5 min-w-4.5 h-4.5 px-1 bg-destructive border-[1.5px] border-background rounded-full items-center justify-center z-10">
-            <Text className="text-10 font-bold text-white text-center leading-none">
+            <Text className="text-xs font-bold text-white text-center leading-none">
               {unreadCount > 99 ? "99+" : unreadCount}
             </Text>
           </View>

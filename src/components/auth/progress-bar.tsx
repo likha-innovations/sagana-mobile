@@ -19,7 +19,7 @@ export function ProgressBar({ activeStep, totalSteps }: ProgressBarProps) {
           <View
             key={index}
             className={cn(
-              'h-full rounded-card',
+              'h-full rounded-2xl',
               isActive ? 'flex-[4]' : 'flex-[1]',
               isActive || isCompleted ? 'bg-primary' : 'bg-gray-progress'
             )}

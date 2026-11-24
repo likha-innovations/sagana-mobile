@@ -81,7 +81,7 @@ export default function SuspendedScreen() {
             {checking ? (
               <ActivityIndicator color="#FAF9EE" size="small" />
             ) : (
-              <Text className="text-15 font-bold text-primary-foreground">
+              <Text className="text-base font-bold text-primary-foreground">
                 Check Status
               </Text>
             )}
@@ -94,7 +94,7 @@ export default function SuspendedScreen() {
             accessibilityRole="button"
             accessibilityLabel="Sign Out"
           >
-            <Text className="text-15 font-bold text-primary">
+            <Text className="text-base font-bold text-primary">
               Sign out
             </Text>
           </Pressable>

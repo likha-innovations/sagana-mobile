@@ -68,6 +68,7 @@ export interface ButtonProps
   haptic?: boolean;
   className?: string;
   textClassName?: string;
+  maxFontSizeMultiplier?: number | null;
 }
 
 export const Button = forwardRef<ElementRef<typeof Pressable>, ButtonProps>(
@@ -82,6 +83,7 @@ export const Button = forwardRef<ElementRef<typeof Pressable>, ButtonProps>(
       haptic = false,
       className,
       textClassName,
+      maxFontSizeMultiplier = 1.3,
       onPress,
       ...props
     },
@@ -109,7 +111,10 @@ export const Button = forwardRef<ElementRef<typeof Pressable>, ButtonProps>(
             color={variant === 'outline' || variant === 'ghost' ? '#718619' : '#FAF9EE'}
           />
         ) : typeof children === 'string' || title ? (
-          <Text className={cn(buttonTextVariants({ variant, size }), textClassName)}>
+          <Text
+            maxFontSizeMultiplier={maxFontSizeMultiplier}
+            className={cn(buttonTextVariants({ variant, size }), textClassName)}
+          >
             {title ?? children}
           </Text>
         ) : (

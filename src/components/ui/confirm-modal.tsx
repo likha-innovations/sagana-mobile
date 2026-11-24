@@ -44,7 +44,7 @@ export function ConfirmModal({
       >
         <Pressable
           onPress={(e) => e.stopPropagation()}
-          className="w-full max-w-89 bg-card rounded-card p-6 items-center shadow-2xl border border-border/40"
+          className="w-full max-w-89 bg-card rounded-2xl p-6 items-center shadow-2xl border border-border/40"
         >
           <Text className="text-base font-bold text-foreground text-center">
             {title}

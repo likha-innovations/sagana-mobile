@@ -249,7 +249,7 @@ export default function BarangayCodeScreen() {
             {loading ? (
               <ActivityIndicator color="#FAF9EE" size="small" />
             ) : (
-              <Text className="text-15 font-bold text-primary-foreground">
+              <Text className="text-base font-bold text-primary-foreground">
                 {error ? "Try again" : "Next"}
               </Text>
             )}

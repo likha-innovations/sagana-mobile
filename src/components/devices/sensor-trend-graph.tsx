@@ -50,7 +50,7 @@ export function SensorTrendGraph({
   const belowZero = Math.ceil(Math.abs(Math.min(0, ...values)) / stepValue);
 
   return (
-    <View className="bg-card rounded-card border border-border px-4 py-5 gap-4">
+    <View className="bg-card rounded-2xl border border-border px-4 py-5 gap-4">
       <View className="flex-row items-center gap-2">
         <Icon size={20} color={iconColor} strokeWidth={1.8} />
         <Text className="flex-1 text-base font-bold text-foreground">

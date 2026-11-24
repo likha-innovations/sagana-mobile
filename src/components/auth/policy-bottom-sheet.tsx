@@ -66,7 +66,7 @@ export const PolicyBottomSheet = forwardRef<BottomSheetModal, PolicyBottomSheetP
             <Text className="text-xl font-bold text-foreground mb-1.5 text-left mt-2">
               {isTos ? 'Terms of Service' : 'Privacy Policy'}
             </Text>
-            <Text className="text-13 font-sans text-muted-foreground mb-5 text-left leading-relaxed">
+            <Text className="text-xs font-sans text-muted-foreground mb-5 text-left leading-relaxed">
               {isTos
                 ? 'Please review the following terms before continuing your registration.'
                 : 'At SAGANA, we take your privacy seriously. This policy outlines how we collect, use, and protect your personal information when you use our services.'}

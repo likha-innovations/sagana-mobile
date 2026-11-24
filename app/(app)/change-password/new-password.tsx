@@ -205,7 +205,7 @@ export default function ChangePasswordNewScreen() {
 
                 {/* Inline Error Message */}
                 {passwordErrorMessage && (
-                  <Text className="text-13 font-sans text-destructive mt-1 ml-1 text-left">
+                  <Text className="text-xs font-sans text-destructive mt-1 ml-1 text-left">
                     {passwordErrorMessage}
                   </Text>
                 )}

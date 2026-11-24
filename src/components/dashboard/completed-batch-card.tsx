@@ -25,7 +25,7 @@ export function CompletedBatchCard({
       accessibilityLabel={
         onPress ? `View batch ${batch.batchCode}` : undefined
       }
-      className="flex-row items-center gap-6 rounded-card border border-border bg-card px-6 py-4"
+      className="flex-row items-center gap-6 rounded-2xl border border-border bg-card px-6 py-4"
     >
       <CompostIcon size={24} color={colors.brand[500]} />
       <View className="flex-1 gap-2">

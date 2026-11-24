@@ -73,7 +73,7 @@ export function NotificationCard({
       accessibilityRole="button"
       accessibilityLabel={`${notification.title}: ${notification.message}`}
       onPress={() => onPress?.(notification)}
-      className="bg-card rounded-card border border-border/40 p-4 px-4 flex-row items-center gap-4 mb-3 active:opacity-75"
+      className="bg-card rounded-2xl border border-border/40 p-4 px-4 flex-row items-center gap-4 mb-3 active:opacity-75"
     >
       <View
         className="w-10 h-10 rounded-full items-center justify-center"

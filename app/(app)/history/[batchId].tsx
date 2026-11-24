@@ -96,7 +96,7 @@ export default function CompletedBatchScreen() {
                 ].map((item) => (
                   <View
                     key={item.label}
-                    className="min-h-24.5 flex-1 items-center justify-center gap-1 rounded-card border border-border p-6"
+                    className="min-h-24.5 flex-1 items-center justify-center gap-1 rounded-2xl border border-border p-6"
                   >
                     <Text className="text-xl font-bold text-foreground">
                       {item.value}
@@ -107,7 +107,7 @@ export default function CompletedBatchScreen() {
                   </View>
                 ))}
               </View>
-              <View className="gap-3 rounded-card border border-border p-6">
+              <View className="gap-3 rounded-2xl border border-border p-6">
                 {[
                   ["Batch ID", batch.batchCode],
                   ["Machine used", batch.machineName],

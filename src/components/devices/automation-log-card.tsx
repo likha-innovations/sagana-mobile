@@ -17,7 +17,7 @@ export function AutomationLogCard({
   timeAgo,
 }: AutomationLogCardProps) {
   return (
-    <View className="bg-card rounded-card border border-border p-4 px-6 flex-row items-center gap-6 mb-3">
+    <View className="bg-card rounded-2xl border border-border p-4 px-6 flex-row items-center gap-6 mb-3">
       <Icon size={24} color={iconColor} strokeWidth={1.5} />
       <View className="flex-1">
         <Text className="text-sm font-medium text-foreground leading-5">
