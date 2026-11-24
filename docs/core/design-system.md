@@ -53,19 +53,13 @@ Always use semantic font tokens rather than arbitrary pixel classes (`text-[14px
 
 | Token | Size | Line Height | Equivalent |
 | --- | --- | --- | --- |
-| `text-10` | `0.625rem` (10px) | `1.2` | Badge labels, micro captions |
-| `text-11` | `0.6875rem` (11px) | `1.25` | Timestamps, secondary tags |
 | `text-xs` | `0.75rem` (12px) | `1.35` | Helper text, metadata |
-| `text-13` | `0.8125rem` (13px) | `1.38` | Dense list items, secondary cards |
 | `text-sm` | `0.875rem` (14px) | `1.4` | Standard UI body, form inputs |
-| `text-15` | `0.9375rem` (15px) | `1.4` | Prominent body, table items |
 | `text-base` | `1rem` (16px) | `1.45` | Primary body, button labels |
 | `text-lg` | `1.125rem` (18px) | `1.4` | Card titles, subheadings |
 | `text-xl` | `1.25rem` (20px) | `1.35` | Section headers |
-| `text-22` | `1.375rem` (22px) | `1.3` | Stat values |
-| `text-2xl` | `1.5rem` (24px) | `1.25` | Screen titles |
-| `text-28` | `1.75rem` (28px) | `1.2` | Large metric callouts |
-| `text-32` / `text-3xl` | `2rem` (32px) | `1.2` | Hero metrics |
+| `text-2xl` | `1.5rem` (24px) | `1.25` | Screen titles, OTP digits |
+| `text-3xl` | `2rem` (32px) | `1.2` | Hero metrics, screen hero headers |
 
 ### Text Scaling & Accessibility
 
@@ -81,8 +75,7 @@ Always use existing tokens instead of arbitrary brackets (`rounded-[14px]` or `m
 | `rounded-md` | `0.375rem` (6px) | Badges, small chips |
 | `rounded-lg` | `0.5rem` (8px) | Inner card elements, small inputs |
 | `rounded-xl` | `0.75rem` (12px) | Action sheets, standard inputs |
-| `rounded-card` | `0.875rem` (14px) | Machine cards, stat cards, metric containers |
-| `rounded-2xl` | `1rem` (16px) | Dialog modals, primary surfaces |
+| `rounded-2xl` | `1rem` (16px) | Cards, dialog modals, primary surfaces |
 | `rounded-3xl` | `1.5rem` (24px) | Large hero containers |
 | `rounded-full` | `9999px` | Buttons, avatars, pill badges |
 

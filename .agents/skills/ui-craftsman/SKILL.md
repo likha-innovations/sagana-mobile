@@ -26,8 +26,8 @@ description: Build, fix, or refactor Sagana Mobile screens and shared UI using e
 
 - Read `global.css` and relevant exports from `src/constants/colors.ts`. Reuse semantic tokens and native color constants; do not maintain another copied palette in this skill.
 - **Strictly use existing semantic design tokens**: Never use arbitrary bracketed pixel classes like `text-[14px]` or `rounded-[14px]`.
-  - **Typography**: Use standard semantic tokens (`text-10`, `text-11`, `text-xs`, `text-13`, `text-sm`, `text-15`, `text-base`, `text-lg`, `text-xl`, `text-22`, `text-2xl`, `text-28`, `text-32`, `text-3xl`). These carry matched unitless line-heights in `global.css` to prevent font clipping.
-  - **Border Radii**: Use semantic tokens (`rounded-md`, `rounded-lg`, `rounded-xl`, `rounded-card`, `rounded-2xl`, `rounded-3xl`, `rounded-full`).
+  - **Typography**: Use standard semantic tokens (`text-xs`, `text-sm`, `text-base`, `text-lg`, `text-xl`, `text-2xl`, `text-3xl`). These carry matched unitless line-heights in `global.css` to prevent font clipping.
+  - **Border Radii**: Use semantic tokens (`rounded-md`, `rounded-lg`, `rounded-xl`, `rounded-2xl`, `rounded-3xl`, `rounded-full`).
   - **Spacing & Dimensions**: Use Tailwind's spacing scale (`px / 4`, e.g. `gap-3`, `p-4`, `h-12`, `min-h-25`) rather than arbitrary pixel brackets.
   - **Text Protection**: Use `<Text>` from `@/components/ui/text` for shared cards, badges, and headers to cap `maxFontSizeMultiplier={1.15}`.
 - Use local Spotify Mix font utilities. Root `Montserrat-*` aliases point to Spotify Mix; do not add a font package to reproduce those aliases.
