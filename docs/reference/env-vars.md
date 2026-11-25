@@ -11,6 +11,7 @@ This document lists all environment variables used by **Sagana Mobile**, how the
 | `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` | **Yes** | `string` | Publishable key from the [Clerk Dashboard](https://dashboard.clerk.com/) (`pk_test_...` or `pk_live_...`). |
 | `EXPO_PUBLIC_API_BASE_URL` | Optional | `string` | Full HTTP(S) URL for the backend API (e.g. `https://api.sagana.ph/api`). Overrides `EXPO_PUBLIC_IP_ADDRESS`. |
 | `EXPO_PUBLIC_IP_ADDRESS` | Optional | `string` | Local network IPv4 address (e.g. `192.168.1.100`) used to route API traffic from physical test devices to your development machine. |
+| `EXPO_PUBLIC_IS_DEV` | Optional | `'true' \| 'false'` | Enables dev-only `expo-dev-client` navigation shortcuts (`src/dev/dev-shortcuts.ts`) when set to `'true'` in a `__DEV__` build. Defaults to `false`. |
 
 ---
 
@@ -35,4 +36,7 @@ EXPO_PUBLIC_API_BASE_URL=
 
 # Local Development IP Address
 EXPO_PUBLIC_IP_ADDRESS=192.168.100.25
+
+# Dev-only Expo Dev Client navigation shortcuts (keep false outside local dev)
+EXPO_PUBLIC_IS_DEV=false
 ```
