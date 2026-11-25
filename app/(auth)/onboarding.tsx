@@ -25,7 +25,7 @@ interface Slide {
 const SLIDES: Slide[] = [
   {
     id: 'wow-user',
-    source: require('@/assets/icons/mascot/onboarding/sagana_hardhat_mascot_blink.lottie'),
+    source: require('@/assets/icons/mascot/onboarding/sagana_sparkle.lottie'),
     showBack: false,
     showSkip: false,
     title: 'Wow, a new SAGANA User!',
