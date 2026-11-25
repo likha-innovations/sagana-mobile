@@ -23,11 +23,13 @@ import Animated, {
   interpolate,
   Easing,
 } from 'react-native-reanimated';
-import { ChevronLeft, Eye, EyeOff, CircleAlert } from 'lucide-react-native';
+import { ChevronLeft } from 'lucide-react-native';
+import LottieView from 'lottie-react-native';
 import { useAuthContext } from '@/context/auth-context';
 import { cn } from '@/lib/utils';
 
-import { ProgressBar, FloatingInputField, OtpInputGroup, PasswordRequirements, ResendTimer } from '@/components/auth';
+import { FloatingInputField, OtpInputGroup, PasswordRequirements, ResendTimer } from '@/components/auth';
+import { ProgressBar } from '@/components/ui/progress-bar';
 import { SuccessScreen } from '@/components/ui/success-screen';
 
 type FlowStep = 'email' | 'otp' | 'password' | 'success' | 'no_email_access';
@@ -60,6 +62,7 @@ export default function ForgotPasswordScreen() {
   const [failedRequirements, setFailedRequirements] = useState<string[]>([]);
 
   const [loading, setLoading] = useState(false);
+  const [sadLottieError, setSadLottieError] = useState(false);
 
   const emailInputRef = useRef<TextInput>(null);
   const newPasswordRef = useRef<TextInput>(null);
@@ -261,6 +264,11 @@ export default function ForgotPasswordScreen() {
         title="You are all set!"
         description="You can now login to your account using your new password."
         buttonText="Done"
+        alignText="left"
+        mascotWidth={264}
+        mascotHeight={264}
+        lottieSource={require('@/assets/icons/mascot/onboarding/sagana_celebrate.lottie')}
+        fallbackImageSource={require('@/assets/icons/mascot/sagana_celebrate.png')}
         onButtonPress={() => {
           router.replace('/(auth)/sign-in');
         }}
@@ -354,8 +362,26 @@ export default function ForgotPasswordScreen() {
               {/* --- SCREEN: No Email Access Content --- */}
               {step === 'no_email_access' && (
                 <View className="w-full">
-                  <View className="w-full h-45.5 bg-[#E2E1DC] rounded-xl mb-8 items-center justify-center">
-                    <CircleAlert size={48} color="#718619" />
+                  <View className="w-50 h-50 self-center items-center justify-center mb-8">
+                    {!sadLottieError ? (
+                      <LottieView
+                        source={require('@/assets/icons/mascot/onboarding/sagana_sad.lottie')}
+                        autoPlay
+                        loop
+                        cacheComposition
+                        renderMode="HARDWARE"
+                        hardwareAccelerationAndroid
+                        style={{ width: 200, height: 200 }}
+                        onAnimationFailure={() => setSadLottieError(true)}
+                      />
+                    ) : (
+                      <Image
+                        source={require('@/assets/icons/mascot/sagana_confused.png')}
+                        style={{ width: 180, height: 180 }}
+                        resizeMode="contain"
+                        accessibilityLabel="Sad mascot illustration"
+                      />
+                    )}
                   </View>
 
                   <View className="w-full gap-2.5">
