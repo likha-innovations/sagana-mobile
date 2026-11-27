@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { View, Text, Pressable, Platform, Linking, ActivityIndicator, useWindowDimensions, Image } from 'react-native';
-import LottieView from 'lottie-react-native';
+import { View, Pressable, Platform, Linking, ActivityIndicator } from 'react-native';
+import { Text } from '@/components/ui/text';
 import { Info, AlertCircle, Bluetooth, QrCode } from 'lucide-react-native';
 import * as IntentLauncher from 'expo-intent-launcher';
 import { Input } from '@/components/ui/input';
@@ -13,33 +13,14 @@ import type { BleStatus } from '@/hooks/use-bluetooth';
 import { useCurrentWifi } from '@/hooks';
 
 export function TurnOnStep() {
-  const { width, height } = useWindowDimensions();
-  const mascotSize = Math.min(width * 0.75, height * 0.36, 290);
-
   return (
-    <View className="flex-1 justify-between pt-2 pb-6">
-      <View>
-        <Text className="text-2xl font-bold text-foreground">Turn on your machine</Text>
-        <Text className="text-sm text-muted-foreground mt-2 leading-relaxed">
-          Once powered on, your{' '}
-          <Text className="font-bold text-foreground">SAGANA AIVSP Machine</Text>
-          {' '}should blink 3 times in order to proceed.
-        </Text>
-      </View>
-
-      <View className="flex-1 items-center justify-center my-6">
-        <View style={{ width: mascotSize, height: mascotSize }} className="items-center justify-center">
-          <LottieView
-            source={require('@/assets/icons/mascot/onboarding/sagana_hardhat_mascot_blink.lottie')}
-            autoPlay
-            loop
-            cacheComposition
-            renderMode="HARDWARE"
-            hardwareAccelerationAndroid
-            style={{ width: '100%', height: '100%' }}
-          />
-        </View>
-      </View>
+    <View className="flex-1 pt-4 pb-6">
+      <Text className="text-xl font-bold text-foreground">Turn on your machine</Text>
+      <Text className="text-sm font-sans text-foreground mt-2.5 leading-5">
+        Once powered on, your{' '}
+        <Text className="text-sm font-bold text-foreground">SAGANA AIVSP Machine</Text>
+        {' '}should blink 3 times in order to proceed.
+      </Text>
     </View>
   );
 }
@@ -371,43 +352,6 @@ export function NameMachineStep({ control }: { control: Control<MachineRegistrat
           />
         )}
       />
-    </View>
-  );
-}
-
-export function SuccessStep() {
-  const [lottieError, setLottieError] = useState(false);
-  return (
-    <View className="flex-1 items-center justify-center">
-      <View className="w-66 h-66 items-center justify-center mb-6">
-        {!lottieError ? (
-          <LottieView
-            source={require('@/assets/icons/mascot/onboarding/sagana_celebration.lottie')}
-            autoPlay
-            loop
-            cacheComposition
-            renderMode="HARDWARE"
-            hardwareAccelerationAndroid
-            style={{ width: 264, height: 264 }}
-            onAnimationFailure={() => setLottieError(true)}
-          />
-        ) : (
-          <Image
-            source={require('@/assets/icons/mascot/sagana_celebrate.png')}
-            style={{ width: 264, height: 264 }}
-            resizeMode="contain"
-            accessibilityLabel="Sagana Mascot"
-          />
-        )}
-      </View>
-      <View className="w-full max-w-95 gap-2.5">
-        <Text className="text-xl font-bold text-foreground text-left">
-          Your machine has been registered!
-        </Text>
-        <Text className="text-sm font-sans text-foreground text-left leading-5">
-          You can now start a compost batch using your newly registered device.
-        </Text>
-      </View>
     </View>
   );
 }

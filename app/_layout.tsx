@@ -21,6 +21,7 @@ import { Toast } from '@/components/ui/toast';
 import { createLogger } from '@/lib/logger';
 import { LoadingScreen } from '@/components/ui/loading-screen';
 import { hasSeenOnboarding, subscribeOnboarding } from '@/lib/onboarding-storage';
+import { useDevShortcuts } from '@/dev/dev-shortcuts';
 import {
   requestNotificationPermissions,
   setupNotificationListeners,
@@ -44,6 +45,7 @@ function AuthProtectedNavigation() {
   const { isSignedIn, isLoaded, user, signupBarangay, signOut } = useAuthContext();
   const segments = useSegments();
   const router = useRouter();
+  useDevShortcuts();
   const queryClient = useQueryClient();
   const { isOffline } = useNetwork();
   const [onboardingStatus, setOnboardingStatus] = useState<{ checked: boolean; seen: boolean }>({

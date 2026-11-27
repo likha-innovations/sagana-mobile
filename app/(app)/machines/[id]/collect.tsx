@@ -31,6 +31,7 @@ import {
 } from "@/lib/actuator-storage";
 import { colors } from "@/constants";
 import { createLogger } from "@/lib/logger";
+import { SuccessScreen } from "@/components/ui/success-screen";
 
 const logger = createLogger("LinearActuatorCollectScreen");
 
@@ -465,46 +466,24 @@ export default function LinearActuatorCollectScreen() {
   ]);
 
   const handleDone = useCallback(() => {
-    if (Platform.OS !== "web") {
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
     router.replace("/(app)/(tabs)/machines");
   }, [router]);
 
   if (isSuccess) {
     return (
-      <View
-        className="flex-1 bg-background px-6 justify-between"
-        style={{
-          paddingTop: Math.max(headerPaddingTop, 48),
-          paddingBottom: stackScrollPadding,
-        }}
-      >
-        <View className="flex-1 items-center justify-center">
-          <Image
-            source={require("@/assets/icons/mascot/sagana_celebrate.png")}
-            style={{ width: 280, height: 220 }}
-            contentFit="contain"
-          />
-          <Text className="text-xl font-bold text-foreground text-center mt-6">
-            {isReject ? "Compost batch rejected" : "Compost batch completed!"}
-          </Text>
-          <Text className="text-sm font-sans text-muted-foreground text-center mt-2 px-4 leading-5">
-            {isReject
-              ? "You can now view this batch in the history tab in this app. The machine chamber is now vacant."
-              : "You can now view this batch in the history tab in this app. Congrats on your new curing-ready compost!"}
-          </Text>
-        </View>
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Done"
-          onPress={handleDone}
-          className="min-h-12 rounded-full bg-primary px-6 items-center justify-center active:opacity-85"
-        >
-          <Text className="text-sm font-bold text-primary-foreground">Done</Text>
-        </Pressable>
-      </View>
+      <SuccessScreen
+        title={isReject ? "Compost batch rejected" : "Compost batch completed!"}
+        description={
+          isReject
+            ? "You can now view this batch in the history tab in this app. The machine chamber is now vacant."
+            : "You can now view this batch in the history tab in this app. Congrats on your new curing-ready compost!"
+        }
+        buttonText="Done"
+        alignText="left"
+        mascotWidth={332}
+        mascotHeight={259}
+        onButtonPress={handleDone}
+      />
     );
   }
 

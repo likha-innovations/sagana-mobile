@@ -14,7 +14,8 @@ import {
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { ChevronLeft } from 'lucide-react-native';
-import { FloatingInputField, ProgressBar } from '@/components/auth';
+import { FloatingInputField } from '@/components/auth';
+import { ProgressBar } from '@/components/ui/progress-bar';
 import { useAuthContext } from '@/context/auth-context';
 import { useDynamicLayout } from '@/hooks';
 import { setPendingCurrentPassword, clearPendingCurrentPassword } from '@/lib/password-flow-store';

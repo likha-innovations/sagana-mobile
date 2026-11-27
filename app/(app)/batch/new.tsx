@@ -31,6 +31,7 @@ import { useMachines } from '@/hooks/use-machines';
 import { useFeedstocks, useCreateCompostBatch, useCompostBatches } from '@/hooks/use-batches';
 import { getFeedstockImage } from '@/constants/feedstocks';
 import { SuccessScreen } from '@/components/ui/success-screen';
+import { ProgressBar } from '@/components/ui/progress-bar';
 
 type WizardStep = 1 | 2 | 3 | 4 | 5;
 
@@ -183,6 +184,9 @@ export default function NewBatchScreen() {
         title="Batch has been started!"
         description="Your compost batch has been initialized. You can now monitor aeration, moisture, and temperature progress through the dashboard."
         buttonText="Done"
+        alignText="left"
+        mascotWidth={332}
+        mascotHeight={259}
         onButtonPress={handleGoToHome}
       />
     );
@@ -206,16 +210,8 @@ export default function NewBatchScreen() {
                 <ChevronLeft size={24} color="#414141" />
               </TouchableOpacity>
 
-              {/* 4-Segment Progress Bar */}
-              <View className="absolute left-0 right-0 flex-row items-center justify-center gap-2">
-                {[1, 2, 3, 4].map((s) => (
-                  <View
-                    key={s}
-                    className={`h-1.5 w-8.5 rounded-full ${
-                      s <= step ? 'bg-primary' : 'bg-[#DCDBD5]'
-                    }`}
-                  />
-                ))}
+              <View className="absolute inset-x-0 items-center justify-center pointer-events-none">
+                <ProgressBar activeStep={step} totalSteps={4} />
               </View>
 
               <View className="w-6" />

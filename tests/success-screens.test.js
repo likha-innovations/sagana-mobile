@@ -4,7 +4,7 @@ const vm = require("node:vm");
 const ts = require("typescript");
 const { jest: mock, test, expect, describe } = require("@jest/globals");
 
-function loadSuccessScreen() {
+function loadSuccessScreen(windowWidth = 412) {
   const filename = path.join(
     __dirname,
     "../src/components/ui/success-screen.tsx",
@@ -32,6 +32,7 @@ function loadSuccessScreen() {
         Text: "Text",
         Image: "Image",
         ActivityIndicator: "ActivityIndicator",
+        useWindowDimensions: () => ({ width: windowWidth, height: 917 }),
       },
       { get: (target, key) => target[key] ?? key },
     ),
@@ -80,7 +81,7 @@ function loadSuccessScreen() {
 }
 
 describe("SuccessScreen Component", () => {
-  test("renders LottieView by default with 264x264 dimensions and centered text", () => {
+  test("renders LottieView with default 264x264 dimensions and centered text", () => {
     const { SuccessScreen } = loadSuccessScreen();
     const onPress = mock.fn();
 
@@ -93,28 +94,45 @@ describe("SuccessScreen Component", () => {
     });
 
     expect(element.type).toBe("View");
-    const container = element.props;
-    expect(container.testID).toBe("success-screen");
+    expect(element.props.testID).toBe("success-screen");
 
-    // Check inner children
-    const inner = container.children;
-    expect(inner.type).toBe("View");
-    const [centerSection, buttonContainer] = inner.props.children;
+    const inner = element.props.children;
+    const [mascotSection, bottomSection] = inner.props.children;
+    const graphicBox = mascotSection.props.children;
+    expect(graphicBox.props.style).toEqual({ width: 264, height: 264 });
 
-    // Graphic section has 264x264 container
-    const [graphicBox, textBlock] = centerSection.props.children;
-    expect(graphicBox.props.className).toContain("w-66");
-    expect(graphicBox.props.className).toContain("h-66");
-
-    // Verify typography and CTA button
+    const [textBlock, button] = bottomSection.props.children;
     const [titleEl, descEl] = textBlock.props.children;
 
     expect(titleEl.props.children).toBe("Welcome, Operator Neo!");
+    expect(titleEl.props.className).toContain("text-center");
     expect(descEl.props.children).toBe(
       "You will now be able to use this app to manage your SAGANA AIVSP Machines!",
     );
-    const button = buttonContainer.props.children;
     expect(button.props.accessibilityRole).toBe("button");
+  });
+
+  test("supports custom landscape mascot dimensions and left-aligned text", () => {
+    const { SuccessScreen } = loadSuccessScreen(412);
+    const element = SuccessScreen({
+      title: "Batch has been started!",
+      description: "You can now monitor the batch.",
+      buttonText: "Go to Home",
+      alignText: "left",
+      mascotWidth: 332,
+      mascotHeight: 259,
+      onButtonPress: mock.fn(),
+    });
+
+    const inner = element.props.children;
+    const [mascotSection, bottomSection] = inner.props.children;
+    const graphicBox = mascotSection.props.children;
+    expect(graphicBox.props.style).toEqual({ width: 332, height: 259 });
+
+    const [textBlock] = bottomSection.props.children;
+    const [titleEl, descEl] = textBlock.props.children;
+    expect(titleEl.props.className).toContain("text-left");
+    expect(descEl.props.className).toContain("text-left");
   });
 
   test("invokes onButtonPress and triggers haptics when pressed", () => {
@@ -129,8 +147,8 @@ describe("SuccessScreen Component", () => {
     });
 
     const inner = element.props.children;
-    const [, buttonContainer] = inner.props.children;
-    const button = buttonContainer.props.children;
+    const [, bottomSection] = inner.props.children;
+    const [, button] = bottomSection.props.children;
 
     button.props.onPress();
     expect(onPress).toHaveBeenCalledTimes(1);
@@ -150,8 +168,8 @@ describe("SuccessScreen Component", () => {
     });
 
     const inner = element.props.children;
-    const [, buttonContainer] = inner.props.children;
-    const button = buttonContainer.props.children;
+    const [, bottomSection] = inner.props.children;
+    const [, button] = bottomSection.props.children;
 
     button.props.onPress();
     expect(onPress).not.toHaveBeenCalled();

@@ -34,7 +34,11 @@ function render(step, weights) {
     "expo-image": { Image: "Image" },
     "lottie-react-native": new Proxy({}, { get: () => "LottieView" }),
     "@/components/ui/success-screen": { SuccessScreen: "SuccessScreen" },
-    "@/components/ui": { SuccessScreen: "SuccessScreen" },
+    "@/components/ui/progress-bar": { ProgressBar: "ProgressBar" },
+    "@/components/ui": {
+      SuccessScreen: "SuccessScreen",
+      ProgressBar: "ProgressBar",
+    },
     "expo-haptics": {
       impactAsync: mock.fn(),
       notificationAsync: mock.fn(),

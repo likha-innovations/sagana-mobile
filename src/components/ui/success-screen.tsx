@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import {
   View,
-  Text,
   Pressable,
   ActivityIndicator,
   Image,
+  useWindowDimensions,
   type ImageSourcePropType,
   type StyleProp,
   type ViewStyle,
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import LottieView, { type AnimationObject } from 'lottie-react-native';
 import * as Haptics from 'expo-haptics';
+import { Text } from '@/components/ui/text';
 import { useDynamicLayout } from '@/hooks';
 import { cn } from '@/lib/utils';
 
@@ -22,6 +23,8 @@ export interface SuccessScreenProps {
   onButtonPress: () => void;
   loading?: boolean;
   alignText?: 'center' | 'left';
+  mascotWidth?: number;
+  mascotHeight?: number;
   lottieSource?: string | AnimationObject | { uri: string };
   fallbackImageSource?: ImageSourcePropType;
   style?: StyleProp<ViewStyle>;
@@ -36,6 +39,8 @@ export function SuccessScreen({
   onButtonPress,
   loading = false,
   alignText = 'center',
+  mascotWidth = 264,
+  mascotHeight = 264,
   lottieSource = require('@/assets/icons/mascot/onboarding/sagana_celebration.lottie'),
   fallbackImageSource = require('@/assets/icons/mascot/sagana_welcome.png'),
   style,
@@ -43,7 +48,13 @@ export function SuccessScreen({
   testID = 'success-screen',
 }: SuccessScreenProps) {
   const { insets } = useDynamicLayout();
+  const { width } = useWindowDimensions();
   const [lottieError, setLottieError] = useState(false);
+
+  const maxMascotWidth = Math.max(120, width - 32);
+  const scale = mascotWidth > maxMascotWidth ? maxMascotWidth / mascotWidth : 1;
+  const renderedWidth = Math.round(mascotWidth * scale);
+  const renderedHeight = Math.round(mascotHeight * scale);
 
   const handlePress = () => {
     if (loading) return;
@@ -60,15 +71,17 @@ export function SuccessScreen({
       style={[
         {
           paddingTop: Math.max(insets.top, 48),
-          paddingBottom: Math.max(insets.bottom, 48),
+          paddingBottom: Math.max(insets.bottom + 16, 48),
         },
         style,
       ]}
     >
       <View className="flex-1 px-4 items-center justify-between pb-4">
-        {/* Center Section: Mascot + Typography grouped with 24px gap */}
-        <View className="flex-1 w-full max-w-95 items-center justify-center gap-6">
-          <View className="w-66 h-66 items-center justify-center">
+        <View className="flex-1 w-full items-center justify-center">
+          <View
+            style={{ width: renderedWidth, height: renderedHeight }}
+            className="items-center justify-center"
+          >
             {!lottieError && lottieSource ? (
               <LottieView
                 source={lottieSource}
@@ -77,31 +90,32 @@ export function SuccessScreen({
                 cacheComposition
                 renderMode="HARDWARE"
                 hardwareAccelerationAndroid
-                style={{ width: 264, height: 264 }}
+                style={{ width: renderedWidth, height: renderedHeight }}
                 onAnimationFailure={() => setLottieError(true)}
               />
             ) : (
               <Image
                 source={fallbackImageSource}
-                style={{ width: 264, height: 264 }}
+                style={{ width: renderedWidth, height: renderedHeight }}
                 resizeMode="contain"
                 accessibilityLabel="Sagana Mascot"
               />
             )}
           </View>
+        </View>
 
-          {/* Typography Block: Centered matching Figma Frame 123 */}
+        <View className="w-full max-w-95 gap-8">
           <View
             className={cn(
               'w-full gap-2.5',
-              alignText === 'center' ? 'items-center px-2' : 'items-start'
+              alignText === 'center' ? 'items-center px-2' : 'items-start',
             )}
           >
             <Text
               testID={`${testID}-title`}
               className={cn(
                 'text-xl font-bold text-foreground',
-                alignText === 'center' ? 'text-center' : 'text-left'
+                alignText === 'center' ? 'text-center' : 'text-left',
               )}
             >
               {title}
@@ -110,29 +124,24 @@ export function SuccessScreen({
               testID={`${testID}-description`}
               className={cn(
                 'text-sm font-sans text-foreground leading-5',
-                alignText === 'center' ? 'text-center' : 'text-left'
+                alignText === 'center' ? 'text-center' : 'text-left',
               )}
             >
               {description}
             </Text>
           </View>
-        </View>
 
-        {/* Bottom Action: Primary CTA Button */}
-        <View className="w-full max-w-95 pt-4">
           <Pressable
             testID={`${testID}-button`}
             onPress={handlePress}
             disabled={loading}
-            className="w-full h-11.25 rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+            className="w-full min-h-11 py-3 rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
             accessibilityRole="button"
           >
             {loading ? (
               <ActivityIndicator color="#FAF9EE" size="small" />
             ) : (
-              <Text className="text-sm font-bold text-primary-foreground">
-                {buttonText}
-              </Text>
+              <Text className="text-sm font-bold text-primary-foreground">{buttonText}</Text>
             )}
           </Pressable>
         </View>

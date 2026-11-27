@@ -26,6 +26,11 @@ export default function ChangePasswordSuccessScreen() {
       title="You are all set!"
       description="You can now login to your account using your new password."
       buttonText="Done"
+      alignText="left"
+      mascotWidth={264}
+      mascotHeight={264}
+      lottieSource={require('@/assets/icons/mascot/onboarding/sagana_celebrate.lottie')}
+      fallbackImageSource={require('@/assets/icons/mascot/sagana_celebrate.png')}
       onButtonPress={handleDone}
       loading={loading}
     />

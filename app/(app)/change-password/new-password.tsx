@@ -15,7 +15,8 @@ import * as Haptics from 'expo-haptics';
 import { ChevronLeft } from 'lucide-react-native';
 import { useAuthContext } from '@/context/auth-context';
 import { useDynamicLayout } from '@/hooks';
-import { FloatingInputField, PasswordRequirements, ProgressBar } from '@/components/auth';
+import { FloatingInputField, PasswordRequirements } from '@/components/auth';
+import { ProgressBar } from '@/components/ui/progress-bar';
 import { getPendingCurrentPassword, clearPendingCurrentPassword } from '@/lib/password-flow-store';
 import { createLogger } from '@/lib/logger';
 
@@ -156,7 +157,7 @@ export default function ChangePasswordNewScreen() {
                 </Pressable>
 
                 <View className="absolute inset-x-0 items-center justify-center pointer-events-none">
-                  <ProgressBar activeStep={2} totalSteps={2} />
+                  <ProgressBar activeStep={2} totalSteps={2} initialStep={1} />
                 </View>
                 <View className="w-7.5" />
               </View>

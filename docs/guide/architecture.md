@@ -31,6 +31,7 @@ sagana-mobile/
 │   ├── constants/             # colors.ts, layout.ts
 │   ├── context/               # auth-context.tsx
 │   ├── data/                  # data.json: demo fixtures
+│   ├── dev/                   # dev-shortcuts.ts (dev-only Expo Dev Menu routes)
 │   ├── hooks/                 # Profile, machines, batches, BLE, Wi-Fi, socket, notifications
 │   ├── lib/                   # BLE/socket drivers, tokens, logger, notifications, utilities
 │   ├── types/                 # auth, api, barangay, device, machine, batch

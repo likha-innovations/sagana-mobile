@@ -33,6 +33,7 @@ import { GoogleIcon } from '@/components/icons';
 import { ErrorModal } from '@/components/ui/error-modal';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
 import { SuccessScreen } from '@/components/ui/success-screen';
+import { ProgressBar } from '@/components/ui/progress-bar';
 import {
   PolicyBottomSheet,
   BirthdayBottomSheet,
@@ -303,6 +304,13 @@ function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupPr
 
 
 type SignUpStep = 'email' | 'otp' | 'password' | 'name' | 'success';
+
+const SIGN_UP_STEP_INDEX: Record<Exclude<SignUpStep, 'success'>, number> = {
+  email: 1,
+  otp: 2,
+  password: 3,
+  name: 4,
+};
 
 export default function SignUpScreen() {
   const insets = useSafeAreaInsets();
@@ -744,6 +752,11 @@ export default function SignUpScreen() {
         title={`Welcome, ${operatorName}!`}
         description="You will now be able to use this app to manage your SAGANA AIVSP Machines!"
         buttonText="Take me to the homepage"
+        alignText="center"
+        mascotWidth={299}
+        mascotHeight={299}
+        lottieSource={require('@/assets/icons/mascot/onboarding/sagana_hardhat_mascot_blink.lottie')}
+        fallbackImageSource={require('@/assets/icons/mascot/sagana_welcome.png')}
         onButtonPress={() => {
           router.replace('/(app)/(tabs)');
         }}
@@ -785,6 +798,10 @@ export default function SignUpScreen() {
                 >
                   <ChevronLeft size={24} color="#414141" />
                 </Pressable>
+
+                <View className="absolute inset-x-0 items-center justify-center pointer-events-none">
+                  <ProgressBar activeStep={SIGN_UP_STEP_INDEX[step]} totalSteps={4} />
+                </View>
 
                 <View className="w-10" />
               </View>

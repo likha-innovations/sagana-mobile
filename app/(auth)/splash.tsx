@@ -1,5 +1,4 @@
 import React, { useEffect } from 'react';
-import { useWindowDimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -15,8 +14,6 @@ import { hasSeenOnboarding } from '@/lib/onboarding-storage';
 
 export default function SplashScreen() {
   const router = useRouter();
-  const { width } = useWindowDimensions();
-  const logoSize = Math.min(width * 0.32, 140);
 
   const scale = useSharedValue(0.92);
   const opacity = useSharedValue(0);
@@ -26,10 +23,10 @@ export default function SplashScreen() {
     scale.value = withRepeat(
       withSequence(
         withTiming(1.05, { duration: 1100, easing: Easing.inOut(Easing.ease) }),
-        withTiming(0.98, { duration: 1100, easing: Easing.inOut(Easing.ease) })
+        withTiming(0.98, { duration: 1100, easing: Easing.inOut(Easing.ease) }),
       ),
       -1,
-      true
+      true,
     );
 
     let isMounted = true;
@@ -74,8 +71,8 @@ export default function SplashScreen() {
   return (
     <LinearGradient
       colors={['#404D0A', '#CEFF00']}
-      start={{ x: 0.1, y: 0.0 }}
-      end={{ x: 0.9, y: 1.0 }}
+      start={{ x: 0.16, y: 0.0 }}
+      end={{ x: 0.84, y: 1.0 }}
       style={{ flex: 1 }}
       className="items-center justify-center"
     >
@@ -83,8 +80,8 @@ export default function SplashScreen() {
         style={[
           animatedStyle,
           {
-            width: logoSize,
-            height: logoSize,
+            width: 76,
+            height: 79,
             alignItems: 'center',
             justifyContent: 'center',
           },
