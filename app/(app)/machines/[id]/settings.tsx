@@ -20,6 +20,7 @@ import {
   AlertCircle,
   AlertTriangle,
   Info,
+  QrCode,
 } from "lucide-react-native";
 import {
   useMachine,
@@ -32,6 +33,7 @@ import { useDynamicLayout, useCurrentWifi } from "@/hooks";
 import { useBluetooth } from "@/hooks/use-bluetooth";
 import { useToast } from "@/components/ui/toast";
 import { Input } from "@/components/ui/input";
+import { WifiQrScannerModal } from "@/components/devices/wifi-qr-scanner-modal";
 import { Button } from "@/components/ui/button";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -81,6 +83,7 @@ export default function MachineSettingsScreen() {
   const [name, setName] = useState("");
   const [ssid, setSsid] = useState("");
   const [password, setPassword] = useState("");
+  const [qrScannerVisible, setQrScannerVisible] = useState(false);
   const [error, setError] = useState("");
   const [removeVisible, setRemoveVisible] = useState(false);
   const [isProvisioning, setIsProvisioning] = useState(false);
@@ -522,15 +525,40 @@ export default function MachineSettingsScreen() {
                     controlClassName="rounded-2xl"
                   />
 
-                  <Pressable
-                    onPress={handleAutoFillWifi}
-                    disabled={pending || isFetchingWifi}
-                    className="mt-1 mb-4 self-start active:opacity-70 disabled:opacity-40"
-                  >
-                    <Text className="text-sm font-bold text-primary">
-                      Use my current Wi-Fi name
-                    </Text>
-                  </Pressable>
+                  <View className="mt-1 mb-4 flex-row items-center justify-between">
+                    <Pressable
+                      onPress={handleAutoFillWifi}
+                      disabled={pending || isFetchingWifi}
+                      className="active:opacity-70 disabled:opacity-40"
+                    >
+                      <Text className="text-sm font-bold text-primary">
+                        Use my current Wi-Fi name
+                      </Text>
+                    </Pressable>
+
+                    <Pressable
+                      onPress={() => setQrScannerVisible(true)}
+                      disabled={pending}
+                      className="flex-row items-center gap-1.5 active:opacity-70 disabled:opacity-40"
+                    >
+                      <QrCode size={16} color="#718619" />
+                      <Text className="text-sm font-bold text-primary">
+                        Scan Wi-Fi QR
+                      </Text>
+                    </Pressable>
+                  </View>
+
+                  <WifiQrScannerModal
+                    visible={qrScannerVisible}
+                    onClose={() => setQrScannerVisible(false)}
+                    onScanned={({ ssid: scannedSsid, password: scannedPassword }) => {
+                      setSsid(scannedSsid);
+                      if (scannedPassword) {
+                        setPassword(scannedPassword);
+                      }
+                      setError("");
+                    }}
+                  />
 
                   <View className="mt-2">
                     <Button

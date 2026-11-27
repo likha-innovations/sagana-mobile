@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { View, Text, Pressable, Platform, Linking, ActivityIndicator, useWindowDimensions, Image } from 'react-native';
 import LottieView from 'lottie-react-native';
-import { Info, AlertCircle, Bluetooth } from 'lucide-react-native';
+import { Info, AlertCircle, Bluetooth, QrCode } from 'lucide-react-native';
 import * as IntentLauncher from 'expo-intent-launcher';
 import { Input } from '@/components/ui/input';
+import { WifiQrScannerModal } from '@/components/devices/wifi-qr-scanner-modal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Controller, type Control, UseFormSetValue } from 'react-hook-form';
 import type { Device } from 'react-native-ble-plx';
@@ -229,6 +230,7 @@ export function WifiCredentialsStep({
   errorMessage?: string | null;
 }) {
   const { fetchWifi, isFetching } = useCurrentWifi();
+  const [qrScannerVisible, setQrScannerVisible] = useState(false);
 
   const handleAutoFill = async () => {
     const currentSsid = await fetchWifi();
@@ -303,13 +305,35 @@ export function WifiCredentialsStep({
         )}
       />
 
-      <Pressable
-        onPress={handleAutoFill}
-        disabled={isConnecting || isFetching}
-        className="mt-1 mb-4 self-start active:opacity-70 disabled:opacity-40"
-      >
-        <Text className="text-sm font-bold text-primary">Use my current Wi-Fi name</Text>
-      </Pressable>
+      <View className="mt-1 mb-4 flex-row items-center justify-between">
+        <Pressable
+          onPress={handleAutoFill}
+          disabled={isConnecting || isFetching}
+          className="active:opacity-70 disabled:opacity-40"
+        >
+          <Text className="text-sm font-bold text-primary">Use my current Wi-Fi name</Text>
+        </Pressable>
+
+        <Pressable
+          onPress={() => setQrScannerVisible(true)}
+          disabled={isConnecting}
+          className="flex-row items-center gap-1.5 active:opacity-70 disabled:opacity-40"
+        >
+          <QrCode size={16} color="#718619" />
+          <Text className="text-sm font-bold text-primary">Scan Wi-Fi QR</Text>
+        </Pressable>
+      </View>
+
+      <WifiQrScannerModal
+        visible={qrScannerVisible}
+        onClose={() => setQrScannerVisible(false)}
+        onScanned={({ ssid: scannedSsid, password: scannedPassword }) => {
+          setValue('ssid', scannedSsid, { shouldValidate: true });
+          if (scannedPassword) {
+            setValue('password', scannedPassword, { shouldValidate: true });
+          }
+        }}
+      />
 
       <View className="flex-row">
         <Info size={16} color="#AFAEA7" style={{ marginTop: 2, marginRight: 8, flexShrink: 0 }} />
