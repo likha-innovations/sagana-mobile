@@ -500,7 +500,6 @@ export default function MachineSettingsScreen() {
                   )}
 
                   <Input
-                    label="SSID"
                     placeholder="SSID"
                     accessibilityLabel="SSID"
                     value={ssid}
@@ -516,9 +515,8 @@ export default function MachineSettingsScreen() {
                   />
 
                   <Input
-                    label="Wi-Fi Password"
-                    placeholder="Wi-Fi Password"
-                    accessibilityLabel="Wi-Fi Password"
+                    placeholder="Wi-Fi password"
+                    accessibilityLabel="Wi-Fi password"
                     value={password}
                     onChangeText={(value) => {
                       setPassword(value);
