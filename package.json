@@ -3,7 +3,7 @@
   "version": "1.4.0",
   "main": "expo-router/entry",
   "dependencies": {
-    "@clerk/expo": "^4.4.0",
+    "@clerk/expo": "^4.17.5",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@hookform/resolvers": "^5.9.1",
     "@lottiefiles/dotlottie-react": "^0.13.5",
