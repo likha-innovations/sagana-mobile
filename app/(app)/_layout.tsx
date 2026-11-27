@@ -19,6 +19,15 @@ export default function AppLayout() {
       <Stack.Screen name="notifications" options={{ headerShown: false }} />
       <Stack.Screen name="change-password" options={{ headerShown: false }} />
       <Stack.Screen name="batch/new" options={{ headerShown: false }} />
+      <Stack.Screen name="machines/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="machines/[id]/settings" options={{ headerShown: false }} />
+      <Stack.Screen name="machines/[id]/aeration-settings" options={{ headerShown: false }} />
+      <Stack.Screen name="machines/[id]/automation-logs" options={{ headerShown: false }} />
+      <Stack.Screen name="machines/[id]/sensors-history" options={{ headerShown: false }} />
+      <Stack.Screen name="machines/[id]/collect" options={{ headerShown: false }} />
+      <Stack.Screen name="history/[batchId]" options={{ headerShown: false }} />
+      <Stack.Screen name="history/[batchId]/automation-logs" options={{ headerShown: false }} />
+      <Stack.Screen name="history/[batchId]/sensors-history" options={{ headerShown: false }} />
     </Stack>
   );
 }

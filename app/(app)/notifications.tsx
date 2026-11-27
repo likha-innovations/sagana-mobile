@@ -66,7 +66,7 @@ export default function NotificationsScreen() {
         onPress={() => markAllRead.mutate()}
         className="min-h-12 justify-center active:opacity-70"
       >
-        <Text className="text-[14px] font-bold text-brand-500">
+        <Text className="text-sm font-bold text-brand-500">
           Mark all as read
         </Text>
       </Pressable>
@@ -74,7 +74,12 @@ export default function NotificationsScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <HistoryHeader title="Notifications" back={true} action={markAllAction} />
+      <HistoryHeader
+        title="Notifications"
+        back={true}
+        fallbackHref="/(app)/(tabs)"
+        action={markAllAction}
+      />
 
       {notificationsQuery.isPending && notifications.length === 0 ? (
         <View className="flex-1 items-center justify-center">
@@ -107,7 +112,7 @@ export default function NotificationsScreen() {
             </View>
           }
           renderSectionHeader={({ section }) => (
-            <Text className="mb-3 mt-4 text-[16px] font-bold text-foreground">
+            <Text className="mb-3 mt-4 text-base font-bold text-foreground">
               {section.title}
             </Text>
           )}

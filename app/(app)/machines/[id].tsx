@@ -1,15 +1,15 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
   ScrollView,
   Pressable,
   useWindowDimensions,
-  Alert,
 } from "react-native";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import {
   ChevronLeft,
+  ChevronRight,
   Radio,
   RadioOff,
   Settings,
@@ -24,11 +24,11 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { format, parseISO } from "date-fns";
 import { useMachine, useMachineOverview } from "@/hooks/use-machines";
-import { useActiveBatch, useCompletedBatches, useFinishCompostBatch } from "@/hooks/use-batches";
+import { useActiveBatch, useCompletedBatches } from "@/hooks/use-batches";
 import { useDynamicLayout } from "@/hooks";
 import { colors } from "@/constants";
 import { formatTimeAgo } from "@/lib/utils";
-import { getMachineState } from "@/lib/machine-overview";
+import { getMachineState, formatCountdownSeconds } from "@/lib/machine-overview";
 import { createLogger } from "@/lib/logger";
 import { CompostIcon } from "@/components/icons";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -36,12 +36,95 @@ import { FeedstockGrid } from "@/components/history/feedstock-grid";
 import { HistoryState } from "@/components/history/history-state";
 import { QuickActionButton } from "@/components/dashboard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { CompletedBatchCard } from "@/components/dashboard/completed-batch-card";
 import { SensorStatCard } from "@/components/devices/sensor-stat-card";
 import { getRecentCompletedBatches } from "@/lib/dashboard";
 
 const logger = createLogger("MachineDetailsScreen");
+
+function AutomationTimerText({
+  targetEndTime,
+  fallbackUntil,
+  serverOffsetMs,
+  color,
+  disconnected,
+}: {
+  targetEndTime?: string | null;
+  fallbackUntil?: string;
+  serverOffsetMs?: number;
+  color: string;
+  disconnected?: boolean;
+}) {
+  const [displayText, setDisplayText] = useState<string>(
+    disconnected ? "--" : (fallbackUntil ?? "--"),
+  );
+  const activeTargetMsRef = useRef<number | null>(null);
+  const serverOffsetMsRef = useRef<number>(serverOffsetMs ?? 0);
+
+  // Retain calibrated server clock offset arrived with HTTP response
+  useEffect(() => {
+    serverOffsetMsRef.current = serverOffsetMs ?? 0;
+  }, [serverOffsetMs]);
+
+  // Target timestamp tracking
+  useEffect(() => {
+    if (disconnected || !targetEndTime) {
+      activeTargetMsRef.current = null;
+      setDisplayText(disconnected ? "--" : (fallbackUntil ?? "--"));
+      return;
+    }
+
+    const newTargetMs = new Date(targetEndTime).getTime();
+    if (Number.isNaN(newTargetMs)) {
+      activeTargetMsRef.current = null;
+      setDisplayText(fallbackUntil ?? "--");
+      return;
+    }
+
+    activeTargetMsRef.current = newTargetMs;
+  }, [targetEndTime, fallbackUntil, disconnected]);
+
+  // Local monotonic 1-second countdown synchronized to server/machine time
+  useEffect(() => {
+    if (disconnected) {
+      setDisplayText("--");
+      return;
+    }
+
+    const tick = () => {
+      if (activeTargetMsRef.current === null) {
+        setDisplayText(fallbackUntil ?? "--");
+        return;
+      }
+      const syncedNow = Date.now() + serverOffsetMsRef.current;
+      const diffSec = Math.max(
+        0,
+        Math.round((activeTargetMsRef.current - syncedNow) / 1000),
+      );
+      if (diffSec <= 0) {
+        setDisplayText("0:00");
+      } else {
+        setDisplayText(formatCountdownSeconds(diffSec));
+      }
+    };
+
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [fallbackUntil, disconnected]);
+
+  return (
+    <Text
+      className="font-bold text-lg text-right"
+      style={{
+        color,
+        fontVariant: ["tabular-nums"],
+      }}
+    >
+      {displayText}
+    </Text>
+  );
+}
 
 export default function MachineDetailsDashboard() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -51,9 +134,7 @@ export default function MachineDetailsDashboard() {
   const stacked = width < 360 || fontScale > 1.2;
   const machineQuery = useMachine(id);
   const batchQuery = useActiveBatch(id);
-  const finishBatch = useFinishCompostBatch();
   const overviewQuery = useMachineOverview(id);
-  const [finishVisible, setFinishVisible] = useState(false);
   useFocusEffect(
     useCallback(() => {
       logger.screen("Machine Details", { id });
@@ -103,7 +184,13 @@ export default function MachineDetailsDashboard() {
         style={{ paddingTop: Math.max(headerPaddingTop, 48) }}
       >
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace("/(app)/(tabs)/machines");
+            }
+          }}
           accessibilityRole="button"
           accessibilityLabel="Back"
           className="min-h-12 min-w-12 items-center justify-center -ml-3"
@@ -135,7 +222,7 @@ export default function MachineDetailsDashboard() {
               className="min-h-12 min-w-12 items-center justify-center"
               onPress={() =>
                 router.push({
-                  pathname: "/(app)/(tabs)/machines/[id]/settings",
+                  pathname: "/(app)/machines/[id]/settings",
                   params: { id },
                 })
               }
@@ -173,13 +260,13 @@ export default function MachineDetailsDashboard() {
             accessibilityLabel="Loading machine details"
             className="gap-3"
           >
-            <Skeleton className="h-[130px] rounded-[14px]" />
+            <Skeleton className="h-32.5 rounded-2xl" />
             <View className="flex-row gap-3">
-              <Skeleton className="flex-1 h-24 rounded-[14px]" />
-              <Skeleton className="flex-1 h-24 rounded-[14px]" />
+              <Skeleton className="flex-1 h-24 rounded-2xl" />
+              <Skeleton className="flex-1 h-24 rounded-2xl" />
             </View>
-            <Skeleton className="h-40 rounded-[14px]" />
-            <Skeleton className="h-48 rounded-[14px]" />
+            <Skeleton className="h-40 rounded-2xl" />
+            <Skeleton className="h-48 rounded-2xl" />
           </View>
         ) : (
           machine &&
@@ -208,7 +295,7 @@ export default function MachineDetailsDashboard() {
                 }
               />
               {completedQuery.isPending ? (
-                <Skeleton className="h-24 rounded-[14px]" />
+                <Skeleton className="h-24 rounded-2xl" />
               ) : completedQuery.isError ? (
                 <HistoryState
                   message="Could not load the previous batch."
@@ -218,7 +305,7 @@ export default function MachineDetailsDashboard() {
               ) : lastCompleted ? (
                 <View className="gap-3">
                   <Text className="text-base font-bold text-foreground">Last completed batch</Text>
-                  <CompletedBatchCard batch={lastCompleted} onPress={() => router.push({ pathname: "/(app)/(tabs)/history/[batchId]", params: { batchId: lastCompleted.id } })} />
+                  <CompletedBatchCard batch={lastCompleted} onPress={() => router.push({ pathname: "/(app)/history/[batchId]", params: { batchId: lastCompleted.id } })} />
                 </View>
               ) : null}
             </>
@@ -270,7 +357,7 @@ export default function MachineDetailsDashboard() {
                           }
                         >
                           <View
-                            className="h-[18px] w-[18px] rounded-full bg-primary-foreground"
+                            className="h-4.5 w-4.5 rounded-full bg-primary-foreground"
                             style={{
                               opacity:
                                 phase !== null && step <= phase ? 1 : 0.3,
@@ -296,7 +383,7 @@ export default function MachineDetailsDashboard() {
                     ].map((stat) => (
                       <View
                         key={stat.label}
-                        className="flex-1 rounded-[14px] border border-border p-6 items-center gap-2"
+                        className="flex-1 rounded-2xl border border-border p-6 items-center gap-2"
                       >
                         <Text className="text-xl font-bold text-foreground">
                           {stat.value}
@@ -307,7 +394,7 @@ export default function MachineDetailsDashboard() {
                       </View>
                     ))}
                   </View>
-                  <View className="rounded-[14px] border border-border p-6 gap-3">
+                  <View className="rounded-2xl border border-border p-6 gap-3">
                     {[
                       ["Batch ID", batch.batchCode],
                       ["Machine used", machine.name],
@@ -338,7 +425,12 @@ export default function MachineDetailsDashboard() {
                     disabled={state.disconnected}
                     accessibilityRole="button"
                     accessibilityState={{ disabled: state.disconnected }}
-                    onPress={() => setFinishVisible(true)}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/(app)/machines/[id]/collect",
+                        params: { id, mode: "collect" },
+                      })
+                    }
                     className="min-h-12 rounded-full bg-secondary px-5 py-3 items-center justify-center"
                   >
                     <Text className="text-sm text-center font-bold text-foreground">
@@ -352,7 +444,7 @@ export default function MachineDetailsDashboard() {
                     <Pressable
                       className="min-h-12 justify-center"
                       accessibilityRole="button"
-                      onPress={() => router.push({ pathname: "/(app)/(tabs)/machines/[id]/sensors-history", params: { id } })}
+                      onPress={() => router.push({ pathname: "/(app)/machines/[id]/sensors-history", params: { id } })}
                     >
                       <Text className="font-bold text-sm text-primary">View history</Text>
                     </Pressable>
@@ -380,7 +472,7 @@ export default function MachineDetailsDashboard() {
                       onPress={() =>
                         router.push({
                           pathname:
-                            "/(app)/(tabs)/machines/[id]/automation-logs",
+                            "/(app)/machines/[id]/automation-logs",
                           params: { id },
                         })
                       }
@@ -397,15 +489,37 @@ export default function MachineDetailsDashboard() {
                       const color = automation?.enabled
                         ? colors.brand[500]
                         : colors.gray.textIcon;
+                      const isAeration = kind === "aeration";
+                      const CardComponent = isAeration ? Pressable : View;
                       return (
-                        <View
+                        <CardComponent
                           key={kind}
                           style={{ opacity: state.disconnected ? 0.55 : 1 }}
-                          className={`rounded-[14px] border border-border p-6 gap-4 ${stacked ? "" : "flex-row items-center justify-between"}`}
+                          onPress={
+                            isAeration
+                              ? () =>
+                                  router.push({
+                                    pathname:
+                                      "/(app)/machines/[id]/aeration-settings",
+                                    params: { id },
+                                  })
+                              : undefined
+                          }
+                          accessibilityRole={isAeration ? "button" : undefined}
+                          accessibilityLabel={
+                            isAeration ? "Aeration settings" : undefined
+                          }
+                          className={`rounded-2xl border border-border p-5 gap-4 ${
+                            isAeration ? "active:opacity-75" : ""
+                          } ${
+                            stacked
+                              ? ""
+                              : "flex-row items-center justify-between"
+                          }`}
                         >
-                          <View className="flex-row items-center gap-5">
+                          <View className="flex-row items-center gap-4">
                             <Icon size={24} color={color} />
-                            <View className="gap-1">
+                            <View className="gap-0.5">
                               <Text className="font-bold text-sm text-foreground">
                                 {kind === "aeration"
                                   ? "Aeration"
@@ -415,22 +529,39 @@ export default function MachineDetailsDashboard() {
                                 className="font-sans text-xs"
                                 style={{ color }}
                               >
-                                {automation ? (automation.enabled ? "On" : "Off") : "--"}
+                                {state.disconnected
+                                  ? "Offline"
+                                  : automation
+                                    ? (automation.enabled ? "On" : "Off")
+                                    : "--"}
                               </Text>
                             </View>
                           </View>
-                          <View className="gap-1">
-                            <Text className="font-sans text-xs text-foreground">
-                              {automation ? (automation.enabled ? "On until" : "Off until") : "Until"}
-                            </Text>
-                            <Text
-                              className="font-bold text-xl"
-                              style={{ color }}
-                            >
-                              {automation?.until ?? "--"}
-                            </Text>
+                          <View className="flex-row items-center gap-3">
+                            <View className="gap-0.5 items-end">
+                              <Text className="font-sans text-xs text-muted-foreground">
+                                {state.disconnected
+                                  ? "Until"
+                                  : automation
+                                    ? (automation.enabled ? "On until" : "Off until")
+                                    : "Until"}
+                              </Text>
+                              <View className="flex-row items-center gap-1.5">
+                                <Clock size={16} color={color} />
+                                <AutomationTimerText
+                                  targetEndTime={automation?.targetEndTime}
+                                  fallbackUntil={automation?.until}
+                                  serverOffsetMs={overview?.serverOffsetMs}
+                                  color={color}
+                                  disconnected={state.disconnected}
+                                />
+                              </View>
+                            </View>
+                            {isAeration && (
+                              <ChevronRight size={20} color={colors.semantic.foreground} />
+                            )}
                           </View>
-                        </View>
+                        </CardComponent>
                       );
                     })}
                   <UpdatedAt
@@ -449,22 +580,6 @@ export default function MachineDetailsDashboard() {
           ))
         )}
       </ScrollView>
-      <ConfirmModal
-        visible={finishVisible}
-        title="Finish Batch"
-        description="Are you sure you want to finish the current composting batch? This action cannot be undone."
-        confirmText="Finish Batch"
-        isDestructive
-        pending={finishBatch.isPending}
-        onCancel={() => setFinishVisible(false)}
-        onConfirm={() => {
-          if (!batch) return;
-          finishBatch.mutate({ id: batch.id }, {
-            onSuccess: () => { setFinishVisible(false); router.replace("/(app)/(tabs)/machines"); },
-            onError: (error) => Alert.alert("Could not finish batch", error.message),
-          });
-        }}
-      />
     </View>
   );
 }

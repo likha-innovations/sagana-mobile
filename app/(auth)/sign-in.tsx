@@ -88,7 +88,7 @@ function AuthInputField({
     <Pressable
       onPress={() => inputRef?.current?.focus()}
       className={cn(
-        'w-full h-[58px] rounded-2xl border-[1.5px] px-5 flex-row items-center justify-between bg-background transition-colors',
+        'w-full h-14.5 rounded-2xl border-[1.5px] px-5 flex-row items-center justify-between bg-background transition-colors',
         hasError
           ? 'border-destructive bg-destructive/[0.03]'
           : isFocused
@@ -110,7 +110,7 @@ function AuthInputField({
         >
           <Text
             className={cn(
-              'text-[14px] select-none',
+              'text-sm select-none',
               hasError
                 ? 'text-destructive font-medium'
                 : 'text-muted-foreground'
@@ -135,7 +135,7 @@ function AuthInputField({
           style={{
             paddingTop: isFloating ? 14 : 0,
           }}
-          className="text-[14px] font-sans text-foreground p-0 m-0 w-full h-full"
+          className="text-sm font-sans text-foreground p-0 m-0 w-full h-full"
         />
       </View>
 
@@ -333,7 +333,7 @@ export default function SignInScreen() {
             showsVerticalScrollIndicator={false}
           >
             {/* Top Logo and Form Section */}
-            <View className="w-full max-w-[380px] items-center pt-8">
+            <View className="w-full max-w-95 items-center pt-8">
               {/* Logo Area */}
               <View className="w-full items-center justify-center mb-10 mt-10">
                 <Image
@@ -383,13 +383,13 @@ export default function SignInScreen() {
                 <Pressable
                   onPress={handleLoginPress}
                   disabled={loading || googleLoading}
-                  className="w-full h-[50px] rounded-full bg-primary items-center justify-center mt-4 active:opacity-90 disabled:opacity-60"
+                  className="w-full h-12.5 rounded-full bg-primary items-center justify-center mt-4 active:opacity-90 disabled:opacity-60"
                   accessibilityRole="button"
                 >
                   {loading ? (
                     <ActivityIndicator color="#FAF9EE" size="small" />
                   ) : (
-                    <Text className="text-[15px] font-bold text-primary-foreground">
+                    <Text className="text-base font-bold text-primary-foreground">
                       Log in
                     </Text>
                   )}
@@ -408,7 +408,7 @@ export default function SignInScreen() {
                 </Pressable>
 
                 {/* Divider: or continue with */}
-                <View className="w-full max-w-[350px] self-center flex-row items-center justify-between my-3">
+                <View className="w-full max-w-87.5 self-center flex-row items-center justify-between my-3">
                   <View className="flex-1 h-[1px] bg-border" />
                   <Text className="text-sm font-sans text-muted-foreground px-3">
                     or continue with
@@ -420,7 +420,7 @@ export default function SignInScreen() {
                 <Pressable
                   onPress={handleGooglePress}
                   disabled={loading || googleLoading}
-                  className="w-full h-[50px] rounded-full bg-secondary flex-row items-center justify-center gap-2.5 active:opacity-85 disabled:opacity-60"
+                  className="w-full h-12.5 rounded-full bg-secondary flex-row items-center justify-center gap-2.5 active:opacity-85 disabled:opacity-60"
                   accessibilityRole="button"
                   accessibilityLabel="Sign in with Google"
                 >
@@ -429,7 +429,7 @@ export default function SignInScreen() {
                   ) : (
                     <>
                       <GoogleIcon size={18} />
-                      <Text className="text-[15px] font-bold text-foreground">
+                      <Text className="text-base font-bold text-foreground">
                         Google
                       </Text>
                     </>
@@ -439,14 +439,14 @@ export default function SignInScreen() {
             </View>
 
             {/* Bottom Outline Button */}
-            <View className="w-full max-w-[380px] pt-12 pb-10">
+            <View className="w-full max-w-95 pt-12 pb-10">
               <Pressable
                 onPress={handleRequestAccountPress}
                 disabled={loading || googleLoading}
-                className="w-full h-[50px] rounded-full border-[1.5px] border-primary bg-transparent items-center justify-center active:opacity-80 disabled:opacity-60"
+                className="w-full h-12.5 rounded-full border-[1.5px] border-primary bg-transparent items-center justify-center active:opacity-80 disabled:opacity-60"
                 accessibilityRole="button"
               >
-                <Text className="text-[15px] font-bold text-primary">
+                <Text className="text-base font-bold text-primary">
                   Don't have an account?
                 </Text>
               </Pressable>

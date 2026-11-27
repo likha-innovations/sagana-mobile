@@ -32,6 +32,13 @@ function render(step, weights) {
     "expo-router": { useRouter: () => ({}), useLocalSearchParams: () => ({}) },
     "lucide-react-native": new Proxy({}, { get: (_, key) => key }),
     "expo-image": { Image: "Image" },
+    "lottie-react-native": new Proxy({}, { get: () => "LottieView" }),
+    "@/components/ui/success-screen": { SuccessScreen: "SuccessScreen" },
+    "@/components/ui/progress-bar": { ProgressBar: "ProgressBar" },
+    "@/components/ui": {
+      SuccessScreen: "SuccessScreen",
+      ProgressBar: "ProgressBar",
+    },
     "expo-haptics": {
       impactAsync: mock.fn(),
       notificationAsync: mock.fn(),
@@ -72,7 +79,10 @@ function render(step, weights) {
     {
       module,
       exports: module.exports,
-      require: (name) => dependencies[name] ?? require(name),
+      require: (name) => {
+        if (name.startsWith("@/assets/")) return 1;
+        return dependencies[name] ?? require(name);
+      },
     },
     { filename },
   );

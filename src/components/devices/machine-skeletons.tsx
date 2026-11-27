@@ -13,14 +13,14 @@ export function MachineSkeletons({ stacked }: { stacked: boolean }) {
       {[0, 1].map((index) => (
         <View
           key={index}
-          className="gap-4 rounded-[14px] border border-border bg-card px-4 py-6"
+          className="gap-4 rounded-2xl border border-border bg-card px-4 py-6"
         >
           <Skeleton className="h-5 w-2/5" />
           <View className="flex-row flex-wrap gap-2">
             {[0, 1, 2, 3].map((sensor) => (
               <Skeleton
                 key={sensor}
-                className="h-[99px] rounded-[8px]"
+                className="h-25 rounded-lg"
                 style={{ flexBasis: stacked ? "47%" : 0, flexGrow: 1 }}
               />
             ))}

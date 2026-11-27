@@ -103,11 +103,11 @@ export default function HistoryScreen() {
                 autoCorrect={false}
                 returnKeyType="search"
                 containerClassName="mb-0"
-                controlClassName="rounded-[14px] border-[1.5px] border-border"
+                controlClassName="rounded-2xl border-[1.5px] border-border"
                 className="font-sans"
                 trailingIcon={<Search size={20} color={colors.gray.textIcon} />}
               />
-              <Text className="text-[16px] font-bold text-foreground">
+              <Text className="text-base font-bold text-foreground">
                 Completed Batches
               </Text>
             </View>
@@ -117,7 +117,7 @@ export default function HistoryScreen() {
               batch={item}
               onPress={() =>
                 router.push({
-                  pathname: "/(app)/(tabs)/history/[batchId]",
+                  pathname: "/(app)/history/[batchId]",
                   params: { batchId: item.id },
                 })
               }
@@ -133,7 +133,15 @@ export default function HistoryScreen() {
             ) : query.isPending ? (
               <HistoryState message="Loading completed batches…" />
             ) : (
-              <HistoryState message="No batches match this search or date filter." />
+              <View className="py-8">
+                <EmptyState
+                  message={
+                    query.data && query.data.length === 0
+                      ? "You have no finished batches yet."
+                      : "No batches match this search or date filter."
+                  }
+                />
+              </View>
             )
           }
         />

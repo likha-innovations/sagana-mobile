@@ -63,10 +63,10 @@ export const PolicyBottomSheet = forwardRef<BottomSheetModal, PolicyBottomSheetP
             contentContainerStyle={{ paddingBottom: 16 }}
             className="flex-1"
           >
-            <Text className="text-[20px] font-bold text-foreground mb-1.5 text-left mt-2">
+            <Text className="text-xl font-bold text-foreground mb-1.5 text-left mt-2">
               {isTos ? 'Terms of Service' : 'Privacy Policy'}
             </Text>
-            <Text className="text-[13px] font-sans text-muted-foreground mb-5 text-left leading-relaxed">
+            <Text className="text-xs font-sans text-muted-foreground mb-5 text-left leading-relaxed">
               {isTos
                 ? 'Please review the following terms before continuing your registration.'
                 : 'At SAGANA, we take your privacy seriously. This policy outlines how we collect, use, and protect your personal information when you use our services.'}
@@ -123,7 +123,7 @@ export const PolicyBottomSheet = forwardRef<BottomSheetModal, PolicyBottomSheetP
 
           <Pressable
             onPress={handleActionPress}
-            className="w-full h-[45px] rounded-full bg-primary items-center justify-center active:opacity-90 mt-3"
+            className="w-full h-11.25 rounded-full bg-primary items-center justify-center active:opacity-90 mt-3"
             accessibilityRole="button"
           >
             <Text className="text-sm font-bold text-primary-foreground">

@@ -72,12 +72,12 @@ export default function DashboardScreen() {
         <View className="gap-8 px-4">
           <View className="flex-row items-center justify-between">
             <View className="flex-1 gap-2 pr-2">
-              <Text className="text-[20px] font-bold text-foreground">
+              <Text className="text-xl font-bold text-foreground">
                 Hello, {firstName}!
               </Text>
               <View className="flex-row items-center gap-1.5">
                 <MapPin size={16} color={colors.semantic.foreground} />
-                <Text className="flex-1 text-[14px] font-sans text-foreground">
+                <Text className="flex-1 text-sm font-sans text-foreground">
                   {getBarangayName(user, barangays)}
                 </Text>
               </View>
@@ -129,7 +129,7 @@ export default function DashboardScreen() {
             </View>
           )}
           <View className="gap-4">
-            <Text className="text-[16px] font-bold text-foreground">
+            <Text className="text-base font-bold text-foreground">
               Quick Actions
             </Text>
             <View className="gap-3">
@@ -154,7 +154,7 @@ export default function DashboardScreen() {
           </View>
           <View className="gap-4">
             <View className="flex-row items-center justify-between">
-              <Text className="text-[16px] font-bold text-foreground">
+              <Text className="text-base font-bold text-foreground">
                 Completed Batches
               </Text>
               <Pressable
@@ -168,7 +168,7 @@ export default function DashboardScreen() {
                   })
                 }
               >
-                <Text className="text-[14px] font-bold text-primary">
+                <Text className="text-sm font-bold text-primary">
                   View All
                 </Text>
               </Pressable>
@@ -187,7 +187,7 @@ export default function DashboardScreen() {
                     batch={batch}
                     onPress={() =>
                       router.push({
-                        pathname: "/(app)/(tabs)/history/[batchId]",
+                        pathname: "/(app)/history/[batchId]",
                         params: { batchId: batch.id },
                       })
                     }
@@ -202,7 +202,7 @@ export default function DashboardScreen() {
           </View>
           <View className="gap-4">
             <View className="flex-row items-center justify-between">
-              <Text className="text-[16px] font-bold text-foreground">
+              <Text className="text-base font-bold text-foreground">
                 Your Machines
               </Text>
               <Pressable
@@ -211,7 +211,7 @@ export default function DashboardScreen() {
                 onPress={() => router.push("/(app)/(tabs)/machines")}
                 className="min-h-12 min-w-12 items-end justify-center"
               >
-                <Text className="text-[14px] font-bold text-primary">
+                <Text className="text-sm font-bold text-primary">
                   View All
                 </Text>
               </Pressable>
@@ -237,7 +237,7 @@ export default function DashboardScreen() {
                     }
                     onPress={() =>
                       router.push({
-                        pathname: "/(app)/(tabs)/machines/[id]",
+                        pathname: "/(app)/machines/[id]",
                         params: { id: machine.id },
                       })
                     }

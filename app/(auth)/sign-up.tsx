@@ -32,9 +32,12 @@ import { ChevronLeft, Eye, EyeOff, X, Calendar } from 'lucide-react-native';
 import { GoogleIcon } from '@/components/icons';
 import { ErrorModal } from '@/components/ui/error-modal';
 import { ConfirmModal } from '@/components/ui/confirm-modal';
+import { SuccessScreen } from '@/components/ui/success-screen';
+import { ProgressBar } from '@/components/ui/progress-bar';
 import {
   PolicyBottomSheet,
   BirthdayBottomSheet,
+  PasswordRequirements,
   type BirthdayBottomSheetRef,
 } from '@/components/auth';
 import { useAuthContext, InvalidBarangayCodeError, MissingSignupRequirementsError } from '@/context/auth-context';
@@ -121,7 +124,7 @@ function FloatingInputField({
         }
       }}
       className={cn(
-        'w-full h-[58px] rounded-2xl border-[1.5px] px-5 flex-row items-center justify-between bg-background transition-colors',
+        'w-full h-14.5 rounded-2xl border-[1.5px] px-5 flex-row items-center justify-between bg-background transition-colors',
         hasError
           ? 'border-destructive bg-destructive/[0.03]'
           : isFocused
@@ -143,7 +146,7 @@ function FloatingInputField({
         >
           <Text
             className={cn(
-              'text-[14px] select-none',
+              'text-sm select-none',
               hasError
                 ? 'text-destructive font-medium'
                 : 'text-muted-foreground'
@@ -171,7 +174,7 @@ function FloatingInputField({
           style={{
             paddingTop: isFloating ? 14 : 0,
           }}
-          className="text-[14px] font-sans text-foreground p-0 m-0 w-full h-full"
+          className="text-sm font-sans text-foreground p-0 m-0 w-full h-full"
         />
       </View>
 
@@ -257,7 +260,7 @@ function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupPr
   };
 
   return (
-    <View className="w-full flex-row justify-between items-center gap-1.5 sm:gap-2 max-w-[380px]">
+    <View className="w-full flex-row justify-between items-center gap-1.5 sm:gap-2 max-w-95">
       {[0, 1, 2, 3, 4, 5].map((index) => {
         const digit = code[index] || '';
         return (
@@ -270,11 +273,15 @@ function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupPr
             onChangeText={(text) => handleCharChange(text, index)}
             onSelectionChange={(event) => { selections.current[index] = event.nativeEvent.selection; }}
             onKeyPress={(e) => handleKeyPress(e, index)}
+            inputMode="numeric"
             keyboardType="number-pad"
+            autoCapitalize="none"
+            autoCorrect={false}
+            spellCheck={false}
             accessibilityLabel={`One-time code digit ${index + 1} of 6`}
             textAlign="center"
             className={cn(
-              'flex-1 max-w-[50px] aspect-[50/58] rounded-2xl border-[1.5px] bg-background text-[22px] font-bold text-foreground p-0',
+              'flex-1 max-w-12.5 aspect-[50/58] rounded-2xl border-[1.5px] bg-background text-2xl font-bold text-foreground p-0',
               hasError
                 ? 'border-destructive text-destructive'
                 : digit
@@ -296,7 +303,14 @@ function OtpInputGroup({ code, onChangeCode, hasError = false }: OtpInputGroupPr
 
 
 
-type SignUpStep = 'email' | 'otp' | 'password' | 'name';
+type SignUpStep = 'email' | 'otp' | 'password' | 'name' | 'success';
+
+const SIGN_UP_STEP_INDEX: Record<Exclude<SignUpStep, 'success'>, number> = {
+  email: 1,
+  otp: 2,
+  password: 3,
+  name: 4,
+};
 
 export default function SignUpScreen() {
   const insets = useSafeAreaInsets();
@@ -339,7 +353,6 @@ export default function SignUpScreen() {
   const [passwordError, setPasswordError] = useState(false);
   const [confirmPasswordError, setConfirmPasswordError] = useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = useState<string | null>(null);
-  const [failedRequirements, setFailedRequirements] = useState<string[]>([]);
   const passwordRef = useRef<TextInput>(null);
   const confirmPasswordRef = useRef<TextInput>(null);
 
@@ -431,6 +444,10 @@ export default function SignUpScreen() {
   };
 
   const handleBack = useCallback(async () => {
+    if (step === 'success') {
+      router.replace('/(app)/(tabs)');
+      return;
+    }
     if (step === 'name') {
       if (isSignedIn) {
         confirmExit();
@@ -444,7 +461,7 @@ export default function SignUpScreen() {
     } else {
       confirmExit();
     }
-  }, [step, isSignedIn, confirmExit]);
+  }, [step, isSignedIn, confirmExit, router]);
 
   useFocusEffect(useCallback(() => {
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => { void handleBack(); return true; });
@@ -472,6 +489,7 @@ export default function SignUpScreen() {
     setLoading(true);
     setEmailError(false);
     setEmailErrorMessage(null);
+    Keyboard.dismiss();
 
     try {
       if (isLoaded) {
@@ -537,47 +555,41 @@ export default function SignUpScreen() {
 
   // --- Step 3: Validate Password ---
   const handleNextPassword = () => {
-    
+    // Missing input check
     if (!password || !confirmPassword) {
       if (!password) setPasswordError(true);
       if (!confirmPassword) setConfirmPasswordError(true);
       setPasswordErrorMessage('Please enter and confirm your password');
-      setFailedRequirements([]);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
-    const isAtLeast8 = password.length >= 8;
+    // Password requirements check (12+ characters, number, symbol)
+    const isAtLeast12 = password.length >= 12;
     const hasNumber = /\d/.test(password);
     const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
-    if (!isAtLeast8 || !hasNumber || !hasSymbol) {
-      const unmet = [];
-      if (!isAtLeast8) unmet.push('At least 8+ characters');
-      if (!hasNumber) unmet.push('Must have a number (0–9)');
-      if (!hasSymbol) unmet.push('Must have a special symbol (e.g., !@#$)');
-
+    if (!isAtLeast12 || !hasNumber || !hasSymbol) {
       setPasswordError(true);
       setConfirmPasswordError(false);
       setPasswordErrorMessage("Password doesn't meet requirements");
-      setFailedRequirements(unmet);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
+    // Password mismatch check
     if (password !== confirmPassword) {
       setPasswordError(false);
       setConfirmPasswordError(true);
-      setPasswordErrorMessage("Passwords doesn't match");
-      setFailedRequirements([]);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setPasswordErrorMessage("Passwords don't match");
+      if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
     setPasswordError(false);
     setConfirmPasswordError(false);
     setPasswordErrorMessage(null);
-    setFailedRequirements([]);
+    Keyboard.dismiss();
     setStep('name');
   };
 
@@ -691,7 +703,7 @@ export default function SignUpScreen() {
         if (completed) {
           await queryClient.invalidateQueries({ queryKey: ['signup-profile'] });
           setSignupBarangay(null);
-          router.replace('/(app)/(tabs)');
+          setStep('success');
         }
       } else {
         router.replace('/(auth)/sign-in');
@@ -733,6 +745,25 @@ export default function SignUpScreen() {
     }
   };
 
+  if (step === 'success') {
+    const operatorName = firstName.trim() ? `Operator ${firstName.trim()}` : 'Operator';
+    return (
+      <SuccessScreen
+        title={`Welcome, ${operatorName}!`}
+        description="You will now be able to use this app to manage your SAGANA AIVSP Machines!"
+        buttonText="Take me to the homepage"
+        alignText="center"
+        mascotWidth={299}
+        mascotHeight={299}
+        lottieSource={require('@/assets/icons/mascot/onboarding/sagana_hardhat_mascot_blink.lottie')}
+        fallbackImageSource={require('@/assets/icons/mascot/sagana_welcome.png')}
+        onButtonPress={() => {
+          router.replace('/(app)/(tabs)');
+        }}
+      />
+    );
+  }
+
   return (
     <View
       className="flex-1 bg-background"
@@ -755,7 +786,7 @@ export default function SignUpScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <View className="w-full max-w-[380px] items-center">
+            <View className="w-full max-w-95 items-center">
               {/* Header Navigation Bar */}
               <View className="w-full h-11 flex-row items-center justify-between relative mb-6">
                 <Pressable
@@ -768,6 +799,10 @@ export default function SignUpScreen() {
                   <ChevronLeft size={24} color="#414141" />
                 </Pressable>
 
+                <View className="absolute inset-x-0 items-center justify-center pointer-events-none">
+                  <ProgressBar activeStep={SIGN_UP_STEP_INDEX[step]} totalSteps={4} />
+                </View>
+
                 <View className="w-10" />
               </View>
 
@@ -775,7 +810,7 @@ export default function SignUpScreen() {
               {step === 'email' && (
                 <View className="w-full">
                   <View className="w-full mb-6">
-                    <Text className="text-[20px] font-bold text-foreground text-left">
+                    <Text className="text-xl font-bold text-foreground text-left">
                       Create your account
                     </Text>
                   </View>
@@ -808,7 +843,7 @@ export default function SignUpScreen() {
                     {/* Divider: or continue with */}
                     <View className="w-full flex-row items-center justify-between my-2">
                       <View className="flex-1 h-[1px] bg-border" />
-                      <Text className="text-[13px] font-sans text-muted-foreground px-3">
+                      <Text className="text-sm font-sans text-muted-foreground px-3">
                         or continue with
                       </Text>
                       <View className="flex-1 h-[1px] bg-border" />
@@ -818,7 +853,7 @@ export default function SignUpScreen() {
                     <Pressable
                       onPress={handleGooglePress}
                       disabled={loading || googleLoading}
-                      className="w-full h-[50px] rounded-full bg-secondary flex-row items-center justify-center gap-2.5 active:opacity-85 disabled:opacity-60"
+                      className="w-full h-12.5 rounded-full bg-secondary flex-row items-center justify-center gap-2.5 active:opacity-85 disabled:opacity-60"
                       accessibilityRole="button"
                       accessibilityLabel="Sign up with Google"
                     >
@@ -827,7 +862,7 @@ export default function SignUpScreen() {
                       ) : (
                         <>
                           <GoogleIcon size={18} />
-                          <Text className="text-[15px] font-bold text-foreground">
+                          <Text className="text-base font-bold text-foreground">
                             Google
                           </Text>
                         </>
@@ -860,10 +895,10 @@ export default function SignUpScreen() {
               {step === 'otp' && (
                 <View className="w-full">
                   <View className="w-full gap-2 mb-6">
-                    <Text className="text-[20px] font-bold text-foreground text-left">
+                    <Text className="text-xl font-bold text-foreground text-left">
                       Enter one-time code
                     </Text>
-                    <Text className="text-[14px] font-sans text-foreground text-left leading-5">
+                    <Text className="text-sm font-sans text-foreground text-left leading-5">
                       Kindly check your email for an OTP and enter it here.
                     </Text>
                   </View>
@@ -897,7 +932,7 @@ export default function SignUpScreen() {
                       disabled={resendCooldown > 0}
                       className="py-1"
                     >
-                      <Text className="text-[14px] font-medium text-foreground">
+                      <Text className="text-sm font-medium text-foreground">
                         <Text className="text-[#96958F] font-sans">Didn’t receive any code? </Text>
                         <Text
                           className={cn(
@@ -919,10 +954,10 @@ export default function SignUpScreen() {
               {step === 'password' && (
                 <View className="w-full">
                   <View className="w-full gap-2.5 mb-8">
-                    <Text className="text-[20px] font-bold text-foreground text-left">
+                    <Text className="text-xl font-bold text-foreground text-left">
                       Enter new password
                     </Text>
-                    <Text className="text-[14px] font-sans text-foreground text-left leading-5">
+                    <Text className="text-sm font-sans text-foreground text-left leading-5">
                       Enter and confirm the password you wish to use for this account.
                     </Text>
                   </View>
@@ -935,7 +970,6 @@ export default function SignUpScreen() {
                         setPassword(text);
                         if (passwordError) setPasswordError(false);
                         if (passwordErrorMessage) setPasswordErrorMessage(null);
-                        if (failedRequirements.length > 0) setFailedRequirements([]);
                       }}
                       hasError={passwordError}
                       isPassword
@@ -951,7 +985,6 @@ export default function SignUpScreen() {
                         setConfirmPassword(text);
                         if (confirmPasswordError) setConfirmPasswordError(false);
                         if (passwordErrorMessage) setPasswordErrorMessage(null);
-                        if (failedRequirements.length > 0) setFailedRequirements([]);
                       }}
                       hasError={confirmPasswordError}
                       isPassword
@@ -962,36 +995,16 @@ export default function SignUpScreen() {
 
                     {/* Inline Error Message */}
                     {passwordErrorMessage && (
-                      <Text className="text-[14px] font-sans text-destructive mt-1 ml-1 text-left">
+                      <Text className="text-sm font-sans text-destructive mt-1 ml-1 text-left">
                         {passwordErrorMessage}
                       </Text>
                     )}
 
-                    {/* Specific Failed Requirement Bullets */}
-                    {failedRequirements.length > 0 && (
-                      <View className="w-full mt-1 pl-2">
-                        {failedRequirements.map((req, idx) => (
-                          <Text key={idx} className="text-[13px] font-sans text-destructive leading-6">
-                            • {req}
-                          </Text>
-                        ))}
-                      </View>
-                    )}
-
-                    {/* Checklist Requirements matching Figma */}
-                    {!passwordErrorMessage && (
-                      <View className="w-full mt-2 pl-2">
-                        <Text className="text-[13px] font-sans text-[#96958F] leading-6">
-                          • At least 8+ characters
-                        </Text>
-                        <Text className="text-[13px] font-sans text-[#96958F] leading-6">
-                          • Must have a number (0–9)
-                        </Text>
-                        <Text className="text-[13px] font-sans text-[#96958F] leading-6">
-                          • Must have a special symbol (e.g., !@#$)
-                        </Text>
-                      </View>
-                    )}
+                    {/* Real-time Checklist Requirements */}
+                    <PasswordRequirements
+                      password={password}
+                      hasAttemptedSubmit={passwordError}
+                    />
                   </View>
                 </View>
               )}
@@ -1000,7 +1013,7 @@ export default function SignUpScreen() {
               {step === 'name' && (
                 <View className="w-full">
                   <View className="w-full mb-6">
-                    <Text className="text-[20px] font-bold text-foreground text-left">
+                    <Text className="text-xl font-bold text-foreground text-left">
                       Who are you?
                     </Text>
                   </View>
@@ -1092,18 +1105,18 @@ export default function SignUpScreen() {
             </View>
 
             {/* Bottom Actions Container (Pinned at the bottom) */}
-            <View className="w-full max-w-[380px] pt-6 pb-2">
+            <View className="w-full max-w-95 pt-6 pb-2">
               {step === 'email' && (
                 <Pressable
                   onPress={handleNextEmail}
                   disabled={loading}
-                  className="w-full h-[50px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+                  className="w-full h-12.5 rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
                   accessibilityRole="button"
                 >
                   {loading ? (
                     <ActivityIndicator color="#FAF9EE" size="small" />
                   ) : (
-                    <Text className="text-[15px] font-bold text-primary-foreground">
+                    <Text className="text-base font-bold text-primary-foreground">
                       Next
                     </Text>
                   )}
@@ -1114,13 +1127,13 @@ export default function SignUpScreen() {
                 <Pressable
                   onPress={handleVerifyOtp}
                   disabled={loading}
-                  className="w-full h-[50px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+                  className="w-full h-12.5 rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
                   accessibilityRole="button"
                 >
                   {loading ? (
                     <ActivityIndicator color="#FAF9EE" size="small" />
                   ) : (
-                    <Text className="text-[15px] font-bold text-primary-foreground">
+                    <Text className="text-base font-bold text-primary-foreground">
                       Next
                     </Text>
                   )}
@@ -1130,10 +1143,11 @@ export default function SignUpScreen() {
               {step === 'password' && (
                 <Pressable
                   onPress={handleNextPassword}
-                  className="w-full h-[50px] rounded-full bg-primary items-center justify-center active:opacity-90"
+                  disabled={loading || !password || !confirmPassword}
+                  className="w-full h-12.5 rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
                   accessibilityRole="button"
                 >
-                  <Text className="text-[15px] font-bold text-primary-foreground">
+                  <Text className="text-base font-bold text-primary-foreground">
                     Next
                   </Text>
                 </Pressable>
@@ -1143,13 +1157,13 @@ export default function SignUpScreen() {
                 <Pressable
                   onPress={handleNextName}
                   disabled={loading}
-                  className="w-full h-[50px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+                  className="w-full h-12.5 rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
                   accessibilityRole="button"
                 >
                   {loading ? (
                     <ActivityIndicator color="#FAF9EE" size="small" />
                   ) : (
-                    <Text className="text-[15px] font-bold text-primary-foreground">
+                    <Text className="text-base font-bold text-primary-foreground">
                       Finish
                     </Text>
                   )}

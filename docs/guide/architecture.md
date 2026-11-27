@@ -9,7 +9,9 @@ sagana-mobile/
 ├── app/                       # Expo Router screens and layouts
 │   ├── (auth)/                # Sign-in, sign-up, reset, fallback
 │   ├── (app)/                 # Protected screens
-│   │   ├── (tabs)/            # Home, Machines stack, Account
+│   │   ├── (tabs)/            # Flat Home, Machines, History, Account tab roots
+│   │   ├── machines/          # Machine detail and child feature screens (hoisted)
+│   │   ├── history/           # Batch detail and child feature screens (hoisted)
 │   │   ├── batch/             # New compost batch wizard
 │   │   ├── machine-registration/ # BLE registration wizard
 │   │   ├── change-password/   # Current, new, success
@@ -29,6 +31,7 @@ sagana-mobile/
 │   ├── constants/             # colors.ts, layout.ts
 │   ├── context/               # auth-context.tsx
 │   ├── data/                  # data.json: demo fixtures
+│   ├── dev/                   # dev-shortcuts.ts (dev-only Expo Dev Menu routes)
 │   ├── hooks/                 # Profile, machines, batches, BLE, Wi-Fi, socket, notifications
 │   ├── lib/                   # BLE/socket drivers, tokens, logger, notifications, utilities
 │   ├── types/                 # auth, api, barangay, device, machine, batch

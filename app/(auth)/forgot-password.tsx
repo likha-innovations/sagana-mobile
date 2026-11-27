@@ -10,6 +10,7 @@ import {
   Keyboard,
   TextInput,
   ActivityIndicator,
+  Image,
   type TextInputProps,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,11 +23,14 @@ import Animated, {
   interpolate,
   Easing,
 } from 'react-native-reanimated';
-import { ChevronLeft, Eye, EyeOff, CircleAlert } from 'lucide-react-native';
+import { ChevronLeft } from 'lucide-react-native';
+import LottieView from 'lottie-react-native';
 import { useAuthContext } from '@/context/auth-context';
 import { cn } from '@/lib/utils';
 
-import { ProgressBar, FloatingInputField, OtpInputGroup, PasswordRequirements, ResendTimer } from '@/components/auth';
+import { FloatingInputField, OtpInputGroup, PasswordRequirements, ResendTimer } from '@/components/auth';
+import { ProgressBar } from '@/components/ui/progress-bar';
+import { SuccessScreen } from '@/components/ui/success-screen';
 
 type FlowStep = 'email' | 'otp' | 'password' | 'success' | 'no_email_access';
 
@@ -58,6 +62,7 @@ export default function ForgotPasswordScreen() {
   const [failedRequirements, setFailedRequirements] = useState<string[]>([]);
 
   const [loading, setLoading] = useState(false);
+  const [sadLottieError, setSadLottieError] = useState(false);
 
   const emailInputRef = useRef<TextInput>(null);
   const newPasswordRef = useRef<TextInput>(null);
@@ -111,6 +116,7 @@ export default function ForgotPasswordScreen() {
     setLoading(true);
     setEmailError(false);
     setEmailErrorMessage(null);
+    Keyboard.dismiss();
 
     try {
       if (isLoaded) {
@@ -252,6 +258,24 @@ export default function ForgotPasswordScreen() {
     }
   };
 
+  if (step === 'success') {
+    return (
+      <SuccessScreen
+        title="You are all set!"
+        description="You can now login to your account using your new password."
+        buttonText="Done"
+        alignText="left"
+        mascotWidth={264}
+        mascotHeight={264}
+        lottieSource={require('@/assets/icons/mascot/onboarding/sagana_celebrate.lottie')}
+        fallbackImageSource={require('@/assets/icons/mascot/sagana_celebrate.png')}
+        onButtonPress={() => {
+          router.replace('/(auth)/sign-in');
+        }}
+      />
+    );
+  }
+
   return (
     <View
       className="flex-1 bg-background"
@@ -273,13 +297,13 @@ export default function ForgotPasswordScreen() {
             showsVerticalScrollIndicator={false}
           >
             {/* Top Unified Group: Header + Form Content */}
-            <View className="w-full max-w-[380px] items-center pt-4">
+            <View className="w-full max-w-95 items-center pt-4">
               {/* Header Navigation Bar */}
               <View className="w-full h-11 flex-row items-center justify-between relative mb-6">
                 <Pressable
                   onPress={handleBack}
                   hitSlop={12}
-                  className="w-[30px] h-[30px] items-center justify-center -ml-1"
+                  className="w-7.5 h-7.5 items-center justify-center -ml-1"
                   accessibilityRole="button"
                   accessibilityLabel="Go back"
                 >
@@ -287,7 +311,7 @@ export default function ForgotPasswordScreen() {
                 </Pressable>
 
                 {/* Centered Progress Bar */}
-                {step !== 'no_email_access' && step !== 'success' && (
+                {step !== 'no_email_access' && (
                   <View className="absolute inset-x-0 items-center justify-center pointer-events-none">
                     <ProgressBar
                       activeStep={step === 'email' ? 1 : step === 'otp' ? 2 : 3}
@@ -295,17 +319,17 @@ export default function ForgotPasswordScreen() {
                     />
                   </View>
                 )}
-                <View className="w-[30px]" />
+                <View className="w-7.5" />
               </View>
 
               {/* --- SCREEN 1: Enter Email Content --- */}
               {step === 'email' && (
                 <View className="w-full">
                   <View className="w-full gap-2.5 mb-8">
-                    <Text className="text-[20px] font-bold text-foreground text-left">
+                    <Text className="text-xl font-bold text-foreground text-left">
                       Forgot your password?
                     </Text>
-                    <Text className="text-[14px] font-sans text-foreground text-left leading-5">
+                    <Text className="text-sm font-sans text-foreground text-left leading-5">
                       To proceed, enter the email address registered under your account.
                     </Text>
                   </View>
@@ -327,7 +351,7 @@ export default function ForgotPasswordScreen() {
                     />
 
                     {emailErrorMessage && (
-                      <Text className="text-[14px] font-sans text-destructive mt-2.5 ml-1">
+                      <Text className="text-sm font-sans text-destructive mt-2.5 ml-1">
                         {emailErrorMessage}
                       </Text>
                     )}
@@ -338,15 +362,33 @@ export default function ForgotPasswordScreen() {
               {/* --- SCREEN: No Email Access Content --- */}
               {step === 'no_email_access' && (
                 <View className="w-full">
-                  <View className="w-full h-[182px] bg-[#E2E1DC] rounded-[12px] mb-8 items-center justify-center">
-                    <CircleAlert size={48} color="#718619" />
+                  <View className="w-50 h-50 self-center items-center justify-center mb-8">
+                    {!sadLottieError ? (
+                      <LottieView
+                        source={require('@/assets/icons/mascot/onboarding/sagana_sad.lottie')}
+                        autoPlay
+                        loop
+                        cacheComposition
+                        renderMode="HARDWARE"
+                        hardwareAccelerationAndroid
+                        style={{ width: 200, height: 200 }}
+                        onAnimationFailure={() => setSadLottieError(true)}
+                      />
+                    ) : (
+                      <Image
+                        source={require('@/assets/icons/mascot/sagana_confused.png')}
+                        style={{ width: 180, height: 180 }}
+                        resizeMode="contain"
+                        accessibilityLabel="Sad mascot illustration"
+                      />
+                    )}
                   </View>
 
                   <View className="w-full gap-2.5">
-                    <Text className="text-[20px] font-bold text-foreground text-left">
+                    <Text className="text-xl font-bold text-foreground text-left">
                       Uh-oh, we’re sorry!
                     </Text>
-                    <Text className="text-[14px] font-sans text-foreground text-left leading-5">
+                    <Text className="text-sm font-sans text-foreground text-left leading-5">
                       To recover your account, you must reach out to your admin for further instructions.
                     </Text>
                   </View>
@@ -357,10 +399,10 @@ export default function ForgotPasswordScreen() {
               {step === 'otp' && (
                 <View className="w-full">
                   <View className="w-full gap-2.5 mb-8">
-                    <Text className="text-[20px] font-bold text-foreground text-left">
+                    <Text className="text-xl font-bold text-foreground text-left">
                       Enter one-time code
                     </Text>
-                    <Text className="text-[14px] font-sans text-foreground text-left leading-5">
+                    <Text className="text-sm font-sans text-foreground text-left leading-5">
                       Kindly check your email for an OTP and enter it here.
                     </Text>
                   </View>
@@ -378,7 +420,7 @@ export default function ForgotPasswordScreen() {
                     />
 
                     {otpErrorMessage && (
-                      <Text className="text-[14px] font-sans text-destructive mt-3 ml-1 text-left">
+                      <Text className="text-sm font-sans text-destructive mt-3 ml-1 text-left">
                         {otpErrorMessage}
                       </Text>
                     )}
@@ -391,7 +433,7 @@ export default function ForgotPasswordScreen() {
                       disabled={resendCooldown > 0}
                       className="py-1"
                     >
-                      <Text className="text-[14px] font-medium text-foreground">
+                      <Text className="text-sm font-medium text-foreground">
                         <Text className="text-[#96958F] font-sans">Didn’t receive any code? </Text>
                         <Text
                           className={cn(
@@ -413,10 +455,10 @@ export default function ForgotPasswordScreen() {
               {step === 'password' && (
                 <View className="w-full">
                   <View className="w-full gap-2.5 mb-8">
-                    <Text className="text-[20px] font-bold text-foreground text-left">
+                    <Text className="text-xl font-bold text-foreground text-left">
                       Enter new password
                     </Text>
-                    <Text className="text-[14px] font-sans text-foreground text-left leading-5">
+                    <Text className="text-sm font-sans text-foreground text-left leading-5">
                       Enter and confirm the new password you wish to use for this account.
                     </Text>
                   </View>
@@ -456,7 +498,7 @@ export default function ForgotPasswordScreen() {
 
                     {/* Inline Error Message */}
                     {passwordErrorMessage && (
-                      <Text className="text-[14px] font-sans text-destructive mt-1 ml-1 text-left">
+                      <Text className="text-sm font-sans text-destructive mt-1 ml-1 text-left">
                         {passwordErrorMessage}
                       </Text>
                     )}
@@ -469,42 +511,22 @@ export default function ForgotPasswordScreen() {
                   </View>
                 </View>
               )}
-
-              {/* --- SCREEN 4: Success Content --- */}
-              {step === 'success' && (
-                <View className="w-full">
-                  <View className="w-full h-[182px] bg-[#E2E1DC] rounded-[12px] mb-8 items-center justify-center">
-                    <View className="w-16 h-16 rounded-full bg-primary items-center justify-center">
-                      <Text className="text-white text-2xl font-bold">✓</Text>
-                    </View>
-                  </View>
-
-                  <View className="w-full gap-2.5">
-                    <Text className="text-[20px] font-bold text-foreground text-left">
-                      You are all set!
-                    </Text>
-                    <Text className="text-[14px] font-sans text-foreground text-left leading-5">
-                      You can now login to your account using your new password.
-                    </Text>
-                  </View>
-                </View>
-              )}
             </View>
 
             {/* Bottom Actions Container (Pinned at the bottom) */}
-            <View className="w-full max-w-[380px] pb-10">
+            <View className="w-full max-w-95 pb-10">
               {step === 'email' && (
                 <View className="w-full gap-3">
                   <Pressable
                     onPress={handleSendOtp}
                     disabled={loading}
-                    className="w-full h-[45px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+                    className="w-full h-11.25 rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
                     accessibilityRole="button"
                   >
                     {loading ? (
                       <ActivityIndicator color="#FAF9EE" size="small" />
                     ) : (
-                      <Text className="text-[14px] font-bold text-primary-foreground">
+                      <Text className="text-sm font-bold text-primary-foreground">
                         Send OTP
                       </Text>
                     )}
@@ -512,10 +534,10 @@ export default function ForgotPasswordScreen() {
 
                   <Pressable
                     onPress={() => setStep('no_email_access')}
-                    className="w-full h-[45px] rounded-full border-[1.5px] border-primary bg-transparent items-center justify-center active:opacity-80"
+                    className="w-full h-11.25 rounded-full border-[1.5px] border-primary bg-transparent items-center justify-center active:opacity-80"
                     accessibilityRole="button"
                   >
-                    <Text className="text-[14px] font-bold text-primary">
+                    <Text className="text-sm font-bold text-primary">
                       I forgot my email address
                     </Text>
                   </Pressable>
@@ -525,10 +547,10 @@ export default function ForgotPasswordScreen() {
               {step === 'no_email_access' && (
                 <Pressable
                   onPress={() => router.replace('/(auth)/sign-in')}
-                  className="w-full h-[45px] rounded-full bg-primary items-center justify-center active:opacity-90"
+                  className="w-full h-11.25 rounded-full bg-primary items-center justify-center active:opacity-90"
                   accessibilityRole="button"
                 >
-                  <Text className="text-[14px] font-bold text-primary-foreground">
+                  <Text className="text-sm font-bold text-primary-foreground">
                     Got it, go back to log in
                   </Text>
                 </Pressable>
@@ -538,13 +560,13 @@ export default function ForgotPasswordScreen() {
                 <Pressable
                   onPress={handleVerifyOtp}
                   disabled={loading}
-                  className="w-full h-[45px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+                  className="w-full h-11.25 rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
                   accessibilityRole="button"
                 >
                   {loading ? (
                     <ActivityIndicator color="#FAF9EE" size="small" />
                   ) : (
-                    <Text className="text-[14px] font-bold text-primary-foreground">
+                    <Text className="text-sm font-bold text-primary-foreground">
                       Next
                     </Text>
                   )}
@@ -555,28 +577,16 @@ export default function ForgotPasswordScreen() {
                 <Pressable
                   onPress={handleFinishReset}
                   disabled={loading}
-                  className="w-full h-[45px] rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
+                  className="w-full h-11.25 rounded-full bg-primary items-center justify-center active:opacity-90 disabled:opacity-60"
                   accessibilityRole="button"
                 >
                   {loading ? (
                     <ActivityIndicator color="#FAF9EE" size="small" />
                   ) : (
-                    <Text className="text-[14px] font-bold text-primary-foreground">
+                    <Text className="text-sm font-bold text-primary-foreground">
                       Finish
                     </Text>
                   )}
-                </Pressable>
-              )}
-
-              {step === 'success' && (
-                <Pressable
-                  onPress={() => router.replace('/(auth)/sign-in')}
-                  className="w-full h-[45px] rounded-full bg-primary items-center justify-center active:opacity-90"
-                  accessibilityRole="button"
-                >
-                  <Text className="text-[14px] font-bold text-primary-foreground">
-                    Go to Log In
-                  </Text>
                 </Pressable>
               )}
             </View>

@@ -33,7 +33,7 @@ export function ResendTimer({ onResend, cooldownSeconds = 60 }: ResendTimerProps
         disabled={cooldown > 0}
         className="py-1"
       >
-        <Text className="text-[14px] font-medium text-foreground">
+        <Text className="text-sm font-medium text-foreground">
           <Text className="text-muted-foreground font-sans">Didn't receive any code? </Text>
           <Text
             className={cn(

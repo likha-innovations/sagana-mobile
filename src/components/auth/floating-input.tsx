@@ -80,7 +80,7 @@ export function FloatingInputField({
     <Pressable
       onPress={handleContainerPress}
       className={cn(
-        'w-full h-[58px] rounded-2xl border-[1.5px] px-5 flex-row items-center justify-between bg-background transition-colors',
+        'w-full h-14.5 rounded-2xl border-[1.5px] px-5 flex-row items-center justify-between bg-background transition-colors',
         hasError
           ? 'border-destructive bg-destructive/[0.03]'
           : isFocused
@@ -102,7 +102,7 @@ export function FloatingInputField({
         >
           <Text
             className={cn(
-              'text-[14px] select-none',
+              'text-sm select-none',
               hasError
                 ? 'text-destructive font-medium'
                 : 'text-muted-foreground'
@@ -128,7 +128,7 @@ export function FloatingInputField({
           style={{
             paddingTop: isFloating ? 14 : 0,
           }}
-          className="text-[14px] font-sans text-foreground p-0 m-0 w-full h-full"
+          className="text-sm font-sans text-foreground p-0 m-0 w-full h-full"
         />
       </View>
 

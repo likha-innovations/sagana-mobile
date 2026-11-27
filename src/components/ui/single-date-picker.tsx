@@ -69,7 +69,7 @@ export function SingleDatePicker({
         onPress={onClose}
       >
         <Pressable
-          className="w-full max-w-sm rounded-[24px] bg-card p-5 border border-border shadow-lg"
+          className="w-full max-w-sm rounded-3xl bg-card p-5 border border-border shadow-lg"
           onPress={(e) => e.stopPropagation()}
         >
           <Text className="mb-3 text-lg font-bold text-foreground">

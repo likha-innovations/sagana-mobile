@@ -1,7 +1,10 @@
-import { View, Text, Pressable, Platform, Linking, ActivityIndicator } from 'react-native';
-import { Info, AlertCircle, Bluetooth } from 'lucide-react-native';
+import { useState } from 'react';
+import { View, Pressable, Platform, Linking, ActivityIndicator } from 'react-native';
+import { Text } from '@/components/ui/text';
+import { Info, AlertCircle, Bluetooth, QrCode } from 'lucide-react-native';
 import * as IntentLauncher from 'expo-intent-launcher';
 import { Input } from '@/components/ui/input';
+import { WifiQrScannerModal } from '@/components/devices/wifi-qr-scanner-modal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Controller, type Control, UseFormSetValue } from 'react-hook-form';
 import type { Device } from 'react-native-ble-plx';
@@ -11,14 +14,13 @@ import { useCurrentWifi } from '@/hooks';
 
 export function TurnOnStep() {
   return (
-    <View className="flex-1 mt-4">
-      <Text className="text-2xl font-bold text-foreground">Turn on your machine</Text>
-      <Text className="text-sm text-muted-foreground mt-2 leading-relaxed">
+    <View className="flex-1 pt-4 pb-6">
+      <Text className="text-xl font-bold text-foreground">Turn on your machine</Text>
+      <Text className="text-sm font-sans text-foreground mt-2.5 leading-5">
         Once powered on, your{' '}
-        <Text className="font-bold text-foreground">SAGANA AIVSP Machine</Text>
+        <Text className="text-sm font-bold text-foreground">SAGANA AIVSP Machine</Text>
         {' '}should blink 3 times in order to proceed.
       </Text>
-      <View className="w-full h-[220px] bg-skeleton rounded-2xl mt-8" />
     </View>
   );
 }
@@ -202,13 +204,16 @@ export function WifiCredentialsStep({
   setValue,
   isConnecting = false,
   errorMessage = null,
+  onQrAutoSubmit,
 }: {
   control: Control<MachineRegistrationInput>;
   setValue: UseFormSetValue<MachineRegistrationInput>;
   isConnecting?: boolean;
   errorMessage?: string | null;
+  onQrAutoSubmit?: () => void;
 }) {
   const { fetchWifi, isFetching } = useCurrentWifi();
+  const [qrScannerVisible, setQrScannerVisible] = useState(false);
 
   const handleAutoFill = async () => {
     const currentSsid = await fetchWifi();
@@ -283,13 +288,36 @@ export function WifiCredentialsStep({
         )}
       />
 
-      <Pressable
-        onPress={handleAutoFill}
-        disabled={isConnecting || isFetching}
-        className="mt-1 mb-4 self-start active:opacity-70 disabled:opacity-40"
-      >
-        <Text className="text-sm font-bold text-primary">Use my current Wi-Fi name</Text>
-      </Pressable>
+      <View className="mt-1 mb-4 flex-row items-center justify-between">
+        <Pressable
+          onPress={handleAutoFill}
+          disabled={isConnecting || isFetching}
+          className="active:opacity-70 disabled:opacity-40"
+        >
+          <Text className="text-sm font-bold text-primary">Use my current Wi-Fi name</Text>
+        </Pressable>
+
+        <Pressable
+          onPress={() => setQrScannerVisible(true)}
+          disabled={isConnecting}
+          className="flex-row items-center gap-1.5 active:opacity-70 disabled:opacity-40"
+        >
+          <QrCode size={16} color="#718619" />
+          <Text className="text-sm font-bold text-primary">Scan Wi-Fi QR</Text>
+        </Pressable>
+      </View>
+
+      <WifiQrScannerModal
+        visible={qrScannerVisible}
+        onClose={() => setQrScannerVisible(false)}
+        onScanned={({ ssid: scannedSsid, password: scannedPassword }) => {
+          setValue('ssid', scannedSsid, { shouldValidate: true });
+          if (scannedPassword) {
+            setValue('password', scannedPassword, { shouldValidate: true });
+            onQrAutoSubmit?.();
+          }
+        }}
+      />
 
       <View className="flex-row">
         <Info size={16} color="#AFAEA7" style={{ marginTop: 2, marginRight: 8, flexShrink: 0 }} />
@@ -324,18 +352,6 @@ export function NameMachineStep({ control }: { control: Control<MachineRegistrat
           />
         )}
       />
-    </View>
-  );
-}
-
-export function SuccessStep() {
-  return (
-    <View className="flex-1 mt-4">
-      <View className="w-full h-[220px] bg-skeleton rounded-2xl mb-8" />
-      <Text className="text-2xl font-bold text-foreground">Your machine has been registered!</Text>
-      <Text className="text-sm text-muted-foreground mt-2 leading-relaxed">
-        You can now start a compost batch using your newly registered device.
-      </Text>
     </View>
   );
 }

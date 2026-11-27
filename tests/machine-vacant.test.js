@@ -60,7 +60,7 @@ function renderDetail(completed, activeBatch = null, offline = false) {
     isError: false,
     refetch: jestMock.fn(),
   };
-  const { default: Screen } = load("app/(app)/(tabs)/machines/[id]/index.tsx", {
+  const { default: Screen } = load("app/(app)/machines/[id].tsx", {
     react: {
       useCallback: (fn) => fn,
       useState: (value) => [value, jestMock.fn()],
@@ -73,6 +73,7 @@ function renderDetail(completed, activeBatch = null, offline = false) {
       Alert: {},
       useWindowDimensions: () => ({ width: 390, fontScale: 1 }),
     },
+    "@/components/ui/text": { Text: "Text" },
     "react/jsx-runtime": require("react/jsx-runtime"),
     "expo-router": {
       useFocusEffect: () => {},
@@ -255,9 +256,7 @@ test("an active machine detail shows sensor readings and history navigation", ()
       nodes(node).some((child) => child.props?.children === "View history"),
   );
   historyLink.props.onPress();
-  expect(pushes[0].pathname).toBe(
-    "/(app)/(tabs)/machines/[id]/sensors-history",
-  );
+  expect(pushes[0].pathname).toBe("/(app)/machines/[id]/sensors-history");
 });
 
 test("an offline active machine keeps readings and automation cards without inventing their status", () => {
@@ -297,6 +296,7 @@ test("machine cards show sensor readings and a fallback for an empty phase", () 
       Pressable: "Pressable",
       useWindowDimensions: () => ({ width: 390, fontScale: 1 }),
     },
+    "@/components/ui/text": { Text: "Text" },
     "react/jsx-runtime": require("react/jsx-runtime"),
     "lucide-react-native": icons,
     "@/components/icons": { CompostIcon: "CompostIcon" },
@@ -326,6 +326,7 @@ test("machine cards show sensor readings and a fallback for an empty phase", () 
 test("data errors show a retry action and disable it while retrying", () => {
   const { HistoryState } = load("src/components/history/history-state.tsx", {
     "react-native": { View: "View", Text: "Text", Pressable: "Pressable" },
+    "@/components/ui/text": { Text: "Text" },
     "react/jsx-runtime": require("react/jsx-runtime"),
     "lucide-react-native": icons,
     "@/constants": { colors },

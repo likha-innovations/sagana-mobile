@@ -1,4 +1,5 @@
-import { View, Text, useWindowDimensions } from "react-native";
+import { View, useWindowDimensions } from "react-native";
+import { Text } from "@/components/ui/text";
 import { Image } from "expo-image";
 import { Sprout } from "lucide-react-native";
 import { colors } from "@/constants";
@@ -30,15 +31,15 @@ export function FeedstockGrid({
                 accessible={false}
               />
             ) : (
-              <View className="h-[60px] w-[74px] items-center justify-center">
+              <View className="h-15 w-18.5 items-center justify-center">
                 <Sprout size={24} color={colors.brand[700]} />
               </View>
             )}
             <View className="gap-1">
-              <Text className="text-center text-[12px] font-sans text-foreground">
+              <Text className="text-center text-xs font-sans text-foreground">
                 {item.name}
               </Text>
-              <Text className="text-center text-[12px] font-sans text-muted-foreground">
+              <Text className="text-center text-xs font-sans text-muted-foreground">
                 {item.weightKg} kg
               </Text>
             </View>

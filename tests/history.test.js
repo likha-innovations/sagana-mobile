@@ -241,6 +241,7 @@ function sheetHarness(file, exportName) {
     },
     "@/constants": { colors },
     "@/lib/history": h,
+    "@/components/ui/text": { Text: "Text" },
     "./button": { Button: "Button" },
   })[exportName];
   return (props) => {
@@ -524,7 +525,7 @@ test("route wrappers preserve scope and log every focus visit", () => {
       const route = sensor ? "sensors-history" : "automation-logs";
       const callbacks = [],
         logs = [];
-      const screen = load(`app/(app)/(tabs)/${folder}/${route}.tsx`, {
+      const screen = load(`app/(app)/${folder}/${route}.tsx`, {
         react: { useCallback: (callback) => callback },
         "react/jsx-runtime": { jsx: (type, props) => ({ type, props }) },
         "expo-router": {

@@ -183,8 +183,8 @@ export const DateRangePicker = forwardRef<
             <Text
               className={
                 valid
-                  ? "text-[14px] font-bold text-primary-foreground"
-                  : "text-[14px] font-bold text-muted-foreground"
+                  ? "text-sm font-bold text-primary-foreground"
+                  : "text-sm font-bold text-muted-foreground"
               }
             >
               Apply range

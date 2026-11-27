@@ -18,7 +18,9 @@ import {
   WifiOff,
   Trash2,
   AlertCircle,
+  AlertTriangle,
   Info,
+  QrCode,
 } from "lucide-react-native";
 import {
   useMachine,
@@ -26,10 +28,12 @@ import {
   useUpdateMachineWifi,
   useRemoveMachine,
 } from "@/hooks/use-machines";
+import { useActiveBatch } from "@/hooks/use-batches";
 import { useDynamicLayout, useCurrentWifi } from "@/hooks";
 import { useBluetooth } from "@/hooks/use-bluetooth";
 import { useToast } from "@/components/ui/toast";
 import { Input } from "@/components/ui/input";
+import { WifiQrScannerModal } from "@/components/devices/wifi-qr-scanner-modal";
 import { Button } from "@/components/ui/button";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -53,6 +57,8 @@ export default function MachineSettingsScreen() {
 
   const query = useMachine(id);
   const machine = query.data;
+  const batchQuery = useActiveBatch(id);
+  const activeBatch = batchQuery.data;
 
   const rename = useUpdateMachineName();
   const wifi = useUpdateMachineWifi();
@@ -77,6 +83,7 @@ export default function MachineSettingsScreen() {
   const [name, setName] = useState("");
   const [ssid, setSsid] = useState("");
   const [password, setPassword] = useState("");
+  const [qrScannerVisible, setQrScannerVisible] = useState(false);
   const [error, setError] = useState("");
   const [removeVisible, setRemoveVisible] = useState(false);
   const [isProvisioning, setIsProvisioning] = useState(false);
@@ -92,7 +99,14 @@ export default function MachineSettingsScreen() {
     if (pending) return;
     if (view === "menu") {
       resetBle();
-      router.back();
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace({
+          pathname: "/(app)/machines/[id]",
+          params: { id },
+        });
+      }
     } else if (view === "wifi-form") {
       setView("wifi-scan");
       setPassword("");
@@ -183,9 +197,15 @@ export default function MachineSettingsScreen() {
     );
   };
 
-  const handleApplyWifiToHardware = async () => {
+  const handleApplyWifiToHardware = async (
+    overrideSsid?: string,
+    overridePassword?: string,
+  ) => {
     if (pending) return;
-    const result = machineSsidSchema.safeParse(ssid);
+    const targetSsid = (overrideSsid ?? ssid).trim();
+    const targetPassword = overridePassword ?? password;
+
+    const result = machineSsidSchema.safeParse(targetSsid);
     if (!result.success) {
       setError(result.error.issues[0].message);
       if (Platform.OS !== "web") {
@@ -193,7 +213,7 @@ export default function MachineSettingsScreen() {
       }
       return;
     }
-    if (!password.trim()) {
+    if (!targetPassword.trim()) {
       setError("Wi-Fi Password is required");
       if (Platform.OS !== "web") {
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -207,10 +227,10 @@ export default function MachineSettingsScreen() {
 
     try {
       // 1. Write credentials to ESP32 over BLE and wait for connection test
-      await provisionWifi(ssid.trim(), password);
+      await provisionWifi(targetSsid, targetPassword);
 
       // 2. Sync new SSID with backend database
-      await wifi.mutateAsync({ id, wifiSsid: ssid.trim() });
+      await wifi.mutateAsync({ id, wifiSsid: targetSsid });
 
       if (Platform.OS !== "web") {
         void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -311,7 +331,7 @@ export default function MachineSettingsScreen() {
             className="gap-3"
           >
             {[0, 1, 2, 3].map((item) => (
-              <Skeleton key={item} className="h-[60px] rounded-lg" />
+              <Skeleton key={item} className="h-15 rounded-lg" />
             ))}
           </View>
         ) : (
@@ -322,7 +342,7 @@ export default function MachineSettingsScreen() {
                   <Pressable
                     accessibilityRole="button"
                     onPress={openRename}
-                    className="min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 bg-card active:bg-muted"
+                    className="min-h-15 rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 bg-card active:bg-muted"
                   >
                     <PencilLine size={24} color={colors.semantic.foreground} />
                     <Text className="flex-1 text-sm font-sans text-foreground">
@@ -333,7 +353,7 @@ export default function MachineSettingsScreen() {
                   <Pressable
                     accessibilityRole="button"
                     onPress={openWifiScan}
-                    className="min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 bg-card active:bg-muted"
+                    className="min-h-15 rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 bg-card active:bg-muted"
                   >
                     <Wifi size={24} color={colors.semantic.foreground} />
                     <View className="flex-1">
@@ -347,22 +367,41 @@ export default function MachineSettingsScreen() {
                   </Pressable>
 
                   <Pressable
-                    disabled
+                    disabled={!activeBatch}
                     accessibilityRole="button"
-                    accessibilityState={{ disabled: true }}
-                    accessibilityLabel="Remove current batch. Batch cancellation is not available yet."
-                    className="min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 opacity-50 bg-card"
+                    accessibilityState={{ disabled: !activeBatch }}
+                    accessibilityLabel={
+                      activeBatch
+                        ? "Reject current batch"
+                        : "No active batch to reject"
+                    }
+                    onPress={() =>
+                      router.push({
+                        pathname: "/(app)/machines/[id]/collect",
+                        params: { id, mode: "reject" },
+                      })
+                    }
+                    className={`min-h-15 rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 bg-card ${
+                      activeBatch ? "active:bg-muted" : "opacity-50"
+                    }`}
                   >
-                    <CompostIcon size={24} color={colors.red[500]} />
-                    <Text className="flex-1 text-sm font-sans text-destructive">
-                      Remove current batch
-                    </Text>
+                    <AlertTriangle size={24} color={colors.red[500]} />
+                    <View className="flex-1">
+                      <Text className="text-sm font-sans text-destructive">
+                        Reject current batch
+                      </Text>
+                      {!activeBatch && (
+                        <Text className="text-xs text-muted-foreground mt-0.5">
+                          No active batch in machine
+                        </Text>
+                      )}
+                    </View>
                   </Pressable>
 
                   <Pressable
                     accessibilityRole="button"
                     onPress={() => setRemoveVisible(true)}
-                    className="min-h-[60px] rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 bg-card active:bg-muted"
+                    className="min-h-15 rounded-lg border border-border px-4 py-4 flex-row items-center gap-4 bg-card active:bg-muted"
                   >
                     <Trash2 size={24} color={colors.red[500]} />
                     <Text className="flex-1 text-sm font-sans text-destructive">
@@ -385,7 +424,7 @@ export default function MachineSettingsScreen() {
                     }}
                     error={error}
                     editable={!pending}
-                    controlClassName="rounded-[14px]"
+                    controlClassName="rounded-2xl"
                     autoCapitalize="words"
                     returnKeyType="done"
                     onSubmitEditing={saveRename}
@@ -398,8 +437,8 @@ export default function MachineSettingsScreen() {
                   <View className="p-4 mb-4 bg-brand-50 border border-brand-200 rounded-2xl flex-row items-center gap-3">
                     <Info size={20} color="#718619" style={{ flexShrink: 0 }} />
                     <Text className="text-xs text-foreground flex-1 leading-relaxed">
-                      Ensure your machine is nearby and in pairing mode
-                      (press and hold the button on the machine for 3 seconds if not broadcasting).
+                      Ensure your machine is nearby and in pairing mode with the LED blinking orange
+                      (press and hold the orange button on the machine for 3 seconds if not broadcasting).
                     </Text>
                   </View>
 
@@ -417,7 +456,7 @@ export default function MachineSettingsScreen() {
 
               {view === "wifi-form" && (
                 <View className="flex-1 mt-2">
-                  <View className="rounded-[14px] border border-border p-4 gap-2 mb-4 bg-card">
+                  <View className="rounded-2xl border border-border p-4 gap-2 mb-4 bg-card">
                     <Text className="text-xs text-muted-foreground">
                       Target Machine:
                     </Text>
@@ -460,20 +499,7 @@ export default function MachineSettingsScreen() {
                     </View>
                   )}
 
-                  <View className="mb-4 flex-row justify-end">
-                    <Button
-                      title="Use Current Wi-Fi SSID"
-                      variant="outline"
-                      size="sm"
-                      onPress={handleAutoFillWifi}
-                      loading={isFetchingWifi}
-                      disabled={pending || isFetchingWifi}
-                      haptic
-                    />
-                  </View>
-
                   <Input
-                    label="SSID"
                     placeholder="SSID"
                     accessibilityLabel="SSID"
                     value={ssid}
@@ -485,13 +511,12 @@ export default function MachineSettingsScreen() {
                     editable={!pending}
                     autoCapitalize="none"
                     autoCorrect={false}
-                    controlClassName="rounded-[14px]"
+                    controlClassName="rounded-2xl"
                   />
 
                   <Input
-                    label="Wi-Fi Password"
-                    placeholder="Wi-Fi Password"
-                    accessibilityLabel="Wi-Fi Password"
+                    placeholder="Wi-Fi password"
+                    accessibilityLabel="Wi-Fi password"
                     value={password}
                     onChangeText={(value) => {
                       setPassword(value);
@@ -501,10 +526,46 @@ export default function MachineSettingsScreen() {
                     editable={!pending}
                     autoCapitalize="none"
                     autoCorrect={false}
-                    controlClassName="rounded-[14px]"
+                    controlClassName="rounded-2xl"
                   />
 
-                  <View className="mt-6">
+                  <View className="mt-1 mb-4 flex-row items-center justify-between">
+                    <Pressable
+                      onPress={handleAutoFillWifi}
+                      disabled={pending || isFetchingWifi}
+                      className="active:opacity-70 disabled:opacity-40"
+                    >
+                      <Text className="text-sm font-bold text-primary">
+                        Use my current Wi-Fi name
+                      </Text>
+                    </Pressable>
+
+                    <Pressable
+                      onPress={() => setQrScannerVisible(true)}
+                      disabled={pending}
+                      className="flex-row items-center gap-1.5 active:opacity-70 disabled:opacity-40"
+                    >
+                      <QrCode size={16} color="#718619" />
+                      <Text className="text-sm font-bold text-primary">
+                        Scan Wi-Fi QR
+                      </Text>
+                    </Pressable>
+                  </View>
+
+                  <WifiQrScannerModal
+                    visible={qrScannerVisible}
+                    onClose={() => setQrScannerVisible(false)}
+                    onScanned={({ ssid: scannedSsid, password: scannedPassword }) => {
+                      setSsid(scannedSsid);
+                      setError("");
+                      if (scannedPassword) {
+                        setPassword(scannedPassword);
+                        void handleApplyWifiToHardware(scannedSsid, scannedPassword);
+                      }
+                    }}
+                  />
+
+                  <View className="mt-2">
                     <Button
                       title={
                         pending
@@ -513,7 +574,7 @@ export default function MachineSettingsScreen() {
                       }
                       loading={pending}
                       disabled={pending || !ssid.trim() || !password.trim()}
-                      onPress={handleApplyWifiToHardware}
+                      onPress={() => void handleApplyWifiToHardware()}
                       haptic
                     />
                   </View>

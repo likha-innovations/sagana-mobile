@@ -60,7 +60,7 @@ export default function MachinesListScreen() {
           />
         }
       >
-        <Text className="text-[32px] font-bold text-foreground mb-8">Machines</Text>
+        <Text className="text-3xl font-bold text-foreground mb-8">Machines</Text>
         {failed && (
           <HistoryState
             message="Could not load machines."
@@ -105,7 +105,7 @@ export default function MachinesListScreen() {
                   }
                   onPress={() =>
                     router.push({
-                      pathname: "/(app)/(tabs)/machines/[id]",
+                      pathname: "/(app)/machines/[id]",
                       params: { id: machine.id },
                     })
                   }

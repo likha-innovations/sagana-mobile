@@ -18,6 +18,8 @@ import { useDynamicLayout, useRegisterMachine } from '@/hooks';
 import { createLogger } from '@/lib/logger';
 import { useAuthContext } from '@/context/auth-context';
 import { Button } from '@/components/ui/button';
+import { ProgressBar } from '@/components/ui/progress-bar';
+import { SuccessScreen } from '@/components/ui/success-screen';
 import { ApiError, machineRegistrationSchema, type MachineRegistrationInput } from '@/types';
 import { useBluetooth } from '@/hooks/use-bluetooth';
 import {
@@ -25,7 +27,6 @@ import {
   ConnectStep,
   WifiCredentialsStep,
   NameMachineStep,
-  SuccessStep
 } from '@/components/devices/registration-steps';
 
 const logger = createLogger('AddMachineScreen');
@@ -186,6 +187,11 @@ export default function AddMachineScreen() {
   const handleBack = () => {
     if (isConnectingWifi || isWriting) return;
 
+    if (step === 6) {
+      handleFinishFlow();
+      return;
+    }
+
     if (step > 1) {
       if (step === 4) {
         clearProvisioningError();
@@ -210,25 +216,7 @@ export default function AddMachineScreen() {
     router.replace('/(app)/(tabs)');
   };
 
-  const getProgressDots = () => {
-    if (step === 6) return null;
-    let activeDot = 0;
-    if (step === 2 || step === 3) activeDot = 1;
-    if (step === 4) activeDot = 2;
-    if (step === 5) activeDot = 3;
-
-    return (
-      <View className="flex-row items-center justify-center flex-1 space-x-2 mr-8">
-        {[0, 1, 2, 3].map((i) => (
-          <View
-            key={i}
-            className={`h-1.5 w-8 rounded-full ${i === activeDot ? 'bg-primary' : 'bg-neutral-200'}`}
-            style={i > 0 ? { marginLeft: 8 } : {}}
-          />
-        ))}
-      </View>
-    );
-  };
+  const progressStep = step === 1 ? 1 : step === 2 || step === 3 ? 2 : step === 4 ? 3 : 4;
 
   const nextButtonLabel = () => {
     if (step === 4) return isConnectingWifi ? 'Connecting device to WiFi...' : 'Next';
@@ -245,6 +233,20 @@ export default function AddMachineScreen() {
     }
   };
 
+  if (step === 6) {
+    return (
+      <SuccessScreen
+        title="Your machine has been registered!"
+        description="You can now start a compost batch using your newly registered device."
+        buttonText="Done"
+        alignText="left"
+        mascotWidth={332}
+        mascotHeight={259}
+        onButtonPress={handleFinishFlow}
+      />
+    );
+  }
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -253,15 +255,20 @@ export default function AddMachineScreen() {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
           {step < 6 && (
-            <View className="flex-row items-center px-4 py-4 border-b border-transparent">
+            <View className="flex-row items-center justify-between px-4 h-11 relative my-2">
               <Pressable
                 onPress={handleBack}
                 disabled={isConnectingWifi || isWriting}
-                className="p-2 -ml-2 rounded-full active:bg-muted disabled:opacity-30"
+                className="w-11 h-11 items-center justify-center -ml-2 rounded-full active:bg-muted disabled:opacity-30"
+                accessibilityRole="button"
+                accessibilityLabel="Go back"
               >
                 <ChevronLeft size={24} color="#414141" />
               </Pressable>
-              {getProgressDots()}
+              <View className="absolute inset-x-0 items-center justify-center pointer-events-none">
+                <ProgressBar activeStep={progressStep} totalSteps={4} />
+              </View>
+              <View className="w-11" />
             </View>
           )}
 
@@ -291,12 +298,12 @@ export default function AddMachineScreen() {
                 setValue={setValue}
                 isConnecting={isConnectingWifi}
                 errorMessage={provisioningError}
+                onQrAutoSubmit={() => void handleNext()}
               />
             )}
             {step === 5 && <NameMachineStep control={control} />}
-            {step === 6 && <SuccessStep />}
 
-            <View className="flex-1 min-h-[40px]" />
+            <View className="flex-1 min-h-10" />
 
             <View className="mt-auto pt-4">
               <Button

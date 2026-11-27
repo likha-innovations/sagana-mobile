@@ -97,6 +97,7 @@ function render(query) {
       "@/components/ui/date-filter-toggle": {
         DateFilterToggle: "DateFilterToggle",
       },
+      "@/components/ui/text": { Text: "Text" },
       "@/constants": {
         colors: {
           red: { 500: "red" },
@@ -255,6 +256,7 @@ test("DateFilterToggle supports label press to open datepicker", () => {
         Text: "Text",
         Pressable: "Pressable",
       },
+      "@/components/ui/text": { Text: "Text" },
       "lucide-react-native": {},
       "@/constants": {
         colors: {
@@ -398,6 +400,7 @@ test("gates sensor readings when anchor differs from debouncedAnchor", () => {
       "@/components/ui/date-filter-toggle": {
         DateFilterToggle: "DateFilterToggle",
       },
+      "@/components/ui/text": { Text: "Text" },
       "@/constants": {
         colors: {
           red: { 500: "red" },
