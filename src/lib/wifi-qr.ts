@@ -32,30 +32,61 @@ function splitUnescapedFields(body: string): string[] {
   return fields;
 }
 
+function parseJsonWifiQr(trimmed: string): WifiQrCredentials | null {
+  if (!trimmed.startsWith('{')) return null;
+  try {
+    const parsed = JSON.parse(trimmed) as Record<string, unknown>;
+    const ssid = typeof parsed.ssid === 'string'
+      ? parsed.ssid
+      : typeof parsed.SSID === 'string'
+        ? parsed.SSID
+        : '';
+    const password = typeof parsed.password === 'string'
+      ? parsed.password
+      : typeof parsed.pass === 'string'
+        ? parsed.pass
+        : '';
+    return ssid ? { ssid, password } : null;
+  } catch {
+    return null;
+  }
+}
+
+function parseLineWifiQr(trimmed: string): WifiQrCredentials | null {
+  const ssidMatch = /(?:^|\n)\s*(?:SSID|Wi-?Fi(?:\s+Name)?)\s*[:=]\s*(.+)/i.exec(trimmed);
+  if (!ssidMatch) return null;
+  const passMatch = /(?:^|\n)\s*(?:Password|Pass(?:phrase)?|PSK|Key)\s*[:=]\s*(.+)/i.exec(trimmed);
+  const ssid = ssidMatch[1].trim();
+  const password = passMatch ? passMatch[1].trim() : '';
+  return ssid ? { ssid, password } : null;
+}
+
 export function parseWifiQr(raw: string): WifiQrCredentials | null {
   const trimmed = raw.trim();
-  if (!/^WIFI:/i.test(trimmed)) return null;
 
-  const body = trimmed.slice(5);
-  const fields = splitUnescapedFields(body);
+  if (/^WIFI:\s*/i.test(trimmed)) {
+    const body = trimmed.replace(/^WIFI:\s*/i, '');
+    const fields = splitUnescapedFields(body);
 
-  let ssid = '';
-  let password = '';
+    let ssid = '';
+    let password = '';
 
-  for (const field of fields) {
-    const colonIdx = field.indexOf(':');
-    if (colonIdx <= 0) continue;
+    for (const field of fields) {
+      const colonIdx = field.indexOf(':');
+      if (colonIdx <= 0) continue;
 
-    const key = field.slice(0, colonIdx).toUpperCase();
-    const val = unescapeWifiField(field.slice(colonIdx + 1));
+      const key = field.slice(0, colonIdx).trim().toUpperCase();
+      const val = unescapeWifiField(field.slice(colonIdx + 1));
 
-    if (key === 'S') {
-      ssid = val;
-    } else if (key === 'P') {
-      password = val;
+      if (key === 'S') {
+        ssid = val;
+      } else if (key === 'P') {
+        password = val;
+      }
     }
+
+    return ssid ? { ssid, password } : null;
   }
 
-  if (!ssid) return null;
-  return { ssid, password };
+  return parseJsonWifiQr(trimmed) ?? parseLineWifiQr(trimmed);
 }

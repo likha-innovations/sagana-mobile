@@ -5,7 +5,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AlertCircle, Camera, X } from 'lucide-react-native';
 import { Text } from '@/components/ui/text';
 import { Button } from '@/components/ui/button';
+import { createLogger } from '@/lib/logger';
 import { parseWifiQr, type WifiQrCredentials } from '@/lib/wifi-qr';
+
+const logger = createLogger('WifiQrScanner');
 
 interface WifiQrScannerModalProps {
   visible: boolean;
@@ -38,10 +41,15 @@ export function WifiQrScannerModal({
   const handleBarcodeScanned = (result: BarcodeScanningResult) => {
     if (scanLockedRef.current) return;
 
-    const parsed = parseWifiQr(result.data ?? '');
+    const raw = result.data ?? '';
+    const parsed = parseWifiQr(raw);
     if (!parsed) {
       scanLockedRef.current = true;
-      setScanError('Not a valid Wi-Fi QR code. Point at a router or phone Wi-Fi share QR.');
+      logger.warn(`Unrecognized QR payload (len=${raw.length}): ${raw.slice(0, 60)}`);
+      const preview = raw.replace(/\s+/g, ' ').trim().slice(0, 36);
+      setScanError(
+        `Not a valid Wi-Fi QR code${preview ? ` (${preview}${raw.length > 36 ? '...' : ''})` : ''}.`,
+      );
       return;
     }
 
