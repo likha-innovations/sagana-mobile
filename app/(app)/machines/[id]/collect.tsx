@@ -136,6 +136,33 @@ export default function LinearActuatorCollectScreen() {
     };
   }, []);
 
+  // Unlock physical Collection Button on the machine only while a user is on this screen
+  useEffect(() => {
+    const mac = machine?.macAddress;
+    if (!mac || isMachineOffline || isSuccess) return;
+
+    const sendCollectionMode = (enabled: boolean) => {
+      void deviceApi
+        .sendCommand(mac, {
+          action: "COLLECTION_MODE",
+          payload: { enabled },
+        })
+        .catch(() => {
+          // Ignore transient network errors when locking/unlocking physical button
+        });
+    };
+
+    sendCollectionMode(true);
+    const heartbeat = setInterval(() => {
+      sendCollectionMode(true);
+    }, 20000);
+
+    return () => {
+      clearInterval(heartbeat);
+      sendCollectionMode(false);
+    };
+  }, [machine?.macAddress, isMachineOffline, isSuccess]);
+
   // Restore persisted floor position asynchronously from hardware storage
   useEffect(() => {
     let isMounted = true;
