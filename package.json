@@ -31,7 +31,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
-    "expo": "~57.0.33",
+    "expo": "~57.0.34",
     "expo-auth-session": "~57.0.17",
     "expo-blur": "~57.0.3",
     "expo-camera": "~57.0.6",
