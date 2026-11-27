@@ -360,7 +360,7 @@ export default function MachineSettingsScreen() {
                       <Text className="text-sm font-sans text-foreground">
                         Change Wi-Fi credentials
                       </Text>
-                      <Text className="text-xs text-muted-foreground mt-0.5">
+                      <Text className="text-xs font-sans text-muted-foreground mt-0.5">
                         Requires Bluetooth to update hardware
                       </Text>
                     </View>
@@ -391,7 +391,7 @@ export default function MachineSettingsScreen() {
                         Reject current batch
                       </Text>
                       {!activeBatch && (
-                        <Text className="text-xs text-muted-foreground mt-0.5">
+                        <Text className="text-xs font-sans text-muted-foreground mt-0.5">
                           No active batch in machine
                         </Text>
                       )}
@@ -436,7 +436,7 @@ export default function MachineSettingsScreen() {
                 <View className="flex-1">
                   <View className="p-4 mb-4 bg-brand-50 border border-brand-200 rounded-2xl flex-row items-center gap-3">
                     <Info size={20} color="#718619" style={{ flexShrink: 0 }} />
-                    <Text className="text-xs text-foreground flex-1 leading-relaxed">
+                    <Text className="text-xs font-sans text-foreground flex-1 leading-relaxed">
                       Ensure your machine is nearby and in pairing mode with the LED blinking orange
                       (press and hold the orange button on the machine for 3 seconds if not broadcasting).
                     </Text>
@@ -457,7 +457,7 @@ export default function MachineSettingsScreen() {
               {view === "wifi-form" && (
                 <View className="flex-1 mt-2">
                   <View className="rounded-2xl border border-border p-4 gap-2 mb-4 bg-card">
-                    <Text className="text-xs text-muted-foreground">
+                    <Text className="text-xs font-sans text-muted-foreground">
                       Target Machine:
                     </Text>
                     <Text className="text-sm font-bold text-foreground">
@@ -473,7 +473,7 @@ export default function MachineSettingsScreen() {
                         <Text className="text-sm font-semibold text-foreground">
                           Testing & connecting machine to Wi-Fi...
                         </Text>
-                        <Text className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                        <Text className="text-xs font-sans text-muted-foreground mt-0.5 leading-relaxed">
                           Sending Wi-Fi credentials to your machine. This may
                           take 10-20 seconds.
                         </Text>
@@ -492,7 +492,7 @@ export default function MachineSettingsScreen() {
                         <Text className="text-sm font-semibold text-destructive">
                           Connection Failed
                         </Text>
-                        <Text className="text-xs text-destructive mt-0.5 leading-relaxed">
+                        <Text className="text-xs font-sans text-destructive mt-0.5 leading-relaxed">
                           {error || provisioningError}
                         </Text>
                       </View>

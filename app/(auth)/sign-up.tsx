@@ -149,7 +149,7 @@ function FloatingInputField({
               'text-sm select-none',
               hasError
                 ? 'text-destructive font-medium'
-                : 'text-muted-foreground'
+                : 'text-muted-foreground font-sans'
             )}
           >
             {label}

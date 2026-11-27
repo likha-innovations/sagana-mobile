@@ -67,10 +67,10 @@ function DeviceCard({
         {device.name || 'Unknown Device'}
       </Text>
       {isConnecting && (
-        <Text className="text-sm text-muted-foreground">Connecting...</Text>
+        <Text className="text-sm font-sans text-muted-foreground">Connecting...</Text>
       )}
       {hasError && !isConnecting && (
-        <Text className="text-sm text-destructive">Error, try again!</Text>
+        <Text className="text-sm font-sans text-destructive">Error, try again!</Text>
       )}
     </Pressable>
   );
@@ -117,7 +117,7 @@ export function ConnectStep({
   return (
     <View className="flex-1 mt-4">
       <Text className="text-2xl font-bold text-foreground">Connect to your machine</Text>
-      <Text className="text-sm text-muted-foreground mt-2 leading-relaxed">
+      <Text className="text-sm font-sans text-muted-foreground mt-2 leading-relaxed">
         Turn on your Bluetooth and pair it with the machine.
       </Text>
 
@@ -125,7 +125,7 @@ export function ConnectStep({
         <View className="mt-6">
           <View className="flex-row items-center gap-2 mb-3">
             <AlertCircle size={16} color="#E84C4C" />
-            <Text className="text-sm text-destructive flex-1">
+            <Text className="text-sm font-sans text-destructive flex-1">
               {errorMessage ?? 'Cannot proceed because Bluetooth is turned off.'}
             </Text>
           </View>
@@ -144,7 +144,7 @@ export function ConnectStep({
         <View className="mt-6">
           <View className="flex-row items-center justify-between mb-4">
             {isScanning ? (
-              <Text className="text-sm text-muted-foreground">
+              <Text className="text-sm font-sans text-muted-foreground">
                 {status === 'connecting' ? 'Connecting...' : 'Finding devices..'}
               </Text>
             ) : (
@@ -225,7 +225,7 @@ export function WifiCredentialsStep({
   return (
     <View className="flex-1 mt-4">
       <Text className="text-2xl font-bold text-foreground">Enter your Wi-Fi credentials</Text>
-      <Text className="text-sm text-muted-foreground mt-2 leading-relaxed mb-6">
+      <Text className="text-sm font-sans text-muted-foreground mt-2 leading-relaxed mb-6">
         To connect your AIVSP Machine to your network, you must enter your Wi-Fi credentials.
       </Text>
 
@@ -236,7 +236,7 @@ export function WifiCredentialsStep({
             <Text className="text-sm font-semibold text-foreground">
               Connecting device to WiFi...
             </Text>
-            <Text className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+            <Text className="text-xs font-sans text-muted-foreground mt-0.5 leading-relaxed">
               Testing Wi-Fi connection with your machine. This may take 10-20 seconds.
             </Text>
           </View>
@@ -248,7 +248,7 @@ export function WifiCredentialsStep({
           <AlertCircle size={20} color="#E84C4C" style={{ flexShrink: 0 }} />
           <View className="flex-1">
             <Text className="text-sm font-semibold text-destructive">Connection Failed</Text>
-            <Text className="text-xs text-destructive mt-0.5 leading-relaxed">
+            <Text className="text-xs font-sans text-destructive mt-0.5 leading-relaxed">
               {errorMessage}
             </Text>
           </View>
@@ -321,7 +321,7 @@ export function WifiCredentialsStep({
 
       <View className="flex-row">
         <Info size={16} color="#AFAEA7" style={{ marginTop: 2, marginRight: 8, flexShrink: 0 }} />
-        <Text className="text-xs text-muted-foreground flex-1 leading-relaxed">
+        <Text className="text-xs font-sans text-muted-foreground flex-1 leading-relaxed">
           If you ever change your Wi-Fi credentials, you must reconnect this machine through the app.
         </Text>
       </View>
@@ -333,7 +333,7 @@ export function NameMachineStep({ control }: { control: Control<MachineRegistrat
   return (
     <View className="flex-1 mt-4">
       <Text className="text-2xl font-bold text-foreground">Name your machine</Text>
-      <Text className="text-sm text-muted-foreground mt-2 leading-relaxed mb-8">
+      <Text className="text-sm font-sans text-muted-foreground mt-2 leading-relaxed mb-8">
         Give a name to your new SAGANA AIVSP Machine.
       </Text>
 

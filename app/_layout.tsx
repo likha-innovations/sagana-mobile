@@ -197,7 +197,7 @@ function AuthProtectedNavigation() {
               <Text className="text-foreground text-xl font-bold text-center">
                 You are offline
               </Text>
-              <Text className="text-muted-foreground text-sm text-center max-w-70">
+              <Text className="text-muted-foreground text-sm font-sans text-center max-w-70">
                 Please connect to the internet to load your account and continue.
               </Text>
               <Pressable
@@ -218,9 +218,9 @@ function AuthProtectedNavigation() {
           ) : showError ? (
             <View className="flex-1 justify-center px-6 gap-4">
               <Text className="text-foreground text-lg font-bold">Unable to load your profile</Text>
-              <Text className="text-muted-foreground">Check your connection and try again.</Text>
+              <Text className="text-muted-foreground font-sans">Check your connection and try again.</Text>
               <Pressable accessibilityRole="button" onPress={() => void profile.refetch()}><Text className="text-primary font-bold">Try again</Text></Pressable>
-              <Pressable accessibilityRole="button" onPress={() => void signOut()}><Text className="text-foreground">Sign out</Text></Pressable>
+              <Pressable accessibilityRole="button" onPress={() => void signOut()}><Text className="text-foreground font-sans">Sign out</Text></Pressable>
             </View>
           ) : <LoadingScreen />}
         </View>
@@ -258,10 +258,6 @@ export default function RootLayout() {
     'SpotifyMix-Black': require('../assets/fonts/SpotifyMix-Black.ttf'),
     'SpotifyMix-Light': require('../assets/fonts/SpotifyMix-Light.ttf'),
     'SpotifyMix-Thin': require('../assets/fonts/SpotifyMix-Thin.ttf'),
-    'Montserrat-Regular': require('../assets/fonts/SpotifyMix-Regular.ttf'),
-    'Montserrat-Medium': require('../assets/fonts/SpotifyMix-Medium.ttf'),
-    'Montserrat-SemiBold': require('../assets/fonts/SpotifyMix-Bold.ttf'),
-    'Montserrat-Bold': require('../assets/fonts/SpotifyMix-Bold.ttf'),
   });
 
   useEffect(() => {

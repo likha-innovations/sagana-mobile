@@ -59,7 +59,7 @@ export const CardDescription = forwardRef<ElementRef<typeof Text>, CardDescripti
   ({ children, className, ...props }, ref) => (
     <Text
       ref={ref}
-      className={cn('text-xs text-muted-foreground', className)}
+      className={cn('text-xs font-sans text-muted-foreground', className)}
       {...props}
     >
       {children}

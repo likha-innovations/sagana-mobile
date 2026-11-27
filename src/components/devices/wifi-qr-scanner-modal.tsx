@@ -70,7 +70,7 @@ export function WifiQrScannerModal({
         <View className="flex-row items-center justify-between px-6 pb-4">
           <View className="flex-1 pr-3">
             <Text className="text-xl font-bold text-foreground">Scan Wi-Fi QR</Text>
-            <Text className="text-xs text-muted-foreground mt-0.5">
+            <Text className="text-xs font-sans text-muted-foreground mt-0.5">
               Point your camera at a Wi-Fi QR code to fill SSID and password.
             </Text>
           </View>
@@ -92,7 +92,7 @@ export function WifiQrScannerModal({
             <Text className="text-lg font-bold text-foreground text-center">
               Camera permission needed
             </Text>
-            <Text className="text-sm text-muted-foreground text-center mt-2 mb-6 leading-relaxed">
+            <Text className="text-sm font-sans text-muted-foreground text-center mt-2 mb-6 leading-relaxed">
               Allow camera access to scan a Wi-Fi QR code from your router or another phone.
             </Text>
             {permission?.canAskAgain ? (
@@ -121,7 +121,7 @@ export function WifiQrScannerModal({
             {scanError && (
               <View className="mt-4 p-4 rounded-2xl bg-red-50 border border-destructive/20 flex-row items-center gap-3">
                 <AlertCircle size={18} color="#E84C4C" style={{ flexShrink: 0 }} />
-                <Text className="text-xs text-destructive flex-1 leading-relaxed">
+                <Text className="text-xs font-sans text-destructive flex-1 leading-relaxed">
                   {scanError}
                 </Text>
                 <Pressable onPress={handleRetryScan} className="px-2 py-1 active:opacity-70">
