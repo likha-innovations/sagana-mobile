@@ -61,6 +61,13 @@ function parseLineWifiQr(trimmed: string): WifiQrCredentials | null {
   return ssid ? { ssid, password } : null;
 }
 
+function parseTwoTokenWifiQr(trimmed: string): WifiQrCredentials | null {
+  if (/^https?:\/\//i.test(trimmed)) return null;
+  const parts = trimmed.split(/\s+/);
+  if (parts.length !== 2 || !parts[0] || !parts[1]) return null;
+  return { ssid: parts[0], password: parts[1] };
+}
+
 export function parseWifiQr(raw: string): WifiQrCredentials | null {
   const trimmed = raw.trim();
 
@@ -88,5 +95,9 @@ export function parseWifiQr(raw: string): WifiQrCredentials | null {
     return ssid ? { ssid, password } : null;
   }
 
-  return parseJsonWifiQr(trimmed) ?? parseLineWifiQr(trimmed);
+  return (
+    parseJsonWifiQr(trimmed) ??
+    parseLineWifiQr(trimmed) ??
+    parseTwoTokenWifiQr(trimmed)
+  );
 }
