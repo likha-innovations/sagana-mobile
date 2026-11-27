@@ -429,7 +429,7 @@ export default function MachineSettingsScreen() {
                     <Info size={20} color="#718619" style={{ flexShrink: 0 }} />
                     <Text className="text-xs text-foreground flex-1 leading-relaxed">
                       Ensure your machine is nearby and in pairing mode
-                      (press and hold the button on the machine for 3 seconds if not broadcasting).
+                      (press and hold the orange button on the machine for 3 seconds if not broadcasting).
                     </Text>
                   </View>
 
