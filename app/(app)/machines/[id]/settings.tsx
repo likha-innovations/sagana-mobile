@@ -197,9 +197,15 @@ export default function MachineSettingsScreen() {
     );
   };
 
-  const handleApplyWifiToHardware = async () => {
+  const handleApplyWifiToHardware = async (
+    overrideSsid?: string,
+    overridePassword?: string,
+  ) => {
     if (pending) return;
-    const result = machineSsidSchema.safeParse(ssid);
+    const targetSsid = (overrideSsid ?? ssid).trim();
+    const targetPassword = overridePassword ?? password;
+
+    const result = machineSsidSchema.safeParse(targetSsid);
     if (!result.success) {
       setError(result.error.issues[0].message);
       if (Platform.OS !== "web") {
@@ -207,7 +213,7 @@ export default function MachineSettingsScreen() {
       }
       return;
     }
-    if (!password.trim()) {
+    if (!targetPassword.trim()) {
       setError("Wi-Fi Password is required");
       if (Platform.OS !== "web") {
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -221,10 +227,10 @@ export default function MachineSettingsScreen() {
 
     try {
       // 1. Write credentials to ESP32 over BLE and wait for connection test
-      await provisionWifi(ssid.trim(), password);
+      await provisionWifi(targetSsid, targetPassword);
 
       // 2. Sync new SSID with backend database
-      await wifi.mutateAsync({ id, wifiSsid: ssid.trim() });
+      await wifi.mutateAsync({ id, wifiSsid: targetSsid });
 
       if (Platform.OS !== "web") {
         void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -553,10 +559,11 @@ export default function MachineSettingsScreen() {
                     onClose={() => setQrScannerVisible(false)}
                     onScanned={({ ssid: scannedSsid, password: scannedPassword }) => {
                       setSsid(scannedSsid);
+                      setError("");
                       if (scannedPassword) {
                         setPassword(scannedPassword);
+                        void handleApplyWifiToHardware(scannedSsid, scannedPassword);
                       }
-                      setError("");
                     }}
                   />
 
@@ -569,7 +576,7 @@ export default function MachineSettingsScreen() {
                       }
                       loading={pending}
                       disabled={pending || !ssid.trim() || !password.trim()}
-                      onPress={handleApplyWifiToHardware}
+                      onPress={() => void handleApplyWifiToHardware()}
                       haptic
                     />
                   </View>

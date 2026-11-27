@@ -223,11 +223,13 @@ export function WifiCredentialsStep({
   setValue,
   isConnecting = false,
   errorMessage = null,
+  onQrAutoSubmit,
 }: {
   control: Control<MachineRegistrationInput>;
   setValue: UseFormSetValue<MachineRegistrationInput>;
   isConnecting?: boolean;
   errorMessage?: string | null;
+  onQrAutoSubmit?: () => void;
 }) {
   const { fetchWifi, isFetching } = useCurrentWifi();
   const [qrScannerVisible, setQrScannerVisible] = useState(false);
@@ -331,6 +333,7 @@ export function WifiCredentialsStep({
           setValue('ssid', scannedSsid, { shouldValidate: true });
           if (scannedPassword) {
             setValue('password', scannedPassword, { shouldValidate: true });
+            onQrAutoSubmit?.();
           }
         }}
       />
