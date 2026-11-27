@@ -20,7 +20,7 @@ export function PasswordRequirements({
         {unmetRequirements.map((req, index) => (
           <View key={index} className="flex-row items-center gap-2 mt-1">
             <View className="w-1.5 h-1.5 rounded-full bg-destructive" />
-            <Text className="text-xs text-destructive leading-6">{req}</Text>
+            <Text className="text-xs font-sans text-destructive leading-6">{req}</Text>
           </View>
         ))}
       </View>
@@ -72,7 +72,7 @@ export function PasswordRequirements({
                   ? 'text-primary font-medium'
                   : isError
                   ? 'text-destructive font-sans'
-                  : 'text-muted-foreground'
+                  : 'text-muted-foreground font-sans'
               )}
             >
               {rule.label}
