@@ -428,7 +428,7 @@ export default function MachineSettingsScreen() {
                   <View className="p-4 mb-4 bg-brand-50 border border-brand-200 rounded-2xl flex-row items-center gap-3">
                     <Info size={20} color="#718619" style={{ flexShrink: 0 }} />
                     <Text className="text-xs text-foreground flex-1 leading-relaxed">
-                      Ensure your machine is nearby and in pairing mode
+                      Ensure your machine is nearby and in pairing mode with the LED blinking orange
                       (press and hold the orange button on the machine for 3 seconds if not broadcasting).
                     </Text>
                   </View>
