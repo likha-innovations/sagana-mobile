@@ -490,18 +490,6 @@ export default function MachineSettingsScreen() {
                     </View>
                   )}
 
-                  <View className="mb-4 flex-row justify-end">
-                    <Button
-                      title="Use Current Wi-Fi SSID"
-                      variant="outline"
-                      size="sm"
-                      onPress={handleAutoFillWifi}
-                      loading={isFetchingWifi}
-                      disabled={pending || isFetchingWifi}
-                      haptic
-                    />
-                  </View>
-
                   <Input
                     label="SSID"
                     placeholder="SSID"
@@ -534,7 +522,17 @@ export default function MachineSettingsScreen() {
                     controlClassName="rounded-2xl"
                   />
 
-                  <View className="mt-6">
+                  <Pressable
+                    onPress={handleAutoFillWifi}
+                    disabled={pending || isFetchingWifi}
+                    className="mt-1 mb-4 self-start active:opacity-70 disabled:opacity-40"
+                  >
+                    <Text className="text-sm font-bold text-primary">
+                      Use my current Wi-Fi name
+                    </Text>
+                  </Pressable>
+
+                  <View className="mt-2">
                     <Button
                       title={
                         pending
