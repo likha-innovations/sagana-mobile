@@ -41,7 +41,7 @@ describe("parseWifiQr", () => {
     });
   });
 
-  it("parses router sticker \"<SSID> <PASSWORD>\" QR payloads", () => {
+  it('parses router sticker "<SSID> <PASSWORD>" QR payloads', () => {
     expect(parseWifiQr("GFiber_0A407 EXAMPLEPASS")).toEqual({
       ssid: "GFiber_0A407",
       password: "EXAMPLEPASS",
