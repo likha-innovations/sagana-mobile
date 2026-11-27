@@ -1,14 +1,19 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import {
   View,
-  Text,
   Pressable,
   ActivityIndicator,
   Platform,
   BackHandler,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ChevronLeft, AlertCircle, CheckCircle2, WifiOff } from "lucide-react-native";
+import {
+  ChevronLeft,
+  ArrowUpFromLine,
+  ArrowDownToLine,
+  WifiOff,
+} from "lucide-react-native";
+import { Text } from "@/components/ui/text";
 import { Image } from "expo-image";
 import * as Haptics from "expo-haptics";
 import { toast } from "burnt";
@@ -131,6 +136,33 @@ export default function LinearActuatorCollectScreen() {
       }
     };
   }, []);
+
+  // Unlock physical Collection Button on the machine only while a user is on this screen
+  useEffect(() => {
+    const mac = machine?.macAddress;
+    if (!mac || isMachineOffline || isSuccess) return;
+
+    const sendCollectionMode = (enabled: boolean) => {
+      void deviceApi
+        .sendCommand(mac, {
+          action: "COLLECTION_MODE",
+          payload: { enabled },
+        })
+        .catch(() => {
+          // Ignore transient network errors when locking/unlocking physical button
+        });
+    };
+
+    sendCollectionMode(true);
+    const heartbeat = setInterval(() => {
+      sendCollectionMode(true);
+    }, 20000);
+
+    return () => {
+      clearInterval(heartbeat);
+      sendCollectionMode(false);
+    };
+  }, [machine?.macAddress, isMachineOffline, isSuccess]);
 
   // Restore persisted floor position asynchronously from hardware storage
   useEffect(() => {
@@ -455,6 +487,13 @@ export default function LinearActuatorCollectScreen() {
     );
   }
 
+  const isReadyToFinish =
+    hasEmptied &&
+    !isMoving &&
+    !finishBatch.isPending &&
+    !batchQuery.isPending &&
+    Boolean(activeBatch);
+
   const getActuatorButtonText = () => {
     switch (floorState) {
       case "raising":
@@ -468,6 +507,55 @@ export default function LinearActuatorCollectScreen() {
         return "Raise floor";
     }
   };
+
+  const getFloorStatusCardContent = () => {
+    if (floorState === "raising") {
+      return {
+        title: "Floor is being raised..",
+        subtitle: null,
+        tone: "default" as const,
+      };
+    }
+    if (floorState === "dropping") {
+      return {
+        title: "Floor is being dropped..",
+        subtitle: null,
+        tone: "default" as const,
+      };
+    }
+    if (floorState === "raised") {
+      return {
+        title: "Floor is raised!",
+        subtitle: isReject
+          ? "Once the rejected batch is cleared, click the drop floor button."
+          : "Once collection is complete, click the drop floor button.",
+        tone: "default" as const,
+      };
+    }
+    if (hasEmptied) {
+      return {
+        title: isReject
+          ? "Floor is dropped and batch cleared!"
+          : "Floor is dropped and compost collected!",
+        subtitle: null,
+        tone: "success" as const,
+      };
+    }
+    return {
+      title: "Floor is dropped",
+      subtitle: isReject
+        ? "To reject the current batch, click the raise floor button."
+        : "To collect the compost batch, click the raise floor button.",
+      tone: isMiddleDoorOpen ? ("default" as const) : ("muted" as const),
+    };
+  };
+
+  const floorStatusCard = getFloorStatusCardContent();
+  const isActuatorIconDown =
+    floorState === "raised" || floorState === "dropping";
+  const actuatorIconColor = isButtonDisabled
+    ? colors.brand[300]
+    : colors.brand[700];
 
   return (
     <View
@@ -509,173 +597,148 @@ export default function LinearActuatorCollectScreen() {
           </Text>
         </View>
 
-        {/* Weight display card */}
-        <View className="rounded-2xl border border-border bg-card p-6 items-center justify-center">
-          <Text className="text-2xl font-bold text-foreground">{displayWeight}</Text>
-          <Text className="text-xs font-sans text-muted-foreground mt-1">Current weight</Text>
-        </View>
-
-        {/* Floor & Middle Door status card */}
-        <View className="mt-4 rounded-2xl border border-border bg-card p-4 flex-row items-center justify-between">
-          <View className="flex-row items-center gap-3">
-            <View
-              className={`w-3 h-3 rounded-full ${
-                isMoving ? "bg-brand-500" : isFloorRaised ? "bg-brand-500" : "bg-neutral-300"
-              }`}
-            />
-            <View>
-              <Text className="text-xs font-sans text-muted-foreground">Floor state</Text>
-              <Text className="text-sm font-bold text-foreground">
-                {isMoving
-                  ? floorState === "raising"
-                    ? "Raising floor..."
-                    : "Dropping floor..."
-                  : isFloorRaised
-                  ? "Floor is opened (raised)"
-                  : "Floor is closed (lowered)"}
-              </Text>
-            </View>
-          </View>
-
-          {/* Middle Door indicator badge */}
-          <View
-            className={`px-3 py-1.5 rounded-full flex-row items-center gap-1.5 ${
-              isMiddleDoorOpen
-                ? "bg-brand-50 border border-brand-200"
-                : "bg-neutral-100 border border-border"
+        {/* Door Status Card */}
+        <View className="rounded-2xl border border-border bg-card px-4 py-3.5">
+          <Text
+            className={`text-sm font-bold ${
+              isMiddleDoorOpen ? "text-primary" : "text-foreground"
             }`}
           >
-            <View
-              className={`w-2 h-2 rounded-full ${
-                isMiddleDoorOpen ? "bg-brand-500" : "bg-neutral-400"
-              }`}
-            />
-            <Text
-              className={`text-xs font-semibold ${
-                isMiddleDoorOpen ? "text-brand-700" : "text-neutral-600"
-              }`}
-            >
-              Middle door: {isMiddleDoorOpen ? "Open" : "Closed"}
-            </Text>
-          </View>
+            {isMiddleDoorOpen
+              ? "Front door is opened!"
+              : isReject
+                ? "Front door is closed, open it to reject the batch"
+                : "Front door is closed, open it to collect the batch"}
+          </Text>
+        </View>
+
+        {/* Weight display card */}
+        <View className="mt-4 rounded-2xl border border-border bg-card px-4 py-6 items-center justify-center">
+          <Text
+            className={`text-2xl font-bold ${
+              isMiddleDoorOpen || isFloorRaised || hasEmptied
+                ? "text-foreground"
+                : "text-muted-foreground"
+            }`}
+          >
+            {displayWeight}
+          </Text>
+          <Text className="text-xs font-sans text-muted-foreground mt-1">
+            Current weight
+          </Text>
         </View>
 
         {/* Machine Offline notice callout */}
         {isMachineOffline && (
-          <View className="mt-3 p-4 rounded-2xl bg-red-50 border border-red-200 flex-row items-start gap-3">
-            <WifiOff size={20} color={colors.red[500]} style={{ marginTop: 2, flexShrink: 0 }} />
+          <View className="mt-4 p-4 rounded-2xl bg-red-50 border border-red-200 flex-row items-start gap-3">
+            <WifiOff
+              size={20}
+              color={colors.red[500]}
+              style={{ marginTop: 2, flexShrink: 0 }}
+            />
             <View className="flex-1">
-              <Text className="text-sm font-bold text-red-900">Machine is offline</Text>
+              <Text className="text-sm font-bold text-red-900">
+                Machine is offline
+              </Text>
               <Text className="text-xs font-sans text-red-700 mt-1 leading-5">
-                The machine is currently disconnected from Wi-Fi. Please check its power and network connection to operate the floor.
-              </Text>
-            </View>
-          </View>
-        )}
-
-        {/* Actionable door & floor notice callout */}
-        {!isMachineOffline && !isFloorRaised && !isMiddleDoorOpen && (
-          <View className="mt-3 p-4 rounded-2xl bg-yellow-50 border border-yellow-200 flex-row items-start gap-3">
-            <AlertCircle size={20} color={colors.yellow[700]} style={{ marginTop: 2, flexShrink: 0 }} />
-            <View className="flex-1">
-              <Text className="text-sm font-bold text-neutral-900">Middle door is closed</Text>
-              <Text className="text-xs font-sans text-neutral-700 mt-1 leading-5">
-                The chamber floor cannot be raised while the middle compost door is closed. Please open the middle door on the machine to proceed.
-              </Text>
-            </View>
-          </View>
-        )}
-
-        {!isMachineOffline && !isFloorRaised && isMiddleDoorOpen && (
-          <View className="mt-3 p-4 rounded-2xl bg-brand-50 border border-brand-200 flex-row items-start gap-3">
-            <CheckCircle2 size={20} color={colors.brand[500]} style={{ marginTop: 2, flexShrink: 0 }} />
-            <View className="flex-1">
-              <Text className="text-sm font-bold text-brand-900">Ready to raise floor</Text>
-              <Text className="text-xs font-sans text-brand-700 mt-1 leading-5">
-                Middle door is open. You can now press &quot;Raise floor&quot; to empty the curing-ready compost.
-              </Text>
-            </View>
-          </View>
-        )}
-
-        {!isMachineOffline && isFloorRaised && (
-          <View className="mt-3 p-4 rounded-2xl bg-brand-50 border border-brand-200 flex-row items-start gap-3">
-            <CheckCircle2 size={20} color={colors.brand[500]} style={{ marginTop: 2, flexShrink: 0 }} />
-            <View className="flex-1">
-              <Text className="text-sm font-bold text-brand-900">Floor is raised</Text>
-              <Text className="text-xs font-sans text-brand-700 mt-1 leading-5">
-                The chamber floor is currently raised. Once compost collection is complete, press &quot;Drop floor&quot;.
+                The machine is currently disconnected from Wi-Fi. Please check
+                its power and network connection to operate the floor.
               </Text>
             </View>
           </View>
         )}
 
         {/* Linear actuator manual control button */}
-        <View className="items-center mt-6">
+        <View className="mt-6">
           <Pressable
             disabled={isButtonDisabled}
             accessibilityRole="button"
             accessibilityLabel={getActuatorButtonText()}
             accessibilityState={{ disabled: isButtonDisabled }}
             onPress={handleActuatorToggle}
-            className={`min-w-37.5 min-h-11 px-8 rounded-full border items-center justify-center ${
+            className={`w-full min-h-11 px-6 rounded-full border flex-row items-center justify-center gap-2 ${
               isButtonDisabled && !isMoving
-                ? "border-neutral-200 bg-neutral-100 opacity-60"
-                : "border-brand-500 active:opacity-75"
+                ? "border-brand-200 bg-background opacity-70"
+                : "border-brand-500 bg-background active:opacity-75"
             }`}
           >
-            {isMoving ? (
-              <View className="flex-row items-center gap-2">
-                <ActivityIndicator size="small" color={colors.brand[500]} />
-                <Text className="text-sm font-bold text-brand-700">{getActuatorButtonText()}</Text>
-              </View>
-            ) : (
-              <Text
-                className={`text-sm font-bold ${
-                  isButtonDisabled ? "text-neutral-400" : "text-brand-700"
-                }`}
-              >
-                {isMachineOffline && !isMoving ? "Machine offline" : getActuatorButtonText()}
-              </Text>
+            {isMoving && (
+              <ActivityIndicator size="small" color={colors.brand[700]} />
             )}
+            {!isMoving &&
+              !isMachineOffline &&
+              (isActuatorIconDown ? (
+                <ArrowDownToLine size={16} color={actuatorIconColor} />
+              ) : (
+                <ArrowUpFromLine size={16} color={actuatorIconColor} />
+              ))}
+            <Text
+              className={`text-sm font-bold ${
+                isButtonDisabled && !isMoving
+                  ? "text-brand-300"
+                  : "text-brand-700"
+              }`}
+            >
+              {isMachineOffline && !isMoving
+                ? "Machine offline"
+                : getActuatorButtonText()}
+            </Text>
           </Pressable>
+        </View>
+
+        {/* Floor Status Card */}
+        <View className="mt-4 rounded-2xl border border-border bg-card p-4">
+          <Text
+            className={`text-sm font-bold ${
+              floorStatusCard.tone === "success"
+                ? "text-primary"
+                : floorStatusCard.tone === "muted"
+                  ? "text-muted-foreground"
+                  : "text-foreground"
+            }`}
+          >
+            {floorStatusCard.title}
+          </Text>
+          {floorStatusCard.subtitle && (
+            <Text className="text-xs font-sans text-muted-foreground mt-1 leading-4">
+              {floorStatusCard.subtitle}
+            </Text>
+          )}
         </View>
       </View>
 
-      {/* Next button pinned to bottom */}
+      {/* Bottom CTA button */}
       <Pressable
-        disabled={
-          !hasEmptied ||
-          isMoving ||
-          finishBatch.isPending ||
-          batchQuery.isPending ||
-          !activeBatch
-        }
+        disabled={!isReadyToFinish}
         accessibilityRole="button"
-        accessibilityLabel="Next"
-        accessibilityState={{
-          disabled:
-            !hasEmptied ||
-            isMoving ||
-            finishBatch.isPending ||
-            batchQuery.isPending ||
-            !activeBatch,
-        }}
+        accessibilityLabel={
+          isReadyToFinish
+            ? isReject
+              ? "Reject batch"
+              : "Finish off batch"
+            : "Next"
+        }
+        accessibilityState={{ disabled: !isReadyToFinish }}
         onPress={handleNext}
         className={`min-h-12 rounded-full items-center justify-center ${
-          hasEmptied &&
-          !isMoving &&
-          !finishBatch.isPending &&
-          !batchQuery.isPending &&
-          activeBatch
+          isReadyToFinish
             ? "bg-primary active:opacity-85"
             : "bg-brand-200 opacity-60"
         }`}
       >
         {finishBatch.isPending ? (
-          <ActivityIndicator size="small" color={colors.semantic.primaryForeground} />
+          <ActivityIndicator
+            size="small"
+            color={colors.semantic.primaryForeground}
+          />
         ) : (
-          <Text className="text-sm font-bold text-primary-foreground">Next</Text>
+          <Text className="text-sm font-bold text-primary-foreground">
+            {isReadyToFinish
+              ? isReject
+                ? "Reject batch"
+                : "Finish off batch"
+              : "Next"}
+          </Text>
         )}
       </Pressable>
     </View>

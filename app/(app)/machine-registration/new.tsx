@@ -298,6 +298,7 @@ export default function AddMachineScreen() {
                 setValue={setValue}
                 isConnecting={isConnectingWifi}
                 errorMessage={provisioningError}
+                onQrAutoSubmit={() => void handleNext()}
               />
             )}
             {step === 5 && <NameMachineStep control={control} />}
