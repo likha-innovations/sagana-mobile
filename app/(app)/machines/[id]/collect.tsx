@@ -259,6 +259,17 @@ export default function LinearActuatorCollectScreen() {
         if (Platform.OS !== "web") {
           void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         }
+      } else if (log.type === "actuator_stopped") {
+        if (ackTimeoutRef.current) {
+          clearTimeout(ackTimeoutRef.current);
+          ackTimeoutRef.current = null;
+        }
+        setFloorState(lastConfirmedPositionRef.current);
+        toast({
+          title: "Movement interrupted",
+          message: log.message ?? "Actuator stopped before completing stroke.",
+          preset: "error",
+        });
       }
     };
 
